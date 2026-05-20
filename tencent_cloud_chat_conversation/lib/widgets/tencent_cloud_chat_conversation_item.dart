@@ -98,6 +98,35 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
     }
   }
 
+  Future<void> _handleLongPress(
+    LongPressStartDetails startDetails,
+    bool isDesktopScreen,
+    BuildContext actionContext,
+    TencentCloudChatTextStyle fontSize,
+    TencentCloudChatThemeColors colors,
+  ) async {
+    // `LongPressStartDetails.globalPosition` is reliable on both touch and
+    // desktop mouse, unlike caching the last `onTapDown` (mouse long-press
+    // does not always fire `onTapDown` first, which previously left the
+    // cached value null and anchored the menu at `Offset.zero`).
+    final position = startDetails.globalPosition;
+    final handler = TencentCloudChat.instance.dataInstance.conversation
+        .conversationEventHandlers?.uiEventHandlers.onLongPressConversationItem;
+    final handled = await handler?.call(
+          conversation: widget.conversation,
+          position: position,
+        ) ??
+        false;
+    if (handled) {
+      return;
+    }
+    if (!isDesktopScreen) {
+      await showMoreItemAction(actionContext, fontSize, colors);
+      return;
+    }
+    _showDesktopMenu(TapDownDetails(globalPosition: position));
+  }
+
   _showDesktopMenu(TapDownDetails details) {
     final screenHeight = MediaQuery.of(context).size.height;
 
@@ -202,7 +231,10 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
     );
   }
 
-  Widget conversationInner(TencentCloudChatThemeColors colors) {
+  Widget conversationInner(
+      BuildContext actionContext,
+      TencentCloudChatThemeColors colors,
+      TencentCloudChatTextStyle fontSize) {
     bool pinned = isPin();
     final isDesktopScreen = TencentCloudChatScreenAdapter.deviceScreenType == DeviceScreenType.desktop;
 
@@ -221,6 +253,12 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
       child: TencentCloudChatGesture(
         onTap: _navigateToMessage,
         onSecondaryTapDown: (details) => _handleSecondaryTap(details, isDesktopScreen),
+        // Use `onLongPressStart` (not `onLongPress`) so the handler gets the
+        // exact press globalPosition. Desktop mouse long-press may not fire
+        // `onTapDown` first, so caching tap-down details is unreliable —
+        // `LongPressStartDetails` carries `globalPosition` directly.
+        onLongPressStart: (startDetails) => _handleLongPress(
+            startDetails, isDesktopScreen, actionContext, fontSize, colors),
         child: Padding(
           padding: EdgeInsets.symmetric(
             vertical: getHeight(12),
@@ -281,7 +319,8 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
   @override
   Widget desktopBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
-      build: (ctx, colors, fontSize) => conversationInner(colors),
+      build: (ctx, colors, fontSize) =>
+          conversationInner(ctx, colors, fontSize),
     );
   }
 
@@ -328,7 +367,7 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
           ),
         ],
         backgroundColor: Colors.transparent,
-        child: conversationInner(colors),
+        child: conversationInner(ctx, colors, fontSize),
       ),
     );
   }

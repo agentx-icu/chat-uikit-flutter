@@ -16,6 +16,11 @@ typedef OnSecondaryTapConversationItem = Future<bool> Function({
   required Offset position,
 });
 
+typedef OnLongPressConversationItem = Future<bool> Function({
+  required V2TimConversation conversation,
+  required Offset position,
+});
+
 class TencentCloudChatConversationEventHandlers {
   final TencentCloudChatConversationUIEventHandlers _uiEventHandlers;
   final TencentCloudChatConversationLifeCycleEventHandlers _lifeCycleEventHandlers;
@@ -52,18 +57,28 @@ class TencentCloudChatConversationUIEventHandlers {
 
   OnSecondaryTapConversationItem? get onSecondaryTapConversationItem => _onSecondaryTapConversationItem;
 
+  OnLongPressConversationItem? _onLongPressConversationItem;
+
+  OnLongPressConversationItem? get onLongPressConversationItem =>
+      _onLongPressConversationItem;
+
   TencentCloudChatConversationUIEventHandlers({
     OnTapConversationItem? onTapConversationItem,
     OnSecondaryTapConversationItem? onSecondaryTapConversationItem,
+    OnLongPressConversationItem? onLongPressConversationItem,
   })  : _onTapConversationItem = onTapConversationItem,
-        _onSecondaryTapConversationItem = onSecondaryTapConversationItem;
+        _onSecondaryTapConversationItem = onSecondaryTapConversationItem,
+        _onLongPressConversationItem = onLongPressConversationItem;
 
   void setEventHandlers({
     OnTapConversationItem? onTapConversationItem,
     OnSecondaryTapConversationItem? onSecondaryTapConversationItem,
+    OnLongPressConversationItem? onLongPressConversationItem,
   }) {
     _onTapConversationItem = onTapConversationItem ?? _onTapConversationItem;
     _onSecondaryTapConversationItem = onSecondaryTapConversationItem ?? _onSecondaryTapConversationItem;
+    _onLongPressConversationItem =
+        onLongPressConversationItem ?? _onLongPressConversationItem;
   }
 }
 
