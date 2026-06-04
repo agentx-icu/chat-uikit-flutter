@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/data/theme/color/color_base.dart';
 import 'package:tencent_cloud_chat_common/data/theme/tencent_cloud_chat_theme.dart';
@@ -508,10 +510,20 @@ class _TencentCloudChatMaterialAppState extends State<TencentCloudChatMaterialAp
   Stream<TencentCloudChatTheme>? themeDataListener =
       TencentCloudChat.instance.eventBusInstance.on<TencentCloudChatTheme>("TencentCloudChatTheme");
 
+  // Subscription handle for [themeDataListener]. Retained so it can be
+  // cancelled in [dispose]; the global event bus outlives this widget, so a
+  // discarded subscription would keep firing _themeDataChangeCallback ->
+  // setState() after the State is disposed.
+  StreamSubscription<TencentCloudChatTheme>? _themeDataSubscription;
+
   bool isInitIntl = false;
 
   // Callback for handling theme data changes
   void _themeDataChangeCallback(TencentCloudChatTheme themeData) {
+    // Defensive guard: the event bus is global and may deliver an in-flight
+    // event around teardown. Cancelling in dispose() is the primary fix; this
+    // keeps a late delivery from calling setState() on an unmounted State.
+    if (!mounted) return;
     final color = themeData.colorTheme;
     final text = themeData.textStyle;
 
@@ -524,7 +536,7 @@ class _TencentCloudChatMaterialAppState extends State<TencentCloudChatMaterialAp
 
   // Adds a listener for theme data changes
   void _addThemeDataChangeListener() {
-    themeDataListener?.listen(
+    _themeDataSubscription = themeDataListener?.listen(
       _themeDataChangeCallback,
     );
   }
@@ -533,6 +545,14 @@ class _TencentCloudChatMaterialAppState extends State<TencentCloudChatMaterialAp
   void initState() {
     super.initState();
     _addThemeDataChangeListener();
+  }
+
+  @override
+  void dispose() {
+    // Cancel the theme event-bus subscription so it stops firing after the
+    // widget is gone (prevents "setState() called after dispose()").
+    _themeDataSubscription?.cancel();
+    super.dispose();
   }
 
   Locale? _initIntl(Locale? l) {

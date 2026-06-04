@@ -1,5 +1,6 @@
 import 'package:azlistview_all_platforms/azlistview_all_platforms.dart';
 import 'package:flutter/material.dart';
+import 'package:tencent_cloud_chat_common/data/contact/tencent_cloud_chat_contact_data.dart';
 import 'package:tencent_cloud_chat_common/models/tencent_cloud_chat_models.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
@@ -25,10 +26,15 @@ class TencentCloudChatContactAzlistState extends TencentCloudChatState<TencentCl
     return friendRemark != "" ? friendRemark : showName;
   }
 
-  List<ISuspensionBeanImpl> _getFriendList() {
+  List<ISuspensionBeanImpl> _getFriendList(String query) {
     final List<ISuspensionBeanImpl> showList = List.empty(growable: true);
     for (var i = 0; i < widget.contactList.length; i++) {
       final item = widget.contactList[i];
+      // S49: filter by the in-page contact search query (case-insensitive
+      // contains on friendRemark / nickName / userID).
+      if (!TencentCloudChatContactData.contactMatchesQuery(item, query)) {
+        continue;
+      }
       final showName = _getShowName(item);
       String tag = showName.substring(0, 1).toUpperCase();
       if (RegExp("[A-Z]").hasMatch(tag)) {
@@ -54,12 +60,24 @@ class TencentCloudChatContactAzlistState extends TencentCloudChatState<TencentCl
 
   @override
   Widget defaultBuilder(BuildContext context) {
-    final showFriendList = _getFriendList();
+    // Rebuild whenever the in-page contact search query changes (S49).
+    return ValueListenableBuilder<String>(
+      valueListenable: TencentCloudChat.instance.dataInstance.contact.contactSearchQuery,
+      builder: (context, query, _) => _buildList(context, query),
+    );
+  }
+
+  Widget _buildList(BuildContext context, String query) {
+    final showFriendList = _getFriendList(query);
     if (widget.tabList != null && widget.tabList!.isNotEmpty) {
       final topList = widget.tabList!.map((e) => ISuspensionBeanImpl(friendInfo: e, tagIndex: '@')).toList();
       showFriendList.insertAll(0, topList);
     }
-    if (widget.contactList.isEmpty) {
+    // Show the empty-state when there are no matching friend entries (either no
+    // contacts at all, or none match the active search query). TTabItems (tag
+    // '@') don't count as contacts for this check.
+    final hasFriendEntries = showFriendList.any((e) => e.getSuspensionTag() != '@');
+    if (!hasFriendEntries) {
       return TencentCloudChatThemeWidget(
         build: (context, colors, fontSize) => Column(
           children: [

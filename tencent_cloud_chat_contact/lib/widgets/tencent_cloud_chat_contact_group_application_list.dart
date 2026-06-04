@@ -310,6 +310,9 @@ class TencentCloudChatContactGroupApplicationItemButtonState
                     color: colorTheme.contactAgreeButtonColor,
                   ),
                   child: GestureDetector(
+                    key: ValueKey(
+                      'group_invite_accept_button:${widget.application.groupID}',
+                    ),
                     onTap: onAcceptApplication,
                     child: Text(
                       tL10n.agree,

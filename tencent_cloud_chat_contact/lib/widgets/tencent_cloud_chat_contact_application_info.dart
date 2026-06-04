@@ -368,6 +368,9 @@ class TencentCloudChatContactApplicationInfoButtonState
                           color: colorTheme.backgroundColor),
                       padding: EdgeInsets.symmetric(vertical: getHeight(10), horizontal: getWidth(20)),
                       child: GestureDetector(
+                          key: ValueKey(
+                            'contact_application_detail_accept_button:${widget.application.userID}',
+                          ),
                           onTap: onAcceptApplication,
                           child: Text(
                             tL10n.agree,
@@ -381,6 +384,9 @@ class TencentCloudChatContactApplicationInfoButtonState
                       width: MediaQuery.of(context).size.width,
                       padding: EdgeInsets.symmetric(vertical: getHeight(10), horizontal: getWidth(20)),
                       child: GestureDetector(
+                          key: ValueKey(
+                            'contact_application_detail_decline_button:${widget.application.userID}',
+                          ),
                           onTap: onRefuseApplication,
                           child: Text(
                             tL10n.refuse,

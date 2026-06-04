@@ -51,10 +51,8 @@ dependencies:
   device_info_plus: ^9.1.2
 
 dependency_overrides:
-#  tencent_cloud_chat_common:
-#    path: ../TIMCommon
-#  tencent_cloud_chat_intl:
-#    path: ../TUIInternational
+  tencent_cloud_chat_common:
+    path: ../tencent_cloud_chat_common
 
 dev_dependencies:
   flutter_test:

@@ -24,6 +24,9 @@ class TencentCloudChatMessageHeaderActions extends StatelessWidget {
               children: [
                 if (startVoiceCall != null && useCallKit)
                   IconButton(
+                    // Automation anchor (toxee UiKeys.chatCallVoiceButton). The
+                    // fork can't import toxee, so the key string is inlined.
+                    key: const ValueKey('chat_call_voice_button'),
                     onPressed: voiceCallHandler,
                     icon: Icon(
                       Icons.call,
@@ -35,6 +38,8 @@ class TencentCloudChatMessageHeaderActions extends StatelessWidget {
                   ),
                 if (startVideoCall != null && useCallKit)
                   IconButton(
+                    // Automation anchor (toxee UiKeys.chatCallVideoButton).
+                    key: const ValueKey('chat_call_video_button'),
                     onPressed: videoCallHandler,
                     icon: Icon(
                       Icons.videocam,

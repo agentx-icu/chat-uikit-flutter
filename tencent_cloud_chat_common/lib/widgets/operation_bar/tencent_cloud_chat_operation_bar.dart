@@ -10,12 +10,21 @@ class TencentCloudChatOperationBar<T> extends StatefulWidget {
   final ValueChanged<T>? onChange;
   final OperationBarType operationBarType;
 
+  /// Optional key applied to the inner control (Switch/TextButton) rather
+  /// than the whole bar, so test/automation can target the control directly.
+  /// The bar's own `key` lands on the centered Row (the label region), so a
+  /// key-tap there would miss the right-aligned switch — this puts the anchor
+  /// on the actual interactive widget. Mirrors how the conversation-mute
+  /// switch is directly keyed in the user-profile body.
+  final Key? controlKey;
+
   const TencentCloudChatOperationBar({
     Key? key,
     required this.label,
     required this.value,
     this.onChange,
     required this.operationBarType,
+    this.controlKey,
   }) : super(key: key);
 
   @override
@@ -60,12 +69,14 @@ class _TencentCloudChatOperationBarState<T>
                     ),
                     if (widget.operationBarType == OperationBarType.labelButton)
                       TextButton(
+                        key: widget.controlKey,
                         onPressed: () => widget.onChange?.call(widget.value),
                         child: Text(widget.label),
                       )
                     else if (widget.operationBarType ==
                         OperationBarType.switchControl)
                       Switch(
+                        key: widget.controlKey,
                         value: widget.value as bool,
                         onChanged: (bool newValue) =>
                             widget.onChange?.call(newValue as T),
@@ -83,7 +94,8 @@ class _TencentCloudChatOperationBarState<T>
                           Text(widget.value.toString()),
                           IconButton(
                             icon: const Icon(Icons.edit),
-                            onPressed: () => widget.onChange?.call(widget.value),
+                            onPressed: () =>
+                                widget.onChange?.call(widget.value),
                           ),
                         ],
                       ),

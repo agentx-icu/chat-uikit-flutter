@@ -27,6 +27,9 @@ class TencentCloudChatColumnMenuState
           (item) => Material(
             color: Colors.transparent,
             child: InkWell(
+              // Stable automation handle (e.g. desktop message context-menu
+              // entries). Null for callers that don't supply one.
+              key: item.valueKey,
               onTap: () {
                 item.onTap();
               },

@@ -6,10 +6,15 @@ class TencentCloudChatMessageGeneralOptionItem {
   final String? id;
   final ({String path, String? package})? iconAsset;
 
+  /// Optional stable key applied to the rendered menu item (e.g. the desktop
+  /// column-menu InkWell) for UI automation. Defaults to null so existing
+  /// callers are unaffected.
+  final Key? valueKey;
+
   /// Not every events include offset data, mainly support on desktop.
   final Function({Offset? offset}) onTap;
 
-  TencentCloudChatMessageGeneralOptionItem({this.iconAsset, this.icon, required this.label, required this.onTap, this.id});
+  TencentCloudChatMessageGeneralOptionItem({this.iconAsset, this.icon, required this.label, required this.onTap, this.id, this.valueKey});
 }
 
 class TencentCloudChatTimeDividerConfig {

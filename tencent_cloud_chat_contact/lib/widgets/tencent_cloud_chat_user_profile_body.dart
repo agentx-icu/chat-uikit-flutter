@@ -50,25 +50,30 @@ class TencentCloudChatUserProfileBodyState
                     SizedBox(
                       height: getHeight(40),
                     ),
-                    TencentCloudChat.instance.dataInstance.contact.contactBuilder
+                    TencentCloudChat
+                        .instance.dataInstance.contact.contactBuilder
                         ?.getUserProfileAvatarBuilder(
                       userFullInfo: widget.userFullInfo,
                     ),
-                    TencentCloudChat.instance.dataInstance.contact.contactBuilder
+                    TencentCloudChat
+                        .instance.dataInstance.contact.contactBuilder
                         ?.getUserProfileContentBuilder(
                       userFullInfo: widget.userFullInfo,
                     ),
-                    TencentCloudChat.instance.dataInstance.contact.contactBuilder
+                    TencentCloudChat
+                        .instance.dataInstance.contact.contactBuilder
                         ?.getUserProfileChatButtonBuilder(
                       userFullInfo: widget.userFullInfo,
                       startVideoCall: widget.startVideoCall,
                       startVoiceCall: widget.startVoiceCall,
                       isNavigatedFromChat: widget.isNavigatedFromChat,
                     ),
-                    TencentCloudChat.instance.dataInstance.contact.contactBuilder
+                    TencentCloudChat
+                        .instance.dataInstance.contact.contactBuilder
                         ?.getUserProfileStateButtonBuilder(
                             userFullInfo: widget.userFullInfo),
-                    TencentCloudChat.instance.dataInstance.contact.contactBuilder
+                    TencentCloudChat
+                        .instance.dataInstance.contact.contactBuilder
                         ?.getUserProfileDeleteButtonBuilder(
                       userFullInfo: widget.userFullInfo,
                     )
@@ -164,8 +169,10 @@ class TencentCloudChatUserProfileContentState
         context: context,
         builder: (context) {
           return AlertDialog(
+            key: const ValueKey('user_profile_modify_remark_dialog'),
             title: Text(tL10n.modifyRemark),
             content: TextField(
+              key: const ValueKey('user_profile_modify_remark_text_field'),
               autofocus: true,
               maxLines: null,
               onChanged: (value) {
@@ -180,6 +187,8 @@ class TencentCloudChatUserProfileContentState
                 child: Text(tL10n.cancel),
               ),
               TextButton(
+                key:
+                    const ValueKey('user_profile_modify_remark_confirm_button'),
                 onPressed: () {
                   _onChangeFriendRemark(remark);
                   Navigator.pop(context);
@@ -208,15 +217,28 @@ class TencentCloudChatUserProfileContentState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        friendRemark,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: textStyle.fontsize_24,
-                            fontWeight: FontWeight.w600),
+                      // Flexible + ellipsis: a friend with no nickname falls
+                      // back to the 76-char Tox ID here (toxee's common case),
+                      // which at fontsize_24 is ~633px wide and overflowed the
+                      // centered Row by 353px (yellow/black stripes). The full
+                      // ID is still shown verbatim in the "ID: …" line below.
+                      Flexible(
+                        child: Text(
+                          key: const ValueKey('user_profile_friend_name_text'),
+                          friendRemark,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: textStyle.fontsize_24,
+                              fontWeight: FontWeight.w600),
+                        ),
                       ),
-                      if (friendIDList.contains(_normalizeId(widget.userFullInfo.userID)))
+                      if (friendIDList
+                          .contains(_normalizeId(widget.userFullInfo.userID)))
                         FloatingActionButton.small(
+                            key: const ValueKey(
+                                'user_profile_edit_remark_button'),
                             onPressed: changeFriendRemark,
                             elevation: 0,
                             backgroundColor: colorTheme.contactBackgroundColor,
@@ -261,6 +283,7 @@ class TencentCloudChatUserProfileChatButtonState
     required IconData icon,
     required String label,
     required VoidCallback? onTap,
+    Key? tileKey,
   }) {
     final isEnabled = onTap != null;
     return TencentCloudChatThemeWidget(
@@ -285,6 +308,7 @@ class TencentCloudChatUserProfileChatButtonState
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(getSquareSize(12)),
                       child: InkWell(
+                        key: tileKey,
                         onTap: onTap,
                         child: Container(
                             padding: EdgeInsets.all(getSquareSize(16)),
@@ -390,6 +414,13 @@ class TencentCloudChatUserProfileChatButtonState
               children: [
                 Expanded(
                     child: _buildClickableItem(
+                        // Per-tile automation anchor so the Send tile can be
+                        // key-tapped directly. The toxee builder wraps the whole
+                        // [Send, Voice, Video] row in one outer key
+                        // (friend_profile_send_message_button), whose center is
+                        // the MIDDLE (Voice) tile — so a group-key tap hits Voice,
+                        // not Send. This keys the leftmost tile itself.
+                        tileKey: const ValueKey('friend_profile_send_message_tile'),
                         icon: Icons.message_rounded,
                         label: tL10n.sendMsg,
                         onTap: () {
@@ -532,18 +563,39 @@ class TencentCloudChatUserProfileStateButtonState
     return TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => Column(
               children: [
-                TencentCloudChatOperationBar(
-                  label: tL10n.doNotDisturb,
-                  operationBarType: OperationBarType.switchControl,
-                  value: disturb,
-                  onChange: (bool value) {
-                    _setC2CReceiveOpt(value);
-                    setState(() {
-                      disturb = value;
-                    });
-                  },
+                Material(
+                  color: colorTheme.groupProfileTabBackground,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: getWidth(16)),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            tL10n.doNotDisturb,
+                            style: TextStyle(
+                              color: colorTheme.secondaryTextColor,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        Switch(
+                          key: const ValueKey(
+                            'user_profile_conversation_mute_switch',
+                          ),
+                          value: disturb,
+                          onChanged: (bool value) {
+                            _setC2CReceiveOpt(value);
+                            setState(() {
+                              disturb = value;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 TencentCloudChatOperationBar(
+                  controlKey: const ValueKey('user_profile_pin_switch'),
                   label: tL10n.pin,
                   operationBarType: OperationBarType.switchControl,
                   value: pinChat,
@@ -555,6 +607,7 @@ class TencentCloudChatUserProfileStateButtonState
                   },
                 ),
                 TencentCloudChatOperationBar(
+                  controlKey: const ValueKey('user_profile_block_switch'),
                   label: tL10n.blackUser,
                   operationBarType: OperationBarType.switchControl,
                   value: blockList,
@@ -593,6 +646,7 @@ class TencentCloudChatUserProfileDeleteButtonState
           onPressed: () => Navigator.of(context).pop(), // 关闭对话框
         ),
         TextButton(
+          key: const ValueKey('user_profile_clear_history_confirm_button'),
           child: Text(tL10n.confirm),
           onPressed: () {
             //关闭对话框并返回true
@@ -668,6 +722,7 @@ class TencentCloudChatUserProfileDeleteButtonState
                   padding: EdgeInsets.symmetric(
                       vertical: getHeight(10), horizontal: getWidth(16)),
                   child: GestureDetector(
+                      key: const ValueKey('user_profile_clear_history_button'),
                       onTap: showClearChatHistoryDialog,
                       child: Text(
                         tL10n.deleteAllMessages,
@@ -676,7 +731,8 @@ class TencentCloudChatUserProfileDeleteButtonState
                             fontSize: textStyle.fontsize_16,
                             fontWeight: FontWeight.w400),
                       ))),
-              if (friendIDList.contains(_normalizeId(widget.userFullInfo.userID)))
+              if (friendIDList
+                  .contains(_normalizeId(widget.userFullInfo.userID)))
                 Container(
                     color: colorTheme
                         .contactAddContactFriendInfoStateButtonBackgroundColor,
@@ -684,6 +740,8 @@ class TencentCloudChatUserProfileDeleteButtonState
                     padding: EdgeInsets.symmetric(
                         vertical: getHeight(10), horizontal: getWidth(16)),
                     child: GestureDetector(
+                        key:
+                            const ValueKey('user_profile_delete_friend_button'),
                         onTap: onDeleteContact,
                         child: Text(
                           tL10n.delete,

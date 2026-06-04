@@ -15,13 +15,17 @@ class TencentCloudChatGroupAddMember extends StatefulWidget {
   final List<V2TimFriendInfo> contactList;
 
   const TencentCloudChatGroupAddMember(
-      {super.key, required this.memberList, required this.contactList, required this.groupInfo});
+      {super.key,
+      required this.memberList,
+      required this.contactList,
+      required this.groupInfo});
 
   @override
   State<StatefulWidget> createState() => TencentCloudChatGroupAddMemberState();
 }
 
-class TencentCloudChatGroupAddMemberState extends TencentCloudChatState<TencentCloudChatGroupAddMember> {
+class TencentCloudChatGroupAddMemberState
+    extends TencentCloudChatState<TencentCloudChatGroupAddMember> {
   ContactPresenter contactPresenter = ContactPresenter();
 
   submitAdd() async {
@@ -29,7 +33,8 @@ class TencentCloudChatGroupAddMemberState extends TencentCloudChatState<TencentC
     for (int i = 0; i < selectedContacts.length; i++) {
       userIDList.add(selectedContacts[i].userID);
     }
-    var result = await contactPresenter.inviteUserToGroup(groupID: widget.groupInfo.groupID, userList: userIDList);
+    var result = await contactPresenter.inviteUserToGroup(
+        groupID: widget.groupInfo.groupID, userList: userIDList);
     if (result.code == 0) {
       List<V2TimGroupMemberOperationResult>? operationResultList = result.data;
       if (operationResultList != null) {
@@ -73,6 +78,7 @@ class TencentCloudChatGroupAddMemberState extends TencentCloudChatState<TencentC
               centerTitle: true,
               actions: [
                 TextButton(
+                  key: const ValueKey('group_member_invite_confirm_button'),
                   onPressed: () async {
                     submitAdd();
                     Navigator.pop(context);
@@ -108,7 +114,8 @@ class TencentCloudChatGroupProfileAddMemberList extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatGroupProfileAddMemberListState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatGroupProfileAddMemberListState();
 }
 
 class TencentCloudChatGroupProfileAddMemberListState
@@ -136,7 +143,8 @@ class TencentCloudChatGroupProfileAddMemberListState
     if (widget.contactList != null) {
       for (var i = 0; i < widget.contactList!.length; i++) {
         final item = widget.contactList![i];
-        final name = TencentCloudChatUtils.checkString(widget.contactList![i].userProfile?.nickName) ??
+        final name = TencentCloudChatUtils.checkString(
+                widget.contactList![i].userProfile?.nickName) ??
             widget.contactList![i].userID;
         String tag = name.substring(0, 1).toUpperCase();
         if (RegExp("[A-Z]").hasMatch(tag)) {
@@ -149,7 +157,8 @@ class TencentCloudChatGroupProfileAddMemberListState
     } else {
       for (var i = 0; i < widget.memberList.length; i++) {
         final item = widget.memberList[i];
-        final name = TencentCloudChatUtils.checkString(item.nameCard) ?? item.userID;
+        final name =
+            TencentCloudChatUtils.checkString(item.nameCard) ?? item.userID;
         String tag = name.substring(0, 1).toUpperCase();
         if (RegExp("[A-Z]").hasMatch(tag)) {
           showList.add(ISuspensionBeanImpl(memberInfo: item, tagIndex: tag));
@@ -171,7 +180,9 @@ class TencentCloudChatGroupProfileAddMemberListState
 
     bool disabled = false;
     if (widget.memberList != null && widget.memberList.isNotEmpty) {
-      disabled = ((widget.memberList.indexWhere((element) => element.userID == item.userID))) > -1;
+      disabled = ((widget.memberList
+              .indexWhere((element) => element.userID == item.userID))) >
+          -1;
     }
 
     return TencentCloudChatThemeWidget(
@@ -212,10 +223,13 @@ class TencentCloudChatGroupProfileAddMemberListState
                   Expanded(
                       child: Container(
                     alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.only(top: 10, bottom: 20, right: 28),
+                    padding:
+                        const EdgeInsets.only(top: 10, bottom: 20, right: 28),
                     child: Text(
                       showName,
-                      style: TextStyle(color: colorTheme.groupProfileTextColor, fontSize: textStyle.fontsize_14),
+                      style: TextStyle(
+                          color: colorTheme.groupProfileTextColor,
+                          fontSize: textStyle.fontsize_14),
                     ),
                   )),
                 ],
@@ -250,7 +264,8 @@ class TencentCloudChatGroupProfileAddMemberListState
                           selectedSilencedMember.remove(item);
                         }
                         if (widget.onSelectedMemberItemChange != null) {
-                          widget.onSelectedMemberItemChange(selectedSilencedMember);
+                          widget.onSelectedMemberItemChange(
+                              selectedSilencedMember);
                         }
                         setState(() {});
                       },
@@ -260,17 +275,23 @@ class TencentCloudChatGroupProfileAddMemberListState
                     padding: const EdgeInsets.only(bottom: 12),
                     margin: const EdgeInsets.only(right: 12),
                     child: TencentCloudChatAvatar(
-                      imageList: [TencentCloudChatUtils.checkString(item.faceUrl)],
+                      imageList: [
+                        TencentCloudChatUtils.checkString(item.faceUrl)
+                      ],
                       scene: TencentCloudChatAvatarScene.groupProfile,
                     ),
                   ),
                   Expanded(
                       child: Container(
                     alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.only(top: 10, bottom: 20, right: 28),
+                    padding:
+                        const EdgeInsets.only(top: 10, bottom: 20, right: 28),
                     child: Text(
-                      TencentCloudChatUtils.checkString(item.nameCard) ?? item.userID,
-                      style: TextStyle(color: colorTheme.groupProfileTextColor, fontSize: textStyle.fontsize_14),
+                      TencentCloudChatUtils.checkString(item.nameCard) ??
+                          item.userID,
+                      style: TextStyle(
+                          color: colorTheme.groupProfileTextColor,
+                          fontSize: textStyle.fontsize_14),
                     ),
                   )),
                 ],
@@ -321,8 +342,11 @@ class TencentCloudChatGroupProfileAddMemberListState
             child: _buildItem(item),
           );
         },
-        indexBarData: SuspensionUtil.getTagIndexList(list).where((element) => element != "@").toList(),
-        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        indexBarData: SuspensionUtil.getTagIndexList(list)
+            .where((element) => element != "@")
+            .toList(),
+        physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics()),
         susItemHeight: getSquareSize(30),
         susItemBuilder: (context, index) {
           ISuspensionBeanImpl tag = list[index];
@@ -353,8 +377,11 @@ class TencentCloudChatGroupProfileAddMemberListState
           child: _buildMemberSilencedItem(item),
         );
       },
-      indexBarData: SuspensionUtil.getTagIndexList(list).where((element) => element != "@").toList(),
-      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      indexBarData: SuspensionUtil.getTagIndexList(list)
+          .where((element) => element != "@")
+          .toList(),
+      physics:
+          const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       susItemHeight: getSquareSize(30),
       susItemBuilder: (context, index) {
         ISuspensionBeanImpl tag = list[index];
@@ -375,17 +402,26 @@ class CheckBoxButton extends StatelessWidget {
   final double? size;
 
   const CheckBoxButton(
-      {this.disabled = false, Key? key, this.size, this.onlyShow = false, required this.isChecked, this.onChanged})
+      {this.disabled = false,
+      Key? key,
+      this.size,
+      this.onlyShow = false,
+      required this.isChecked,
+      this.onChanged})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     BoxDecoration boxDecoration = !isChecked
-        ? BoxDecoration(border: Border.all(color: Colors.black), shape: BoxShape.circle, color: Colors.white)
+        ? BoxDecoration(
+            border: Border.all(color: Colors.black),
+            shape: BoxShape.circle,
+            color: Colors.white)
         : const BoxDecoration(shape: BoxShape.circle, color: Colors.blue);
 
     if (disabled) {
-      boxDecoration = const BoxDecoration(shape: BoxShape.circle, color: Colors.grey);
+      boxDecoration =
+          const BoxDecoration(shape: BoxShape.circle, color: Colors.grey);
     }
     return TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => Center(

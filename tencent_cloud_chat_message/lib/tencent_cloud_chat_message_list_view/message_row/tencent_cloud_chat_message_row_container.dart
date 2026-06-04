@@ -279,7 +279,11 @@ class _TencentCloudChatMessageRowContainerState extends TencentCloudChatState<Te
   Widget defaultBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
       build: (context, colorTheme, textStyle) => TencentCloudChatMessageItemContainer(
-        key: ValueKey(_message.msgID),
+        // Canonical stable handle for UI automation to target a specific message
+        // row. Falls back to the local id when msgID is not yet assigned, mirroring
+        // the message-row builder key below, preserving per-message uniqueness for
+        // element reconciliation.
+        key: ValueKey('message_list_item:${_message.msgID ?? _message.id ?? '${_message.timestamp}_${_message.sender ?? 'unknown'}'}'),
         message: _message,
         messageRowWidth: widget.messageRowWidth,
         inMergerMessagePreviewMode: widget.inMergerMessagePreviewMode,

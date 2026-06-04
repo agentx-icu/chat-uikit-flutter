@@ -60,11 +60,14 @@ class TencentCloudChatGroupMemberList extends StatefulWidget {
   State<StatefulWidget> createState() => TencentCloudChatGroupMemberListState();
 }
 
-class TencentCloudChatGroupMemberListState extends TencentCloudChatState<TencentCloudChatGroupMemberList> {
-  final Stream<TencentCloudChatGroupProfileData<dynamic>>? _groupProfileDataStream = TencentCloudChat
-      .instance.eventBusInstance
-      .on<TencentCloudChatGroupProfileData<dynamic>>("TencentCloudChatGroupProfileData");
-  StreamSubscription<TencentCloudChatGroupProfileData<dynamic>>? _groupProfileDataSubscription;
+class TencentCloudChatGroupMemberListState
+    extends TencentCloudChatState<TencentCloudChatGroupMemberList> {
+  final Stream<TencentCloudChatGroupProfileData<dynamic>>?
+      _groupProfileDataStream = TencentCloudChat.instance.eventBusInstance
+          .on<TencentCloudChatGroupProfileData<dynamic>>(
+              "TencentCloudChatGroupProfileData");
+  StreamSubscription<TencentCloudChatGroupProfileData<dynamic>>?
+      _groupProfileDataSubscription;
 
   @override
   void initState() {
@@ -73,16 +76,19 @@ class TencentCloudChatGroupMemberListState extends TencentCloudChatState<Tencent
   }
 
   _addGroupProfileDataListener() {
-    _groupProfileDataSubscription = _groupProfileDataStream?.listen(_groupProfileDataHandler);
+    _groupProfileDataSubscription =
+        _groupProfileDataStream?.listen(_groupProfileDataHandler);
   }
 
   _groupProfileDataHandler(TencentCloudChatGroupProfileData data) {
-    if (data.currentUpdatedFields == TencentCloudChatGroupProfileDataKeys.updateMemberRole) {
+    if (data.currentUpdatedFields ==
+        TencentCloudChatGroupProfileDataKeys.updateMemberRole) {
       if (data.updateGroupID == widget.groupInfo.groupID) {
         bool needUpdate = false;
         List<V2TimGroupMemberInfo> updateMemberInfoList = data.updateMemberList;
         for (var updateMemberInfo in updateMemberInfoList) {
-          var index = widget.memberInfoList.indexWhere((member) => member.userID == updateMemberInfo.userID);
+          var index = widget.memberInfoList
+              .indexWhere((member) => member.userID == updateMemberInfo.userID);
           if (index >= 0) {
             widget.memberInfoList[index].role = data.updateMemberRole;
             needUpdate = true;
@@ -98,55 +104,53 @@ class TencentCloudChatGroupMemberListState extends TencentCloudChatState<Tencent
   @override
   Widget? desktopBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) =>
-            Scaffold(
-                appBar: AppBar(
-                  leading: IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back_ios_rounded),
-                    color: colorTheme.primaryColor,
+        build: (context, colorTheme, textStyle) => Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back_ios_rounded),
+                color: colorTheme.primaryColor,
+              ),
+              scrolledUnderElevation: 0.0,
+            ),
+            body: Container(
+                color: colorTheme.backgroundColor,
+                child: Center(
+                  child: _toxeeConstrainWide(
+                    context,
+                    TencentCloudChatGroupMemberListAzList(
+                      groupInfo: widget.groupInfo,
+                      memberInfoList: widget.memberInfoList,
+                      lastMessageTimeMap: widget.lastMessageTimeMap,
+                    ),
                   ),
-                  scrolledUnderElevation: 0.0,
-                ),
-                body: Container(
-                    color: colorTheme.backgroundColor,
-                    child: Center(
-                      child: _toxeeConstrainWide(
-                        context,
-                        TencentCloudChatGroupMemberListAzList(
-                          groupInfo: widget.groupInfo,
-                          memberInfoList: widget.memberInfoList,
-                          lastMessageTimeMap: widget.lastMessageTimeMap,
-                        ),
-                      ),
-                    ))));
+                ))));
   }
 
   @override
   Widget defaultBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) =>
-            Scaffold(
-                appBar: AppBar(
-                  leading: IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back_ios_rounded),
-                    color: colorTheme.primaryColor,
+        build: (context, colorTheme, textStyle) => Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back_ios_rounded),
+                color: colorTheme.primaryColor,
+              ),
+              scrolledUnderElevation: 0.0,
+            ),
+            body: Container(
+                color: colorTheme.backgroundColor,
+                child: Center(
+                  child: _toxeeConstrainWide(
+                    context,
+                    TencentCloudChatGroupMemberListAzList(
+                      groupInfo: widget.groupInfo,
+                      memberInfoList: widget.memberInfoList,
+                      lastMessageTimeMap: widget.lastMessageTimeMap,
+                    ),
                   ),
-                  scrolledUnderElevation: 0.0,
-                ),
-                body: Container(
-                    color: colorTheme.backgroundColor,
-                    child: Center(
-                      child: _toxeeConstrainWide(
-                        context,
-                        TencentCloudChatGroupMemberListAzList(
-                          groupInfo: widget.groupInfo,
-                          memberInfoList: widget.memberInfoList,
-                          lastMessageTimeMap: widget.lastMessageTimeMap,
-                        ),
-                      ),
-                    ))));
+                ))));
   }
 
   @override
@@ -169,10 +173,12 @@ class TencentCloudChatGroupMemberListAzList extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatGroupMemberListAzListState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatGroupMemberListAzListState();
 }
 
-class TencentCloudChatGroupMemberListAzListState extends TencentCloudChatState<TencentCloudChatGroupMemberListAzList> {
+class TencentCloudChatGroupMemberListAzListState
+    extends TencentCloudChatState<TencentCloudChatGroupMemberListAzList> {
   ContactPresenter contactPresenter = ContactPresenter();
   Map tagCount = {};
   List<ISuspensionBeanImpl> list = [];
@@ -183,11 +189,13 @@ class TencentCloudChatGroupMemberListAzListState extends TencentCloudChatState<T
     super.initState();
     tagCount = {};
     list = _getListTag();
-    final loginID = TencentCloudChat.instance.dataInstance.basic.currentUser!.userID;
+    final loginID =
+        TencentCloudChat.instance.dataInstance.basic.currentUser!.userID;
     try {
       myRole = widget.memberInfoList
-          .firstWhere((element) => element.userID == loginID)
-          .role ?? 0;
+              .firstWhere((element) => element.userID == loginID)
+              .role ??
+          0;
     } catch (e) {
       // If current user not found in member list, default to member role
       myRole = 0; // V2TIM_GROUP_MEMBER_ROLE_MEMBER
@@ -199,9 +207,11 @@ class TencentCloudChatGroupMemberListAzListState extends TencentCloudChatState<T
     final List<ISuspensionBeanImpl> adminAndOwner = List.empty(growable: true);
     for (var i = 0; i < widget.memberInfoList.length; i++) {
       final item = widget.memberInfoList[i];
-      final name =
-          TencentCloudChatUtils.checkString(widget.memberInfoList[i].nameCard) ??
-              TencentCloudChatUtils.checkString(widget.memberInfoList[i].nickName) ?? widget.memberInfoList[i].userID;
+      final name = TencentCloudChatUtils.checkString(
+              widget.memberInfoList[i].nameCard) ??
+          TencentCloudChatUtils.checkString(
+              widget.memberInfoList[i].nickName) ??
+          widget.memberInfoList[i].userID;
       String tag = name.substring(0, 1).toUpperCase();
       if (RegExp("[A-Z]").hasMatch(tag)) {
         showList.add(ISuspensionBeanImpl(memberInfo: item, tagIndex: tag));
@@ -217,7 +227,9 @@ class TencentCloudChatGroupMemberListAzListState extends TencentCloudChatState<T
     }
     SuspensionUtil.sortListBySuspensionTag(showList);
     final List<ISuspensionBeanImpl> list = [];
-    list..addAll(adminAndOwner)..addAll(showList);
+    list
+      ..addAll(adminAndOwner)
+      ..addAll(showList);
     SuspensionUtil.setShowSuspensionStatus(list);
     return list;
   }
@@ -229,37 +241,41 @@ class TencentCloudChatGroupMemberListAzListState extends TencentCloudChatState<T
     }
     return Scrollbar(
         child: AzListView(
-          data: list,
-          itemCount: list.length,
-          itemBuilder: (context, index) {
-            final item = list[index].memberInfo;
-            return TencentCloudChatGroupMemberListItem(
-              onDeleteGroupMember: () async {
-                final deleteRes =
-                await contactPresenter.kickGroupMember(groupID: widget.groupInfo.groupID, memberList: [item.userID]);
-                if (deleteRes.code == 0) {
-                  safeSetState(() {
-                    list.removeWhere((element) => element.memberInfo.userID == item.userID);
-                  });
-                }
-              },
-              memberFullInfo: item,
-              myRole: myRole,
-              groupInfo: widget.groupInfo,
-              lastMessageTime: widget.lastMessageTimeMap?[item.userID],
-            );
+      data: list,
+      itemCount: list.length,
+      itemBuilder: (context, index) {
+        final item = list[index].memberInfo;
+        return TencentCloudChatGroupMemberListItem(
+          onDeleteGroupMember: () async {
+            final deleteRes = await contactPresenter.kickGroupMember(
+                groupID: widget.groupInfo.groupID, memberList: [item.userID]);
+            if (deleteRes.code == 0) {
+              safeSetState(() {
+                list.removeWhere(
+                    (element) => element.memberInfo.userID == item.userID);
+              });
+            }
           },
-          indexBarData: SuspensionUtil.getTagIndexList(list).where((element) => element != "@").toList(),
-          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-          susItemBuilder: (context, index) {
-            ISuspensionBeanImpl tag = list[index];
-            return TencentCloudChatGroupMemberListTag(
-              tag: tag.getSuspensionTag(),
-              count: tagCount[tag.getSuspensionTag()],
-            );
-          },
-          susItemHeight: getSquareSize(30),
-        ));
+          memberFullInfo: item,
+          myRole: myRole,
+          groupInfo: widget.groupInfo,
+          lastMessageTime: widget.lastMessageTimeMap?[item.userID],
+        );
+      },
+      indexBarData: SuspensionUtil.getTagIndexList(list)
+          .where((element) => element != "@")
+          .toList(),
+      physics:
+          const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      susItemBuilder: (context, index) {
+        ISuspensionBeanImpl tag = list[index];
+        return TencentCloudChatGroupMemberListTag(
+          tag: tag.getSuspensionTag(),
+          count: tagCount[tag.getSuspensionTag()],
+        );
+      },
+      susItemHeight: getSquareSize(30),
+    ));
   }
 }
 
@@ -270,18 +286,21 @@ class TencentCloudChatGroupMemberListItem extends StatefulWidget {
   final Function() onDeleteGroupMember;
   final int? lastMessageTime;
 
-  const TencentCloudChatGroupMemberListItem({super.key,
-    required this.memberFullInfo,
-    required this.myRole,
-    required this.groupInfo,
-    required this.onDeleteGroupMember,
-    this.lastMessageTime});
+  const TencentCloudChatGroupMemberListItem(
+      {super.key,
+      required this.memberFullInfo,
+      required this.myRole,
+      required this.groupInfo,
+      required this.onDeleteGroupMember,
+      this.lastMessageTime});
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatGroupMemberListItemState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatGroupMemberListItemState();
 }
 
-class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<TencentCloudChatGroupMemberListItem> {
+class TencentCloudChatGroupMemberListItemState
+    extends TencentCloudChatState<TencentCloudChatGroupMemberListItem> {
   ContactPresenter contactPresenter = ContactPresenter();
 
   String _getRoleText() {
@@ -297,14 +316,16 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
 
   String _getLastMessageTimeText() {
     if (widget.lastMessageTime != null && widget.lastMessageTime! > 0) {
-      final dateTime = DateTime.fromMillisecondsSinceEpoch(widget.lastMessageTime! * 1000);
+      final dateTime =
+          DateTime.fromMillisecondsSinceEpoch(widget.lastMessageTime! * 1000);
       return TencentCloudChatIntl.getFormattedTimeString(dateTime: dateTime);
     }
     return '无';
   }
 
   bool canSetAdmin() {
-    if (widget.groupInfo.role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_OWNER) {
+    if (widget.groupInfo.role ==
+        GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_OWNER) {
       return true;
     }
 
@@ -312,7 +333,8 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
   }
 
   bool canDeleteMember() {
-    if (widget.memberFullInfo.role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_OWNER) {
+    if (widget.memberFullInfo.role ==
+        GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_OWNER) {
       return false;
     }
 
@@ -325,7 +347,8 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
     }
 
     if (widget.myRole == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_ADMIN &&
-        widget.memberFullInfo.role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_MEMBER) {
+        widget.memberFullInfo.role ==
+            GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_MEMBER) {
       return true;
     }
 
@@ -334,11 +357,14 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
 
   _onSetMemberRole(GroupMemberRoleTypeEnum roleType) async {
     await contactPresenter.setGroupMemberRole(
-        groupID: widget.groupInfo.groupID, userID: widget.memberFullInfo.userID, role: roleType);
+        groupID: widget.groupInfo.groupID,
+        userID: widget.memberFullInfo.userID,
+        role: roleType);
   }
 
   bool isSelf() {
-    return widget.memberFullInfo.userID == TencentCloudChat.instance.dataInstance.basic.currentUser!.userID;
+    return widget.memberFullInfo.userID ==
+        TencentCloudChat.instance.dataInstance.basic.currentUser!.userID;
   }
 
   Future<void> _copyMemberId() async {
@@ -357,7 +383,8 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
       return;
     }
     final int role = widget.memberFullInfo.role ?? 0;
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    final overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox?;
 
     final List<PopupMenuEntry<String>> items = <PopupMenuEntry<String>>[
       const PopupMenuItem<String>(
@@ -385,9 +412,10 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
           value: 'admin',
           child: ListTile(
             leading: const Icon(Icons.shield_outlined),
-            title: Text(role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_MEMBER
-                ? tL10n.setAsAdmin
-                : tL10n.dismissAdmin),
+            title: Text(
+                role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_MEMBER
+                    ? tL10n.setAsAdmin
+                    : tL10n.dismissAdmin),
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
@@ -399,8 +427,10 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
         PopupMenuItem<String>(
           value: 'remove',
           child: ListTile(
-            leading: const Icon(Icons.person_remove_outlined, color: Colors.red),
-            title: Text(tL10n.delete, style: const TextStyle(color: Colors.red)),
+            leading:
+                const Icon(Icons.person_remove_outlined, color: Colors.red),
+            title:
+                Text(tL10n.delete, style: const TextStyle(color: Colors.red)),
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
@@ -413,8 +443,12 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
       position: RelativeRect.fromLTRB(
         globalPosition.dx,
         globalPosition.dy,
-        overlay == null ? globalPosition.dx : overlay.size.width - globalPosition.dx,
-        overlay == null ? globalPosition.dy : overlay.size.height - globalPosition.dy,
+        overlay == null
+            ? globalPosition.dx
+            : overlay.size.width - globalPosition.dx,
+        overlay == null
+            ? globalPosition.dy
+            : overlay.size.height - globalPosition.dy,
       ),
       items: items,
     );
@@ -445,9 +479,11 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
         break;
       case 'admin':
         if (role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_MEMBER) {
-          await _onSetMemberRole(GroupMemberRoleTypeEnum.V2TIM_GROUP_MEMBER_ROLE_ADMIN);
+          await _onSetMemberRole(
+              GroupMemberRoleTypeEnum.V2TIM_GROUP_MEMBER_ROLE_ADMIN);
         } else {
-          await _onSetMemberRole(GroupMemberRoleTypeEnum.V2TIM_GROUP_MEMBER_ROLE_MEMBER);
+          await _onSetMemberRole(
+              GroupMemberRoleTypeEnum.V2TIM_GROUP_MEMBER_ROLE_MEMBER);
         }
         break;
       case 'remove':
@@ -470,16 +506,14 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
           if (isDesktop) {
             TencentCloudChatDialog.showCustomDialog(
                 context: context,
-                builder: (c) =>
-                    TencentCloudChatGroupMemberInfo(
+                builder: (c) => TencentCloudChatGroupMemberInfo(
                       memberFullInfo: widget.memberFullInfo,
                     ));
           } else {
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) =>
-                        TencentCloudChatGroupMemberInfo(
+                    builder: (context) => TencentCloudChatGroupMemberInfo(
                           memberFullInfo: widget.memberFullInfo,
                         )));
           }
@@ -492,19 +526,23 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
         CupertinoActionSheetAction(
           onPressed: () {
             if (role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_MEMBER) {
-              _onSetMemberRole(GroupMemberRoleTypeEnum.V2TIM_GROUP_MEMBER_ROLE_ADMIN);
+              _onSetMemberRole(
+                  GroupMemberRoleTypeEnum.V2TIM_GROUP_MEMBER_ROLE_ADMIN);
             } else {
-              _onSetMemberRole(GroupMemberRoleTypeEnum.V2TIM_GROUP_MEMBER_ROLE_MEMBER);
+              _onSetMemberRole(
+                  GroupMemberRoleTypeEnum.V2TIM_GROUP_MEMBER_ROLE_MEMBER);
             }
             Navigator.pop(context);
           },
-          child:
-          Text(role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_MEMBER ? tL10n.setAsAdmin : tL10n.dismissAdmin),
+          child: Text(role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_MEMBER
+              ? tL10n.setAsAdmin
+              : tL10n.dismissAdmin),
         ),
       );
     }
     if (canDeleteMember()) {
       actionList.add(CupertinoActionSheetAction(
+        key: const ValueKey('group_member_action_kick_button'),
         onPressed: () {
           widget.onDeleteGroupMember();
           Navigator.pop(context);
@@ -515,17 +553,15 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
     }
     showCupertinoModalPopup<void>(
         context: context,
-        builder: (BuildContext context) =>
-            TencentCloudChatThemeWidget(
-                build: (context, colorTheme, textStyle) =>
-                    CupertinoActionSheet(
-                      actions: actionList,
-                      cancelButton: CupertinoActionSheetAction(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: Text(tL10n.cancel)),
-                    )));
+        builder: (BuildContext context) => TencentCloudChatThemeWidget(
+            build: (context, colorTheme, textStyle) => CupertinoActionSheet(
+                  actions: actionList,
+                  cancelButton: CupertinoActionSheetAction(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(tL10n.cancel)),
+                )));
   }
 
   @override
@@ -533,16 +569,16 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
     final lastMessageTimeText = _getLastMessageTimeText();
     final roleText = _getRoleText();
     return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) =>
-            Container(
+        build: (context, colorTheme, textStyle) => Container(
               color: colorTheme.backgroundColor,
               child: GestureDetector(
                   onTap: onManageMember,
-                  onSecondaryTapDown: TencentCloudChatPlatformAdapter().isDesktop
-                      ? (TapDownDetails details) {
-                          _showDesktopContextMenu(details.globalPosition);
-                        }
-                      : null,
+                  onSecondaryTapDown:
+                      TencentCloudChatPlatformAdapter().isDesktop
+                          ? (TapDownDetails details) {
+                              _showDesktopContextMenu(details.globalPosition);
+                            }
+                          : null,
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       vertical: getHeight(10),
@@ -553,7 +589,10 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
                         Padding(
                             padding: EdgeInsets.only(right: getWidth(16)),
                             child: TencentCloudChatAvatar(
-                              imageList: [TencentCloudChatUtils.checkString(widget.memberFullInfo.faceUrl)],
+                              imageList: [
+                                TencentCloudChatUtils.checkString(
+                                    widget.memberFullInfo.faceUrl)
+                              ],
                               width: getSquareSize(40),
                               height: getSquareSize(40),
                               borderRadius: getSquareSize(48),
@@ -561,89 +600,105 @@ class TencentCloudChatGroupMemberListItemState extends TencentCloudChatState<Ten
                             )),
                         Expanded(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
                               children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        TencentCloudChatUtils.checkString(widget.memberFullInfo.nameCard) ??
-                                            TencentCloudChatUtils.checkString(widget.memberFullInfo.nickName) ??
-                                            widget.memberFullInfo.userID,
-                                        style:
-                                        TextStyle(color: colorTheme.groupProfileTextColor, fontSize: textStyle.fontsize_14),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    if (widget.memberFullInfo.role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_OWNER)
-                                      Container(
-                                        margin: const EdgeInsets.only(left: 8),
-                                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                                        decoration: BoxDecoration(
-                                          color: colorTheme.primaryColor.withAlpha(30),
-                                          border: Border.all(color: colorTheme.primaryColor),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          tL10n.groupOwner,
-                                          style: TextStyle(
-                                            color: colorTheme.primaryColor,
-                                            fontSize: textStyle.fontsize_10,
-                                          ),
-                                        ),
-                                      ),
-                                    if (widget.memberFullInfo.role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_ADMIN)
-                                      Container(
-                                        margin: const EdgeInsets.only(left: 8),
-                                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                                        decoration: BoxDecoration(
-                                          color: colorTheme.primaryColor.withAlpha(30),
-                                          border: Border.all(color: colorTheme.primaryColor),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          tL10n.admin,
-                                          style: TextStyle(
-                                            color: colorTheme.primaryColor,
-                                            fontSize: textStyle.fontsize_10,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
+                                Flexible(
+                                  child: Text(
+                                    TencentCloudChatUtils.checkString(
+                                            widget.memberFullInfo.nameCard) ??
+                                        TencentCloudChatUtils.checkString(
+                                            widget.memberFullInfo.nickName) ??
+                                        widget.memberFullInfo.userID,
+                                    style: TextStyle(
+                                        color: colorTheme.groupProfileTextColor,
+                                        fontSize: textStyle.fontsize_14),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Text(
-                                      roleText,
+                                if (widget.memberFullInfo.role ==
+                                    GroupMemberRoleType
+                                        .V2TIM_GROUP_MEMBER_ROLE_OWNER)
+                                  Container(
+                                    margin: const EdgeInsets.only(left: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 4),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          colorTheme.primaryColor.withAlpha(30),
+                                      border: Border.all(
+                                          color: colorTheme.primaryColor),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      tL10n.groupOwner,
                                       style: TextStyle(
-                                        color: colorTheme.groupProfileTabTextColor,
-                                        fontSize: textStyle.fontsize_12,
+                                        color: colorTheme.primaryColor,
+                                        fontSize: textStyle.fontsize_10,
                                       ),
                                     ),
-                                    Text(
-                                        '  ·  ',
-                                        style: TextStyle(
-                                          color: colorTheme.groupProfileTabTextColor,
-                                          fontSize: textStyle.fontsize_12,
-                                        ),
+                                  ),
+                                if (widget.memberFullInfo.role ==
+                                    GroupMemberRoleType
+                                        .V2TIM_GROUP_MEMBER_ROLE_ADMIN)
+                                  Container(
+                                    margin: const EdgeInsets.only(left: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 4),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          colorTheme.primaryColor.withAlpha(30),
+                                      border: Border.all(
+                                          color: colorTheme.primaryColor),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      tL10n.admin,
+                                      style: TextStyle(
+                                        color: colorTheme.primaryColor,
+                                        fontSize: textStyle.fontsize_10,
                                       ),
-                                      Flexible(
-                                        child: Text(
-                                          lastMessageTimeText,
-                                          style: TextStyle(
-                                            color: colorTheme.groupProfileTabTextColor,
-                                            fontSize: textStyle.fontsize_12,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                  ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text(
+                                  roleText,
+                                  style: TextStyle(
+                                    color: colorTheme.groupProfileTabTextColor,
+                                    fontSize: textStyle.fontsize_12,
+                                  ),
+                                ),
+                                Text(
+                                  '  ·  ',
+                                  style: TextStyle(
+                                    color: colorTheme.groupProfileTabTextColor,
+                                    fontSize: textStyle.fontsize_12,
+                                  ),
+                                ),
+                                Flexible(
+                                  child: Text(
+                                    lastMessageTimeText,
+                                    style: TextStyle(
+                                      color:
+                                          colorTheme.groupProfileTabTextColor,
+                                      fontSize: textStyle.fontsize_12,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
-                            )),
-                        if (!isSelf()) Icon(Icons.arrow_forward_ios_rounded, color: colorTheme.groupProfileTabTextColor)
+                            ),
+                          ],
+                        )),
+                        if (!isSelf())
+                          Icon(Icons.arrow_forward_ios_rounded,
+                              color: colorTheme.groupProfileTabTextColor)
                       ],
                     ),
                   )),
@@ -662,33 +717,31 @@ class TencentCloudChatGroupMemberListTag extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatGroupMemberListTagState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatGroupMemberListTagState();
 }
 
-class TencentCloudChatGroupMemberListTagState extends TencentCloudChatState<TencentCloudChatGroupMemberListTag> {
+class TencentCloudChatGroupMemberListTagState
+    extends TencentCloudChatState<TencentCloudChatGroupMemberListTag> {
   @override
   Widget defaultBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) =>
-            Container(
-                decoration: BoxDecoration(
-                  color: colorTheme.backgroundColor,
-                ),
-                height: getSquareSize(40),
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width,
-                padding: const EdgeInsets.only(left: 16.0, bottom: 3),
-                // color: Color.fromARGB(255, 255, 255, 255),
-                alignment: Alignment.bottomLeft,
-                child: Text(
-                  "${widget.tag} (${widget.count})",
-                  style: TextStyle(
-                    fontSize: textStyle.fontsize_14,
-                    fontWeight: FontWeight.w400,
-                    color: colorTheme.contactItemFriendNameColor,
-                  ),
-                )));
+        build: (context, colorTheme, textStyle) => Container(
+            decoration: BoxDecoration(
+              color: colorTheme.backgroundColor,
+            ),
+            height: getSquareSize(40),
+            width: MediaQuery.of(context).size.width,
+            padding: const EdgeInsets.only(left: 16.0, bottom: 3),
+            // color: Color.fromARGB(255, 255, 255, 255),
+            alignment: Alignment.bottomLeft,
+            child: Text(
+              "${widget.tag} (${widget.count})",
+              style: TextStyle(
+                fontSize: textStyle.fontsize_14,
+                fontWeight: FontWeight.w400,
+                color: colorTheme.contactItemFriendNameColor,
+              ),
+            )));
   }
 }

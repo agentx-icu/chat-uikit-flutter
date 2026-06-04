@@ -101,17 +101,25 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
 
   void removeUIKitListener() {
     if (listenerUUID.isNotEmpty) {
-      return TencentCloudChat.instance.chatSDKInstance.messageSDK.removeUIKitListener(listenerID: listenerUUID);
+      TencentCloudChat.instance.chatSDKInstance.messageSDK.removeUIKitListener(listenerID: listenerUUID);
+      // Clear so a second call is an idempotent no-op (the guard above now
+      // actually protects against double-removal).
+      listenerUUID = "";
     }
   }
 
   @override
   void dispose() {
-    super.dispose();
-    _messageAttachmentOptions.dispose();
+    // Dispose our own resources BEFORE super.dispose() — this State is a
+    // TickerProvider (the AnimationController in _addTextInputEvent uses
+    // `vsync: this`), so the controllers must be torn down first.
+    // NOTE: _messageAttachmentOptions is disposed inside _removeTextInputEvent();
+    // do NOT also dispose it here — that double-disposes its internal
+    // AnimationController ("dispose() called more than once").
     WidgetsBinding.instance.removeObserver(this);
     _removeTextInputEvent();
     removeUIKitListener();
+    super.dispose();
   }
 
   @override
@@ -176,7 +184,10 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
       _textEditingController.clear();
       _textEditingController.dispose();
       _textEditingFocusNode.dispose();
-      TencentCloudChat.instance.chatSDKInstance.messageSDK.removeUIKitListener(listenerID: listenerUUID);
+      // NOTE: the UIKit listener is initState-paired and removed in dispose()
+      // via removeUIKitListener(); do NOT also remove it here (double-remove),
+      // and keeping it out of this try/catch means a text-controller throw
+      // can't skip the listener removal.
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -539,6 +550,7 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
                         ),
                         if (widget.inputData.hasStickerPlugin)
                           GestureDetector(
+                            key: const ValueKey('emoji_panel_button'),
                             onTap: () {
                               if (!_showStickerPanel) {
                                 _textEditingFocusNode.unfocus();

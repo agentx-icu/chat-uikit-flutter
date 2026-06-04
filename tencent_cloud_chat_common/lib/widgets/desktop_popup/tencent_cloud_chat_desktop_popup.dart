@@ -123,6 +123,11 @@ class TencentCloudChatDesktopPopup {
                                 );
                               }
                               return ElevatedButton(
+                                // Stable automation handle for the primary
+                                // (confirm/delete) action of secondary confirm
+                                // dialogs. Generic by design — shared across
+                                // confirm dialogs that use this path.
+                                key: const ValueKey('confirm_dialog_primary_button'),
                                 onPressed: () {
                                   e.onTap();
                                   onClose();

@@ -465,6 +465,9 @@ class _TencentCloudChatMessageItemWithMenuContainerState
                   actions: [
                     if (enableMessageDeleteForSelf)
                       TextButton(
+                        // Stable automation handle for the mobile delete-confirm
+                        // primary action. Mirrors the desktop popup key.
+                        key: const ValueKey('confirm_dialog_primary_button'),
                         onPressed: () {
                           dataProvider.deleteMessagesForMe(messages: [_message]);
                           Navigator.pop(context);

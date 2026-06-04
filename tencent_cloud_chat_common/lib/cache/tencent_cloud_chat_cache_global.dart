@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:hive_flutter/hive_flutter.dart';
@@ -36,7 +37,10 @@ class TencentCloudChatCacheGlobal {
       return true;
     }
 
-    await Hive.initFlutter();
+    final subDir = Platform.environment['TOXEE_TCCF_GLOBAL_SUBDIR'];
+    await Hive.initFlutter(
+      (subDir != null && subDir.trim().isNotEmpty) ? subDir.trim() : null,
+    );
     String md5 = TencentCloudChatUtils.getMd5ByString(name);
     _box = await Hive.openBox("TCCFGLOBAL-$md5");
     console("global box path is ${_box!.path}");

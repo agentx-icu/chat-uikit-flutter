@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:tencent_cloud_chat_common/components/component_config/tencent_cloud_chat_contact_config.dart';
 import 'package:tencent_cloud_chat_common/components/component_event_handlers/tencent_cloud_chat_contact_event_handlers.dart';
 import 'package:tencent_cloud_chat_common/components/components_definition/tencent_cloud_chat_component_base_controller.dart';
@@ -144,8 +145,16 @@ class TencentCloudChatContactData<T> extends TencentCloudChatDataAB<T> {
     TencentCloudChat.instance.eventBusInstance.fire(groupProfileEvent, TencentCloudChatEventBus.eventNameGroup);
   }
 
-  void deleteGroupInfoFromJoinedGroupList(String groupID) {
+  void deleteGroupInfoFromJoinedGroupList(String groupID, {bool fireQuitEvent = true}) {
     _groupList.removeWhere((element) => element.groupID == groupID);
+
+    // fireQuitEvent=false lets a list RECONCILE (delete-then-rebuild) drop an
+    // entry WITHOUT signaling a real group quit/dismiss. The quitGroup event is
+    // consumed by listeners that remove the group from Prefs and clean its
+    // conversation, so a reconcile that re-adds the group immediately must not
+    // fire it (otherwise it has to manually counteract those side-effects).
+    // Real quit/dismiss/leave paths keep the default (true).
+    if (!fireQuitEvent) return;
 
     var groupProfileEvent = TencentCloudChatGroupProfileData(TencentCloudChatGroupProfileDataKeys.quitGroup);
     groupProfileEvent.updateGroupID = groupID;
@@ -220,6 +229,38 @@ class TencentCloudChatContactData<T> extends TencentCloudChatDataAB<T> {
       }
     }
     notifyListener(TencentCloudChatContactDataKeys.blockList as T);
+  }
+
+  /// === in-page contact search query (S49) ===
+  ///
+  /// Drives the contact AZ-list filter. Set from the contact app bar search
+  /// field's `onChanged`; the AZ-list listens to this and rebuilds. Empty
+  /// string means "no filter" (show all contacts).
+  final ValueNotifier<String> contactSearchQuery = ValueNotifier<String>('');
+
+  /// Pure, UI-free helper computing how many contacts match [query] using the
+  /// same case-insensitive contains filter applied to friendRemark / nickName /
+  /// userID that the in-page search field and AZ-list use. An empty/blank query
+  /// returns the full contact count. Intended for deterministic testing of the
+  /// S49 contact search.
+  static int filteredContactCountForQuery(String query) {
+    final List<V2TimFriendInfo> contactList =
+        TencentCloudChat.instance.dataInstance.contact.contactList;
+    return contactList.where((e) => contactMatchesQuery(e, query)).length;
+  }
+
+  /// Whether [item] matches [query] under the S49 contact-search filter rules:
+  /// case-insensitive substring match against friendRemark, nickName, or
+  /// userID. A blank query matches everything.
+  static bool contactMatchesQuery(V2TimFriendInfo item, String query) {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return true;
+    final lower = trimmed.toLowerCase();
+    bool contains(String? value) =>
+        value != null && value.isNotEmpty && value.toLowerCase().contains(lower);
+    return contains(item.friendRemark) ||
+        contains(item.userProfile?.nickName) ||
+        contains(item.userID);
   }
 
   /// === friend list ===

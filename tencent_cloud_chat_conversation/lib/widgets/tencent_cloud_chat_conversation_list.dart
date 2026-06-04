@@ -111,11 +111,17 @@ class TencentCloudChatConversationListState extends TencentCloudChatState<Tencen
           itemBuilder: (context, index) {
             var conversation = conv[index];
             var isOnline = getIsOnline(conversation);
-            return TencentCloudChatConversationItem(
-              key: ValueKey(conversation.conversationID),
-              conversation: conversation,
-              isOnline: isOnline,
-              isSelected: widget.currentConversation?.conversationID == conversation.conversationID && TencentCloudChatUtils.checkString(widget.currentConversation?.conversationID) != null,
+            // Wrap with a KeyedSubtree carrying a namespaced, stable selector
+            // for test/automation while preserving the original element key on
+            // the item (load-bearing for ListView state preservation/recycling).
+            return KeyedSubtree(
+              key: ValueKey('conversation_list_item:${conversation.conversationID}'),
+              child: TencentCloudChatConversationItem(
+                key: ValueKey(conversation.conversationID),
+                conversation: conversation,
+                isOnline: isOnline,
+                isSelected: widget.currentConversation?.conversationID == conversation.conversationID && TencentCloudChatUtils.checkString(widget.currentConversation?.conversationID) != null,
+              ),
             );
           },
         ));

@@ -34,24 +34,32 @@ class TencentCloudChatConversationItem extends StatefulWidget {
   });
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatConversationItemState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatConversationItemState();
 }
 
-class TencentCloudChatConversationItemState extends TencentCloudChatState<TencentCloudChatConversationItem> {
-  final bool useDesktopMode = (TencentCloudChat.instance.dataInstance.conversation.conversationConfig.useDesktopMode) &&
-      (TencentCloudChatScreenAdapter.deviceScreenType == DeviceScreenType.desktop ||
-          TencentCloudChat.instance.dataInstance.conversation.conversationConfig.forceDesktopLayout);
-  TencentCloudChatConversationPresenter conversationPresenter = TencentCloudChatConversationPresenter();
+class TencentCloudChatConversationItemState
+    extends TencentCloudChatState<TencentCloudChatConversationItem> {
+  final bool useDesktopMode = (TencentCloudChat.instance.dataInstance
+          .conversation.conversationConfig.useDesktopMode) &&
+      (TencentCloudChatScreenAdapter.deviceScreenType ==
+              DeviceScreenType.desktop ||
+          TencentCloudChat.instance.dataInstance.conversation.conversationConfig
+              .forceDesktopLayout);
+  TencentCloudChatConversationPresenter conversationPresenter =
+      TencentCloudChatConversationPresenter();
 
   _navigateToMessage() async {
     final options = TencentCloudChatMessageOptions(
-      userID: widget.conversation.groupID == null ? widget.conversation.userID : null,
+      userID: widget.conversation.groupID == null
+          ? widget.conversation.userID
+          : null,
       groupID: widget.conversation.groupID,
       draftText: widget.conversation.draftText,
     );
 
-    final res = await TencentCloudChat
-            .instance.dataInstance.conversation.conversationEventHandlers?.uiEventHandlers.onTapConversationItem
+    final res = await TencentCloudChat.instance.dataInstance.conversation
+            .conversationEventHandlers?.uiEventHandlers.onTapConversationItem
             ?.call(
           conversation: widget.conversation,
           messageOptions: options,
@@ -63,9 +71,11 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
     }
 
     if (useDesktopMode &&
-        TencentCloudChat.instance.dataInstance.basic.usedComponents.contains(TencentCloudChatComponentsEnum.message)) {
+        TencentCloudChat.instance.dataInstance.basic.usedComponents
+            .contains(TencentCloudChatComponentsEnum.message)) {
       // Desktop combined navigator
-      TencentCloudChat.instance.dataInstance.conversation.currentConversation = widget.conversation;
+      TencentCloudChat.instance.dataInstance.conversation.currentConversation =
+          widget.conversation;
     } else if (TencentCloudChat.instance.dataInstance.basic.usedComponents
         .contains(TencentCloudChatComponentsEnum.message)) {
       // Mobile navigator
@@ -82,8 +92,14 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
     return widget.conversation.isPinned ?? false;
   }
 
-  Future<void> _handleSecondaryTap(TapDownDetails details, bool isDesktopScreen) async {
-    final handler = TencentCloudChat.instance.dataInstance.conversation.conversationEventHandlers?.uiEventHandlers
+  Future<void> _handleSecondaryTap(
+      TapDownDetails details, bool isDesktopScreen) async {
+    final handler = TencentCloudChat
+        .instance
+        .dataInstance
+        .conversation
+        .conversationEventHandlers
+        ?.uiEventHandlers
         .onSecondaryTapConversationItem;
     final handled = await handler?.call(
           conversation: widget.conversation,
@@ -150,7 +166,9 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
     ];
 
     final tapDetails = details;
-    final double dy = min(tapDetails.globalPosition.dy, screenHeight - (items.length * 38)).toDouble();
+    final double dy =
+        min(tapDetails.globalPosition.dy, screenHeight - (items.length * 38))
+            .toDouble();
 
     TencentCloudChatDesktopPopup.showColumnMenu(
       context: context,
@@ -160,15 +178,17 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
   }
 
   _markAsRead({Offset? offset}) {
-    TencentCloudChat.instance.chatSDKInstance.manager.getConversationManager().cleanConversationUnreadMessageCount(
+    TencentCloudChat.instance.chatSDKInstance.manager
+        .getConversationManager()
+        .cleanConversationUnreadMessageCount(
           conversationID: widget.conversation.conversationID,
           cleanTimestamp: 0,
           cleanSequence: 0,
         );
   }
 
-  showMoreItemAction(
-      BuildContext context, TencentCloudChatTextStyle fontSize, TencentCloudChatThemeColors colors) async {
+  showMoreItemAction(BuildContext context, TencentCloudChatTextStyle fontSize,
+      TencentCloudChatThemeColors colors) async {
     TextStyle style = TextStyle(
       fontSize: fontSize.fontsize_16,
       fontWeight: FontWeight.w400,
@@ -206,15 +226,17 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
     ];
 
     if (widget.conversation.unreadCount! > 0) {
-      actions.insert(0, BottomSheetAction(
-          title: Text(
-            tL10n.markAsRead,
-            style: style,
-          ),
-          onPressed: (context) {
-            _markAsRead();
-            hideMoreItemAction();
-          }));
+      actions.insert(
+          0,
+          BottomSheetAction(
+              title: Text(
+                tL10n.markAsRead,
+                style: style,
+              ),
+              onPressed: (context) {
+                _markAsRead();
+                hideMoreItemAction();
+              }));
     }
 
     await showAdaptiveActionSheet(
@@ -231,12 +253,11 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
     );
   }
 
-  Widget conversationInner(
-      BuildContext actionContext,
-      TencentCloudChatThemeColors colors,
-      TencentCloudChatTextStyle fontSize) {
+  Widget conversationInner(BuildContext actionContext,
+      TencentCloudChatThemeColors colors, TencentCloudChatTextStyle fontSize) {
     bool pinned = isPin();
-    final isDesktopScreen = TencentCloudChatScreenAdapter.deviceScreenType == DeviceScreenType.desktop;
+    final isDesktopScreen = TencentCloudChatScreenAdapter.deviceScreenType ==
+        DeviceScreenType.desktop;
 
     return Ink(
       decoration: BoxDecoration(
@@ -248,11 +269,14 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
         ),
         color: widget.isSelected
             ? colors.primaryColor.withOpacity(0.05)
-            : (pinned ? colors.conversationItemIsPinedBgColor : colors.conversationItemNormalBgColor),
+            : (pinned
+                ? colors.conversationItemIsPinedBgColor
+                : colors.conversationItemNormalBgColor),
       ),
       child: TencentCloudChatGesture(
         onTap: _navigateToMessage,
-        onSecondaryTapDown: (details) => _handleSecondaryTap(details, isDesktopScreen),
+        onSecondaryTapDown: (details) =>
+            _handleSecondaryTap(details, isDesktopScreen),
         // Use `onLongPressStart` (not `onLongPress`) so the handler gets the
         // exact press globalPosition. Desktop mouse long-press may not fire
         // `onTapDown` first, so caching tap-down details is unreliable —
@@ -266,15 +290,20 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
           ),
           child: Row(
             children: [
-              TencentCloudChat.instance.dataInstance.conversation.conversationBuilder?.getConversationItemAvatarBuilder(
+              TencentCloudChat
+                  .instance.dataInstance.conversation.conversationBuilder
+                  ?.getConversationItemAvatarBuilder(
                 widget.conversation,
                 widget.isOnline,
               ),
-              TencentCloudChat.instance.dataInstance.conversation.conversationBuilder
+              TencentCloudChat
+                  .instance.dataInstance.conversation.conversationBuilder
                   ?.getConversationItemContentBuilder(
                 widget.conversation,
               ),
-              TencentCloudChat.instance.dataInstance.conversation.conversationBuilder?.getConversationItemInfoBuilder(
+              TencentCloudChat
+                  .instance.dataInstance.conversation.conversationBuilder
+                  ?.getConversationItemInfoBuilder(
                 widget.conversation,
               ),
             ],
@@ -289,23 +318,29 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
   }
 
   _hideConversation({Offset? offset}) async {
-    await TencentCloudChat.instance.chatSDKInstance.manager.getConversationManager().markConversation(
-        markType: 8,
-        enableMark: true,
-        conversationIDList: [widget.conversation.conversationID]);
+    await TencentCloudChat.instance.chatSDKInstance.manager
+        .getConversationManager()
+        .markConversation(
+            markType: 8,
+            enableMark: true,
+            conversationIDList: [widget.conversation.conversationID]);
   }
 
   _deleteConversation({Offset? offset}) async {
-    var result = await conversationPresenter
-        .cleanConversation(conversationIDList: [widget.conversation.conversationID], clearMessage: true);
+    var result = await conversationPresenter.cleanConversation(
+        conversationIDList: [widget.conversation.conversationID],
+        clearMessage: true);
 
     if (result.code == 0) {
-      TencentCloudChat.instance.dataInstance.messageData.clearMessageList(userID: widget.conversation.userID, groupID: widget.conversation.groupID);
+      TencentCloudChat.instance.dataInstance.messageData.clearMessageList(
+          userID: widget.conversation.userID,
+          groupID: widget.conversation.groupID);
     }
   }
 
   _pinConversation({Offset? offset}) async {
-    await TencentCloudChat.instance.chatSDKInstance.conversationSDK.pinConversation(
+    await TencentCloudChat.instance.chatSDKInstance.conversationSDK
+        .pinConversation(
       conversationID: widget.conversation.conversationID,
       isPinned: isPin() ? false : true,
     );
@@ -331,45 +366,49 @@ class TencentCloudChatConversationItemState extends TencentCloudChatState<Tencen
 
   @override
   Widget defaultBuilder(BuildContext context) {
-    return _isHidden() ? const SizedBox() : TencentCloudChatThemeWidget(
-      build: (ctx, colors, fontSize) => SwipeActionCell(
-        key: ObjectKey(widget.conversation.conversationID),
-        trailingActions: <SwipeAction>[
-          SwipeAction(
-            title: isPin() ? tL10n.unpin : tL10n.pin,
-            onTap: (CompletionHandler handler) async {
-              await _pinConversation();
-            },
-            color: colors.conversationItemSwipeActionOneBgColor,
-            icon: Icon(
-              isPin() ? Icons.vertical_align_bottom_rounded : Icons.vertical_align_top_rounded,
-              color: colors.conversationItemSwipeActionOneTextColor,
+    return _isHidden()
+        ? const SizedBox()
+        : TencentCloudChatThemeWidget(
+            build: (ctx, colors, fontSize) => SwipeActionCell(
+              key: ObjectKey(widget.conversation.conversationID),
+              trailingActions: <SwipeAction>[
+                SwipeAction(
+                  title: isPin() ? tL10n.unpin : tL10n.pin,
+                  onTap: (CompletionHandler handler) async {
+                    await _pinConversation();
+                  },
+                  color: colors.conversationItemSwipeActionOneBgColor,
+                  icon: Icon(
+                    isPin()
+                        ? Icons.vertical_align_bottom_rounded
+                        : Icons.vertical_align_top_rounded,
+                    color: colors.conversationItemSwipeActionOneTextColor,
+                  ),
+                  style: TextStyle(
+                    fontSize: fontSize.fontsize_12,
+                    color: colors.conversationItemSwipeActionOneTextColor,
+                  ),
+                ),
+                SwipeAction(
+                  title: tL10n.more,
+                  onTap: (CompletionHandler handler) async {
+                    await showMoreItemAction(ctx, fontSize, colors);
+                  },
+                  color: colors.conversationItemSwipeActionTwoBgColor,
+                  icon: Icon(
+                    Icons.expand_circle_down_outlined,
+                    color: colors.conversationItemSwipeActionTwoTextColor,
+                  ),
+                  style: TextStyle(
+                    fontSize: fontSize.fontsize_12,
+                    color: colors.conversationItemSwipeActionTwoTextColor,
+                  ),
+                ),
+              ],
+              backgroundColor: Colors.transparent,
+              child: conversationInner(ctx, colors, fontSize),
             ),
-            style: TextStyle(
-              fontSize: fontSize.fontsize_12,
-              color: colors.conversationItemSwipeActionOneTextColor,
-            ),
-          ),
-          SwipeAction(
-            title: tL10n.more,
-            onTap: (CompletionHandler handler) async {
-              await showMoreItemAction(ctx, fontSize, colors);
-            },
-            color: colors.conversationItemSwipeActionTwoBgColor,
-            icon: Icon(
-              Icons.expand_circle_down_outlined,
-              color: colors.conversationItemSwipeActionTwoTextColor,
-            ),
-            style: TextStyle(
-              fontSize: fontSize.fontsize_12,
-              color: colors.conversationItemSwipeActionTwoTextColor,
-            ),
-          ),
-        ],
-        backgroundColor: Colors.transparent,
-        child: conversationInner(ctx, colors, fontSize),
-      ),
-    );
+          );
   }
 }
 
@@ -384,7 +423,8 @@ class TencentCloudChatConversationItemAvatar extends StatefulWidget {
   });
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatConversationItemAvatarState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatConversationItemAvatarState();
 }
 
 class TencentCloudChatConversationItemAvatarState
@@ -395,7 +435,8 @@ class TencentCloudChatConversationItemAvatarState
 
   @override
   Widget defaultBuilder(BuildContext context) {
-    final isDesktop = TencentCloudChatScreenAdapter.deviceScreenType == DeviceScreenType.desktop;
+    final isDesktop = TencentCloudChatScreenAdapter.deviceScreenType ==
+        DeviceScreenType.desktop;
     return TencentCloudChatThemeWidget(
       build: (ctx, colors, fonts) => Padding(
         padding: EdgeInsets.symmetric(
@@ -424,8 +465,13 @@ class TencentCloudChatConversationItemAvatarState
                   width: getSquareSize(isDesktop ? 9 : 10),
                   height: getSquareSize(isDesktop ? 9 : 10),
                   child: Container(
+                    key: ValueKey(
+                      'conversation_item_online_dot:${widget.conversation.conversationID}',
+                    ),
                     decoration: BoxDecoration(
-                      color: widget.isOnline ? colors.conversationItemUserStatusBgColor : Colors.transparent,
+                      color: widget.isOnline
+                          ? colors.conversationItemUserStatusBgColor
+                          : Colors.transparent,
                       borderRadius: BorderRadius.all(
                         Radius.circular(
                           getSquareSize(5),
@@ -452,7 +498,8 @@ class TencentCloudChatConversationItemContent extends StatefulWidget {
   });
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatConversationItemContentState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatConversationItemContentState();
 }
 
 class TencentCloudChatConversationItemContentState
@@ -499,7 +546,8 @@ class TencentCloudChatConversationItemContentState
     return wid;
   }
 
-  getDraftWidget(TencentCloudChatTextStyle textStyle, TencentCloudChatThemeColors colorTheme) {
+  getDraftWidget(TencentCloudChatTextStyle textStyle,
+      TencentCloudChatThemeColors colorTheme) {
     var draft = getDraftText();
     Widget draftWidget = draft.isEmpty
         ? Container()
@@ -514,7 +562,8 @@ class TencentCloudChatConversationItemContentState
     return draftWidget;
   }
 
-  getLastMessageWidget(TencentCloudChatTextStyle textStyle, TencentCloudChatThemeColors colorTheme) {
+  getLastMessageWidget(TencentCloudChatTextStyle textStyle,
+      TencentCloudChatThemeColors colorTheme) {
     final laseMessage = widget.conversation.lastMessage;
     String originalText = TencentCloudChatUtils.getMessageSummary(
       message: laseMessage,
@@ -523,7 +572,8 @@ class TencentCloudChatConversationItemContentState
       draftText: widget.conversation.draftText,
     );
 
-    String replaceText = FaceManager.emojiMap.keys.fold(originalText, (previous, key) {
+    String replaceText =
+        FaceManager.emojiMap.keys.fold(originalText, (previous, key) {
       return previous.replaceAll(key, FaceManager.emojiMap[key]!);
     });
 
@@ -559,7 +609,8 @@ class TencentCloudChatConversationItemContentState
     return atType;
   }
 
-  getGroupAtInfo(TencentCloudChatTextStyle textStyle, TencentCloudChatThemeColors colorTheme) {
+  getGroupAtInfo(TencentCloudChatTextStyle textStyle,
+      TencentCloudChatThemeColors colorTheme) {
     List<Widget> tips = [];
 
     var style = TextStyle(
@@ -618,7 +669,8 @@ class TencentCloudChatConversationItemContentState
     final hasUnread = (widget.conversation.unreadCount ?? 0) > 0;
     final titleWeight = hasUnread ? FontWeight.w600 : FontWeight.w500;
     return Expanded(
-      child: TencentCloudChatThemeWidget(build: (context, colorTheme, textStyle) {
+      child:
+          TencentCloudChatThemeWidget(build: (context, colorTheme, textStyle) {
         Widget status = getLastMessageStatus(colorTheme);
         Widget draft = getDraftWidget(textStyle, colorTheme);
         Widget lastMessage = getLastMessageWidget(textStyle, colorTheme);
@@ -628,7 +680,8 @@ class TencentCloudChatConversationItemContentState
           mainAxisSize: MainAxisSize.max,
           children: [
             Text(
-              widget.conversation.showName ?? widget.conversation.conversationID,
+              widget.conversation.showName ??
+                  widget.conversation.conversationID,
               style: TextStyle(
                 fontSize: textStyle.fontsize_13,
                 fontWeight: titleWeight,
@@ -660,7 +713,8 @@ class TencentCloudChatConversationItemContentState
     final hasUnread = (widget.conversation.unreadCount ?? 0) > 0;
     final titleWeight = hasUnread ? FontWeight.w600 : FontWeight.w500;
     return Expanded(
-      child: TencentCloudChatThemeWidget(build: (context, colorTheme, textStyle) {
+      child:
+          TencentCloudChatThemeWidget(build: (context, colorTheme, textStyle) {
         Widget status = getLastMessageStatus(colorTheme);
         Widget draft = getDraftWidget(textStyle, colorTheme);
         Widget lastMessage = getLastMessageWidget(textStyle, colorTheme);
@@ -670,7 +724,8 @@ class TencentCloudChatConversationItemContentState
           mainAxisSize: MainAxisSize.max,
           children: [
             Text(
-              widget.conversation.showName ?? widget.conversation.conversationID,
+              widget.conversation.showName ??
+                  widget.conversation.conversationID,
               style: TextStyle(
                 fontSize: textStyle.fontsize_14,
                 fontWeight: titleWeight,
@@ -698,14 +753,17 @@ class TencentCloudChatConversationItemContentState
 class TencentCloudChatConversationItemInfoUnreadCount extends StatefulWidget {
   final V2TimConversation conversation;
 
-  const TencentCloudChatConversationItemInfoUnreadCount({super.key, required this.conversation});
+  const TencentCloudChatConversationItemInfoUnreadCount(
+      {super.key, required this.conversation});
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatConversationItemInfoUnreadCountState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatConversationItemInfoUnreadCountState();
 }
 
 class TencentCloudChatConversationItemInfoUnreadCountState
-    extends TencentCloudChatState<TencentCloudChatConversationItemInfoUnreadCount> {
+    extends TencentCloudChatState<
+        TencentCloudChatConversationItemInfoUnreadCount> {
   bool hasUnreadCount() {
     bool has = false;
     if (widget.conversation.unreadCount != null) {
@@ -727,7 +785,8 @@ class TencentCloudChatConversationItemInfoUnreadCountState
     return text;
   }
 
-  Widget unreadCountWidget(context, TencentCloudChatThemeColors colorTheme, textStyle) {
+  Widget unreadCountWidget(
+      context, TencentCloudChatThemeColors colorTheme, textStyle) {
     String text = unReadCountDisplayText();
     return Container(
       height: getHeight(16),
@@ -795,11 +854,13 @@ class TencentCloudChatConversationItemInfoTimeAndStatus extends StatefulWidget {
   });
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatConversationItemInfoTimeAndStatusState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatConversationItemInfoTimeAndStatusState();
 }
 
 class TencentCloudChatConversationItemInfoTimeAndStatusState
-    extends TencentCloudChatState<TencentCloudChatConversationItemInfoTimeAndStatus> {
+    extends TencentCloudChatState<
+        TencentCloudChatConversationItemInfoTimeAndStatus> {
   bool hasLastMessage() {
     return widget.conversation.lastMessage != null;
   }
@@ -850,10 +911,12 @@ class TencentCloudChatConversationItemInfo extends StatefulWidget {
   });
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatConversationItemInfoState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatConversationItemInfoState();
 }
 
-class TencentCloudChatConversationItemInfoState extends TencentCloudChatState<TencentCloudChatConversationItemInfo> {
+class TencentCloudChatConversationItemInfoState
+    extends TencentCloudChatState<TencentCloudChatConversationItemInfo> {
   @override
   Widget defaultBuilder(BuildContext context) {
     return SizedBox(

@@ -178,8 +178,58 @@ class TencentCloudChatAppBarSearchItem extends StatefulWidget {
 }
 
 class TencentCloudChatAppBarSearchItemState extends TencentCloudChatState<TencentCloudChatAppBarSearchItem> {
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onChanged);
+  }
+
+  void _onChanged() {
+    // Drive the AZ-list filter via the shared query notifier, and rebuild so the
+    // clear-button suffix appears/disappears.
+    TencentCloudChat.instance.dataInstance.contact.contactSearchQuery.value = _searchController.text;
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onChanged);
+    _searchController.dispose();
+    _focusNode.dispose();
+    // Reset the filter so the contact list isn't left filtered after the bar is gone.
+    TencentCloudChat.instance.dataInstance.contact.contactSearchQuery.value = '';
+    super.dispose();
+  }
+
   @override
   Widget defaultBuilder(BuildContext context) {
-    return Container();
+    return TextField(
+      key: const ValueKey('contact_search_field'),
+      focusNode: _focusNode,
+      maxLines: 1,
+      controller: _searchController,
+      style: const TextStyle(fontSize: 14),
+      decoration: InputDecoration(
+        hintText: tL10n.search,
+        filled: true,
+        isDense: true,
+        hintStyle: const TextStyle(fontSize: 14),
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon: _searchController.text.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.clear),
+                onPressed: () {
+                  _searchController.clear();
+                  _focusNode.unfocus();
+                },
+              )
+            : null,
+        border: const OutlineInputBorder(borderSide: BorderSide.none),
+        contentPadding: const EdgeInsets.all(0),
+      ),
+    );
   }
 }

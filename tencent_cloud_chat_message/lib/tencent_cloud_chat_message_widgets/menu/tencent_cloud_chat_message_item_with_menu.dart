@@ -247,6 +247,11 @@ class _TencentCloudChatMessageItemWithMenuState extends TencentCloudChatState<Te
         data: list
             .map((e) => TencentCloudChatMessageGeneralOptionItem(
           label: e.label,
+          // Preserve id so the action token resolves the same as mobile.
+          id: e.id,
+          // Stable test/automation handle for the desktop context-menu entry.
+          // Mirrors the mobile long-press menu key contract.
+          valueKey: tencentCloudChatMessageMenuKeyForOption(e),
           onTap: ({Offset? offset}) {
             _removeDesktopMenu();
             e.onTap();
@@ -275,6 +280,10 @@ class _TencentCloudChatMessageItemWithMenuState extends TencentCloudChatState<Te
             Material(
               color: Colors.transparent,
               child: InkWell(
+                // Stable test/automation handle for the long-press menu entry.
+                // Action token is derived from the option id (e.g. copy, reply,
+                // multiSelect, forward, delete, recall) so it survives locale changes.
+                key: tencentCloudChatMessageMenuKeyForOption(e),
                 onTap: () {
                   _closeMobileMenu();
                   e.onTap();
@@ -699,4 +708,53 @@ class _TencentCloudChatMessageItemWithMenuState extends TencentCloudChatState<Te
   Widget tabletAppBuilder(BuildContext context) {
     return defaultBuilder(context);
   }
+}
+
+/// Maps a message-menu option to a stable, locale-independent action token used
+/// in `ValueKey('message_menu_item:<action>')` for UI automation.
+///
+/// The built-in UIKit options carry an `id` like `_uikit_copy_message`; this
+/// strips the `_uikit_` prefix and `_message` suffix and normalizes a few names
+/// to the canonical action vocabulary the harness targets
+/// ({delete, copy, forward, reply, recall, multiSelect, ...}). Returns `null`
+/// for custom options added via `additionalMessageMenuOptions`: their id/label
+/// is arbitrary and two such entries could collide into duplicate sibling
+/// ValueKeys (a Flutter error), so only the known built-ins are keyed.
+String? tencentCloudChatMessageMenuActionForOption(
+    TencentCloudChatMessageGeneralOptionItem option) {
+  final String? id = option.id;
+  switch (id) {
+    case '_uikit_copy_message':
+      return 'copy';
+    case '_uikit_quote_message':
+      return 'reply';
+    case '_uikit_multi_message':
+      return 'multiSelect';
+    case '_uikit_forward_message':
+      return 'forward';
+    case '_uikit_delete_message':
+      return 'delete';
+    case '_uikit_revoke_message':
+      return 'recall';
+    case '_uikit_read_receipt':
+      return 'readReceipt';
+    case '_uikit_translate':
+      return 'translate';
+    case '_uikit_convert_to_text':
+      return 'convertToText';
+    case '_uikit_reveal_file_location':
+      return 'revealFileLocation';
+    default:
+      // Custom / additional options are intentionally NOT keyed (see above):
+      // arbitrary id/label can produce duplicate sibling keys.
+      return null;
+  }
+}
+
+/// The stable automation [Key] for a built-in message-menu option, or `null`
+/// for a custom/additional option (left unkeyed to avoid duplicate siblings).
+Key? tencentCloudChatMessageMenuKeyForOption(
+    TencentCloudChatMessageGeneralOptionItem option) {
+  final action = tencentCloudChatMessageMenuActionForOption(option);
+  return action == null ? null : ValueKey('message_menu_item:$action');
 }

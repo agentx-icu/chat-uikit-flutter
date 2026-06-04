@@ -323,7 +323,7 @@ class _TencentCloudChatMessageInputDesktopState extends TencentCloudChatState<Te
   List<Widget> _generateBarIcons(TencentCloudChatThemeColors theme) {
     return widget.inputData.attachmentOptions.map((e) {
       final GlobalKey toolbarKey = GlobalKey();
-      return Container(
+      final Widget iconContainer = Container(
         key: toolbarKey,
         margin: const EdgeInsets.only(right: 10),
         child: InkWell(
@@ -376,6 +376,17 @@ class _TencentCloudChatMessageInputDesktopState extends TencentCloudChatState<Te
           ),
         ),
       );
+      // The sticker/emoji panel trigger is the data-driven option carrying the
+      // sticker asset (see input container). Wrap only that option in a
+      // KeyedSubtree with a stable selector for test/automation, preserving the
+      // load-bearing `toolbarKey` GlobalKey used for the panel offset math.
+      if (e.iconAsset?.path == "lib/assets/send_face.svg") {
+        return KeyedSubtree(
+          key: const ValueKey('sticker_panel_button'),
+          child: iconContainer,
+        );
+      }
+      return iconContainer;
     }).toList();
   }
 

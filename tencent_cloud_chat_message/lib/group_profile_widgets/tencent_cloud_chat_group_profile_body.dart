@@ -408,7 +408,8 @@ class TencentCloudChatGroupProfileContentState
                         fontSize: textStyle.fontsize_12,
                         color: chatId != null && chatId!.isNotEmpty
                             ? colorTheme.groupProfileTextColor
-                            : colorTheme.groupProfileTextColor?.withOpacity(0.5),
+                            : colorTheme.groupProfileTextColor
+                                ?.withOpacity(0.5),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -1553,6 +1554,7 @@ class TencentCloudChatGroupProfileGroupMemberState
                     )),
                 checkCanAddMember()
                     ? Container(
+                        key: const ValueKey('group_add_member_button'),
                         padding: EdgeInsets.symmetric(
                             horizontal: getWidth(16), vertical: getHeight(12)),
                         width: MediaQuery.of(context).size.width,

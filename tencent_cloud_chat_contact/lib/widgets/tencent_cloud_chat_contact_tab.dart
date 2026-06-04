@@ -14,7 +14,8 @@ class TencentCloudChatContactTabItem extends StatefulWidget {
   State<StatefulWidget> createState() => TencentCloudChatContactTabItemState();
 }
 
-class TencentCloudChatContactTabItemState extends TencentCloudChatState<TencentCloudChatContactTabItem> {
+class TencentCloudChatContactTabItemState
+    extends TencentCloudChatState<TencentCloudChatContactTabItem> {
   @override
   Widget defaultBuilder(BuildContext context) {
     return TencentCloudChatContactTab(item: widget.item);
@@ -30,23 +31,35 @@ class TencentCloudChatContactTab extends StatefulWidget {
   State<StatefulWidget> createState() => TencentCloudChatContactTabState();
 }
 
-class TencentCloudChatContactTabState extends TencentCloudChatState<TencentCloudChatContactTab> {
+class TencentCloudChatContactTabState
+    extends TencentCloudChatState<TencentCloudChatContactTab> {
   Widget getUnreadCount() {
     if (widget.item.unreadCount != null) {
-      return TencentCloudChatContactTabItemApplicationCount(count: widget.item.unreadCount ?? 0);
+      return TencentCloudChatContactTabItemApplicationCount(
+          count: widget.item.unreadCount ?? 0);
     }
     return Container();
   }
 
   @override
   Widget defaultBuilder(BuildContext context) {
+    final tabKey = switch (widget.item.id) {
+      'new_contacts' => const ValueKey('contact_new_contacts_tab'),
+      'group_notification' => const ValueKey('contact_group_notifications_tab'),
+      'blocked_users' => const ValueKey('contact_blocked_users_tab'),
+      _ => null,
+    };
     return TencentCloudChatThemeWidget(
       build: (context, colorTheme, textStyle) => GestureDetector(
+        key: tabKey,
         onTap: widget.item.onTap,
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: getHeight(12), horizontal: getWidth(16)),
+          padding: EdgeInsets.symmetric(
+              vertical: getHeight(12), horizontal: getWidth(16)),
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: colorTheme.contactItemTabItemBorderColor)),
+            border: Border(
+                bottom: BorderSide(
+                    color: colorTheme.contactItemTabItemBorderColor)),
             color: colorTheme.contactTabItemBackgroundColor,
           ),
           child: Row(
@@ -70,7 +83,10 @@ class TencentCloudChatContactTabState extends TencentCloudChatState<TencentCloud
                         children: [
                           Text(
                             widget.item.name,
-                            style: TextStyle(fontSize: textStyle.fontsize_16, fontWeight: FontWeight.w400, color: colorTheme.contactItemTabItemNameColor),
+                            style: TextStyle(
+                                fontSize: textStyle.fontsize_16,
+                                fontWeight: FontWeight.w400,
+                                color: colorTheme.contactItemTabItemNameColor),
                           ),
                           Expanded(
                             child: Container(),
@@ -91,16 +107,25 @@ class TencentCloudChatContactTabState extends TencentCloudChatState<TencentCloud
 
   @override
   Widget desktopBuilder(BuildContext context) {
+    final tabKey = switch (widget.item.id) {
+      'new_contacts' => const ValueKey('contact_new_contacts_tab'),
+      'group_notification' => const ValueKey('contact_group_notifications_tab'),
+      'blocked_users' => const ValueKey('contact_blocked_users_tab'),
+      _ => null,
+    };
     return TencentCloudChatThemeWidget(
       build: (context, colorTheme, textStyle) => Material(
         color: colorTheme.contactTabItemBackgroundColor,
         child: InkWell(
+          key: tabKey,
           onTap: widget.item.onTap,
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: getHeight(12), horizontal: getWidth(16)),
+            padding: EdgeInsets.symmetric(
+                vertical: getHeight(12), horizontal: getWidth(16)),
             decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: colorTheme.contactItemTabItemBorderColor),
+                bottom:
+                    BorderSide(color: colorTheme.contactItemTabItemBorderColor),
               ),
             ),
             child: Row(
@@ -118,7 +143,9 @@ class TencentCloudChatContactTabState extends TencentCloudChatState<TencentCloud
                       children: [
                         Text(
                           widget.item.name,
-                          style: TextStyle(fontSize: textStyle.fontsize_14, color: colorTheme.secondaryTextColor),
+                          style: TextStyle(
+                              fontSize: textStyle.fontsize_14,
+                              color: colorTheme.secondaryTextColor),
                         ),
                         Expanded(
                           child: Container(),
@@ -150,10 +177,13 @@ class TencentCloudChatContactTabItemApplicationCount extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatContactTabItemApplicationCountState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatContactTabItemApplicationCountState();
 }
 
-class TencentCloudChatContactTabItemApplicationCountState extends TencentCloudChatState<TencentCloudChatContactTabItemApplicationCount> {
+class TencentCloudChatContactTabItemApplicationCountState
+    extends TencentCloudChatState<
+        TencentCloudChatContactTabItemApplicationCount> {
   @override
   Widget defaultBuilder(BuildContext context) {
     if (widget.count > 0) {

@@ -136,6 +136,8 @@ class TencentCloudChatContactItemState extends TencentCloudChatState<TencentClou
       build: (context, color, textStyle) => Material(
         color: color.backgroundColor,
         child: InkWell(
+          // Stable automation handle for the contact list item.
+          key: ValueKey('contact_list_item:${widget.friend.userID}'),
           onTap: navigateToChat,
           onLongPress: platformIsDesktop ? null : _showMobileContextMenu,
           onSecondaryTapDown: platformIsDesktop
