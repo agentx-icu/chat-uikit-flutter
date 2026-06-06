@@ -636,6 +636,13 @@ class TencentCloudChatUserProfileDeleteButton extends StatefulWidget {
 
 class TencentCloudChatUserProfileDeleteButtonState
     extends TencentCloudChatState<TencentCloudChatUserProfileDeleteButton> {
+  void _popProfileIfCurrent() {
+    final route = ModalRoute.of(context);
+    if (route != null && route.isCurrent) {
+      Navigator.of(context).pop();
+    }
+  }
+
   showClearChatHistoryDialog() async {
     TencentCloudChatDialog.showAdaptiveDialog(
       context: context,
@@ -696,7 +703,10 @@ class TencentCloudChatUserProfileDeleteButtonState
           ));
 
       if (errorCode == 0) {
-        Navigator.of(context).pop();
+        // Real-UI automation can double-fire route-popping buttons; only pop
+        // the profile while this route is still current so an extra callback
+        // cannot unwind the root HomePage and blank the window.
+        _popProfileIfCurrent();
       }
     }
   }

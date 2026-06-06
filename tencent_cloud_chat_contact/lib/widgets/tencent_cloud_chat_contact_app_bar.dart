@@ -111,6 +111,7 @@ class TencentCloudChatContactAppBarNameState extends TencentCloudChatState<Tence
           MenuAnchor(
             builder: (BuildContext context, MenuController controller, Widget? child) {
               return IconButton(
+                key: const ValueKey('contact_app_bar_menu_button'),
                 icon: Icon(Icons.maps_ugc_outlined, size: getSquareSize(20), color: colorTheme.contactAppBarIconColor),
                 onPressed: () {
                   if (controller.isOpen) {
@@ -123,8 +124,16 @@ class TencentCloudChatContactAppBarNameState extends TencentCloudChatState<Tence
               );
             },
             menuChildren: [
-              MenuItemButton(onPressed: addContacts, child: Text(tL10n.addContact)),
-              MenuItemButton(onPressed: addGroup, child: Text(tL10n.addGroup))
+              MenuItemButton(
+                key: const ValueKey('contact_app_bar_add_contact_item'),
+                onPressed: addContacts,
+                child: Text(tL10n.addContact),
+              ),
+              MenuItemButton(
+                key: const ValueKey('contact_app_bar_add_group_item'),
+                onPressed: addGroup,
+                child: Text(tL10n.addGroup),
+              )
             ],
           ),
         ],
@@ -148,6 +157,7 @@ class TencentCloudChatContactAppBarNameState extends TencentCloudChatState<Tence
           MenuAnchor(
             builder: (BuildContext context, MenuController controller, Widget? child) {
               return IconButton(
+                key: const ValueKey('contact_app_bar_menu_button'),
                 icon: Icon(Icons.maps_ugc_outlined, size: getSquareSize(20), color: colorTheme.contactAppBarIconColor),
                 onPressed: () {
                   if (controller.isOpen) {
@@ -160,8 +170,16 @@ class TencentCloudChatContactAppBarNameState extends TencentCloudChatState<Tence
               );
             },
             menuChildren: [
-              MenuItemButton(onPressed: addContacts, child: Text(tL10n.addContact)),
-              MenuItemButton(onPressed: addGroup, child: Text(tL10n.addGroup))
+              MenuItemButton(
+                key: const ValueKey('contact_app_bar_add_contact_item'),
+                onPressed: addContacts,
+                child: Text(tL10n.addContact),
+              ),
+              MenuItemButton(
+                key: const ValueKey('contact_app_bar_add_group_item'),
+                onPressed: addGroup,
+                child: Text(tL10n.addGroup),
+              )
             ],
           ),
         ],
