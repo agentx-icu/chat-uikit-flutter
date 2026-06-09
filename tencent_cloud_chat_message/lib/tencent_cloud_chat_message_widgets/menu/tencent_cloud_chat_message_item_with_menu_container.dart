@@ -458,6 +458,7 @@ class _TencentCloudChatMessageItemWithMenuContainerState
                   ],
                 );
               } else {
+                var handled = false;
                 TencentCloudChatDialog.showAdaptiveDialog(
                   context: context,
                   title: Text(tL10n.confirmDeletion),
@@ -469,6 +470,8 @@ class _TencentCloudChatMessageItemWithMenuContainerState
                         // primary action. Mirrors the desktop popup key.
                         key: const ValueKey('confirm_dialog_primary_button'),
                         onPressed: () {
+                          if (handled) return;
+                          handled = true;
                           dataProvider.deleteMessagesForMe(messages: [_message]);
                           Navigator.pop(context);
                         },
@@ -476,6 +479,8 @@ class _TencentCloudChatMessageItemWithMenuContainerState
                       ),
                     TextButton(
                       onPressed: () {
+                        if (handled) return;
+                        handled = true;
                         Navigator.pop(context);
                       },
                       child: Text(tL10n.cancel),
@@ -503,6 +508,7 @@ class _TencentCloudChatMessageItemWithMenuContainerState
                       dataProvider.recallMessage(message: _message);
                     });
               } else {
+                var handled = false;
                 TencentCloudChatDialog.showAdaptiveDialog(
                   context: context,
                   title: Text(tL10n.messageRecall),
@@ -510,6 +516,8 @@ class _TencentCloudChatMessageItemWithMenuContainerState
                   actions: [
                     TextButton(
                       onPressed: () {
+                        if (handled) return;
+                        handled = true;
                         dataProvider.recallMessage(message: _message);
                         Navigator.pop(context);
                       },
@@ -517,6 +525,8 @@ class _TencentCloudChatMessageItemWithMenuContainerState
                     ),
                     TextButton(
                       onPressed: () {
+                        if (handled) return;
+                        handled = true;
                         Navigator.pop(context);
                       },
                       child: Text(tL10n.cancel),

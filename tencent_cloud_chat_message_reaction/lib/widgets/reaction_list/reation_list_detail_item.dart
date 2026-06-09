@@ -91,7 +91,22 @@ class TencentCloudChatMessageReactionListDetailItem extends StatelessWidget {
                               IconButton(
                                   icon: const Icon(Icons.close),
                                   onPressed: () {
-                                    Navigator.of(context).pop();
+                                    // Guard against a double-fired tap (real fast
+                                    // double-click or a test harness dispatching a
+                                    // synthetic pointer AND directly invoking
+                                    // onPressed). The second pop would unwind the
+                                    // page under the sheet and blank the app.
+                                    // `ModalRoute.isCurrent` flips false inside the
+                                    // first pop, so the guarded second call no-ops.
+                                    // Inlined rather than using the fork-local
+                                    // `popDialogIfCurrent` helper because this
+                                    // package resolves `tencent_cloud_chat_common`
+                                    // from pub.dev (not the local fork), so that
+                                    // import is unavailable here.
+                                    final route = ModalRoute.of(context);
+                                    if (route != null && route.isCurrent) {
+                                      Navigator.of(context).pop();
+                                    }
                                   }),
                             ],
                           ),

@@ -204,6 +204,13 @@ class TencentCloudChatConversationItemState
       fontWeight: FontWeight.w600,
       color: colors.conversationItemMoreActionItemNormalTextColor,
     );
+    // One-shot guard against a double-fired action (real fast double-tap or a
+    // test harness that dispatches a synthetic pointer AND directly invokes
+    // onPressed). Without it the second `hideMoreItemAction()` pop unwinds the
+    // page under the sheet and blanks the app. These callbacks capture the
+    // State context (not the sheet builder context), so a one-shot flag at the
+    // call site is the right tool rather than `popDialogIfCurrent`.
+    var handled = false;
     final actions = <BottomSheetAction>[
       BottomSheetAction(
           title: Text(
@@ -211,6 +218,8 @@ class TencentCloudChatConversationItemState
             style: style,
           ),
           onPressed: (context) async {
+            if (handled) return;
+            handled = true;
             await _hideConversation();
             hideMoreItemAction();
           }),
@@ -220,6 +229,8 @@ class TencentCloudChatConversationItemState
             style: deleteStyle,
           ),
           onPressed: (context) async {
+            if (handled) return;
+            handled = true;
             await _deleteConversation();
             hideMoreItemAction();
           }),
@@ -234,6 +245,8 @@ class TencentCloudChatConversationItemState
                 style: style,
               ),
               onPressed: (context) {
+                if (handled) return;
+                handled = true;
                 _markAsRead();
                 hideMoreItemAction();
               }));
@@ -249,7 +262,15 @@ class TencentCloudChatConversationItemState
           tL10n.cancel,
           style: cancelStyle,
         ),
-      ), // onPressed parameter is optional by default will dismiss the ActionSheet
+        // Without an explicit onPressed the library default-dismisses with a raw
+        // Navigator.pop — vulnerable to the same double-fire blank. Route it
+        // through the shared one-shot flag so a double-tap pops exactly once.
+        onPressed: (ctx) {
+          if (handled) return;
+          handled = true;
+          Navigator.of(ctx).pop();
+        },
+      ),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 
 class ChooseGroupAvatar extends StatefulWidget {
   String groupID;
@@ -34,7 +35,7 @@ class ChooseGroupAvatarState extends TencentCloudChatState<ChooseGroupAvatar> {
               appBar: AppBar(
                 leadingWidth: getWidth(100),
                 leading: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: () => popDialogIfCurrent(context),
                   child: Row(children: [
                     Padding(padding: EdgeInsets.only(left: getWidth(10))),
                     Icon(

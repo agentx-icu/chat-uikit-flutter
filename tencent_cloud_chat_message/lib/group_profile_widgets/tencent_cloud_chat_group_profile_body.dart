@@ -11,6 +11,7 @@ import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_
 import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_navigator.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_common/log/tencent_cloud_chat_log.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
@@ -947,10 +948,13 @@ class TencentCloudChatGroupProfileGroupManagementState
       return;
     }
 
+    var handled = false;
     List<CupertinoActionSheetAction> action = [
       CupertinoActionSheetAction(
         isDefaultAction: false,
         onPressed: () {
+          if (handled) return;
+          handled = true;
           _onChangeGroupApplicationType(GroupAddOptType.V2TIM_GROUP_ADD_FORBID);
           Navigator.pop(context);
         },
@@ -959,6 +963,8 @@ class TencentCloudChatGroupProfileGroupManagementState
       CupertinoActionSheetAction(
         isDefaultAction: false,
         onPressed: () {
+          if (handled) return;
+          handled = true;
           _onChangeGroupApplicationType(GroupAddOptType.V2TIM_GROUP_ADD_AUTH);
           Navigator.pop(context);
         },
@@ -967,6 +973,8 @@ class TencentCloudChatGroupProfileGroupManagementState
       CupertinoActionSheetAction(
         isDefaultAction: false,
         onPressed: () {
+          if (handled) return;
+          handled = true;
           _onChangeGroupApplicationType(GroupAddOptType.V2TIM_GROUP_ADD_ANY);
           Navigator.pop(context);
         },
@@ -981,7 +989,7 @@ class TencentCloudChatGroupProfileGroupManagementState
                   cancelButton: CupertinoActionSheetAction(
                     isDefaultAction: true,
                     onPressed: () {
-                      Navigator.pop(context);
+                      popDialogIfCurrent(context);
                     },
                     child: Text(tL10n.cancel),
                   ),
@@ -993,10 +1001,13 @@ class TencentCloudChatGroupProfileGroupManagementState
       return;
     }
 
+    var handled = false;
     List<CupertinoActionSheetAction> action = [
       CupertinoActionSheetAction(
         isDefaultAction: false,
         onPressed: () {
+          if (handled) return;
+          handled = true;
           _onChangeInviteToGroupType(GroupAddOptType.V2TIM_GROUP_ADD_FORBID);
           Navigator.pop(context);
         },
@@ -1005,6 +1016,8 @@ class TencentCloudChatGroupProfileGroupManagementState
       CupertinoActionSheetAction(
         isDefaultAction: false,
         onPressed: () {
+          if (handled) return;
+          handled = true;
           _onChangeInviteToGroupType(GroupAddOptType.V2TIM_GROUP_ADD_AUTH);
           Navigator.pop(context);
         },
@@ -1013,6 +1026,8 @@ class TencentCloudChatGroupProfileGroupManagementState
       CupertinoActionSheetAction(
         isDefaultAction: false,
         onPressed: () {
+          if (handled) return;
+          handled = true;
           _onChangeInviteToGroupType(GroupAddOptType.V2TIM_GROUP_ADD_ANY);
           Navigator.pop(context);
         },
@@ -1027,7 +1042,7 @@ class TencentCloudChatGroupProfileGroupManagementState
                   cancelButton: CupertinoActionSheetAction(
                     isDefaultAction: true,
                     onPressed: () {
-                      Navigator.pop(context);
+                      popDialogIfCurrent(context);
                     },
                     child: Text(tL10n.cancel),
                   ),
@@ -1301,13 +1316,13 @@ class TencentCloudChatGroupProfileNickNameState
               CupertinoDialogAction(
                 onPressed: () {
                   _onChangeGrouopNameCard(mid);
-                  Navigator.pop(context);
+                  popDialogIfCurrent(context);
                 },
                 child: Text(tL10n.confirm),
               ),
               CupertinoDialogAction(
                 onPressed: () {
-                  Navigator.pop(context);
+                  popDialogIfCurrent(context);
                 },
                 child: Text(tL10n.cancel),
               ),

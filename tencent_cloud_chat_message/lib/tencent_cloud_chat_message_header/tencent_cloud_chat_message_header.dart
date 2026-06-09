@@ -3,6 +3,7 @@ import 'package:tencent_cloud_chat_common/components/components_definition/tence
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_screen_adapter.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 
 class TencentCloudChatMessageHeader extends StatefulWidget {
   final MessageHeaderBuilderWidgets widgets;
@@ -41,7 +42,7 @@ class _TencentCloudChatMessageHeaderState
                 if (!isDesktop)
                   IconButton(
                       color: colorTheme.primaryColor,
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => popDialogIfCurrent(context),
                       icon: const Icon(Icons.arrow_back_ios_rounded)),
                 widget.widgets.messageHeaderProfileImage,
                 SizedBox(

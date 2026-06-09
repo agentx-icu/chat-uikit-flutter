@@ -63,7 +63,7 @@ class TencentCloudChatContactAddContactsAppBarState
             centerTitle: true,
             leadingWidth: getWidth(100),
             leading: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () => popDialogIfCurrent(context),
                 child: Row(
                   children: [
                     Padding(padding: EdgeInsets.only(left: getWidth(15))),

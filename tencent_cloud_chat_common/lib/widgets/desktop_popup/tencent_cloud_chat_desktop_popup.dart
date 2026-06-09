@@ -172,6 +172,17 @@ class TencentCloudChatDesktopPopup {
     }
     isShow = true;
 
+    // toxee(double-pop guard): the title-bar close/submit InkWell and the
+    // footer Cancel/Confirm buttons live inside `contentWidget`, which is built
+    // OUTSIDE the showDialog `builder:` below, so they capture this method's
+    // OUTER `context` rather than the dialog's builder context. popDialogIfCurrent
+    // would therefore test the caller's page route, not the dialog — so use a
+    // one-shot flag shared across those buttons instead (only one is reachable
+    // per popup instance once the first interaction tears it down). This stops a
+    // double-fired onPressed/onTap (fast double-click or test harness) from
+    // issuing a second Navigator.pop that unwinds the page underneath.
+    var handled = false;
+
     final isUseMaterialAlert = (offset == null);
 
     final Widget contentWidget = TencentCloudChatThemeWidget(
@@ -219,6 +230,8 @@ class TencentCloudChatDesktopPopup {
                       const SizedBox(width: 16,),
                       InkWell(
                         onTap: () {
+                          if (handled) return;
+                          handled = true;
                           if (onSubmit != null) {
                             onSubmit();
                           }
@@ -278,6 +291,8 @@ class TencentCloudChatDesktopPopup {
                                 }),
                               ),
                               onPressed: () {
+                                if (handled) return;
+                                handled = true;
                                 isShow = false;
                                 if (isUseMaterialAlert) {
                                   Navigator.pop(context);
@@ -297,6 +312,8 @@ class TencentCloudChatDesktopPopup {
                           margin: const EdgeInsets.only(right: 16),
                           child: ElevatedButton(
                               onPressed: () {
+                                if (handled) return;
+                                handled = true;
                                 isShow = false;
                                 if (isUseMaterialAlert) {
                                   Navigator.pop(context);

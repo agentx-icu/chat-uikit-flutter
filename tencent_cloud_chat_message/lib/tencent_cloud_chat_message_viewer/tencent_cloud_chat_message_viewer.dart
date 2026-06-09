@@ -12,6 +12,7 @@ import 'package:tencent_cloud_chat_common/components/tencent_cloud_chat_componen
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_code_info.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_download_utils.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/widgets/desktop_popup/tencent_cloud_chat_desktop_popup.dart';
@@ -110,7 +111,7 @@ class TencentCloudChatMessageViewerState extends State<TencentCloudChatMessageVi
   }
 
   closeViewer() {
-    Navigator.pop(context);
+    popDialogIfCurrent(context);
   }
 
   @override
@@ -376,7 +377,7 @@ class TencentCloudChatMessageViewerState extends State<TencentCloudChatMessageVi
         openUrlInNewWindow(data);
         break;
     }
-    Navigator.of(context).pop();
+    popDialogIfCurrent(context);
   }
 
   @override

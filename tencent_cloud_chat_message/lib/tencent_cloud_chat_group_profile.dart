@@ -11,6 +11,7 @@ import 'package:tencent_cloud_chat_common/models/tencent_cloud_chat_models.dart'
 import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_route_names.dart';
 import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_router.dart';
 import 'package:tencent_cloud_chat_common/tuicore/tencent_cloud_chat_core.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_component_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
@@ -214,7 +215,7 @@ class _TencentCloudChatGroupProfileState extends TencentCloudChatState<TencentCl
                       build: (context, colorTheme, textStyle) => Scaffold(
                           appBar: AppBar(
                               leading: IconButton(
-                                onPressed: () => Navigator.of(context).pop(),
+                                onPressed: () => popDialogIfCurrent(context),
                                 icon: const Icon(Icons.arrow_back_ios_rounded),
                                 color: colorTheme.primaryColor,
                               ),
@@ -259,7 +260,7 @@ class _TencentCloudChatGroupProfileState extends TencentCloudChatState<TencentCl
                       build: (context, colorTheme, textStyle) => Scaffold(
                           appBar: AppBar(
                               leading: IconButton(
-                                onPressed: () => Navigator.of(context).pop(),
+                                onPressed: () => popDialogIfCurrent(context),
                                 icon: const Icon(Icons.arrow_back_ios_rounded),
                                 color: colorTheme.primaryColor,
                               ),

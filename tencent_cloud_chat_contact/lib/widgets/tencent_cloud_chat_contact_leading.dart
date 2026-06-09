@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 
 class TencentCloudChatContactLeading extends StatefulWidget {
   const TencentCloudChatContactLeading({super.key});
@@ -16,7 +17,7 @@ class TencentCloudChatContactLeadingState
   Widget defaultBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
+              onTap: () => popDialogIfCurrent(context),
               child: Row(children: [
                 Padding(padding: EdgeInsets.only(left: getWidth(10))),
                 Icon(

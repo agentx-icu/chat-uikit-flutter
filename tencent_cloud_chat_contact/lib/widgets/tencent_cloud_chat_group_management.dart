@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
@@ -335,7 +336,7 @@ class TencentCloudChatGroupProfileAddSilenceMemberListState
             child: TextButton(
               onPressed: () async {
                 submitAdd();
-                Navigator.pop(context);
+                popDialogIfCurrent(context);
               },
               child: Text(
                 tL10n.confirm,
@@ -369,7 +370,7 @@ class TencentCloudChatGroupProfileAddSilenceMemberListState
                   TextButton(
                     onPressed: () async {
                       submitAdd();
-                      Navigator.pop(context);
+                      popDialogIfCurrent(context);
                     },
                     child: Text(
                       tL10n.confirm,

@@ -99,18 +99,24 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
   }
 
   void _showResendDialog() {
+    var handled = false;
     TencentCloudChatDialog.showAdaptiveDialog(
       context: context,
       title: Text(tL10n.resendTips),
       actions: <Widget>[
         TextButton(
           child: Text(tL10n.cancel),
-          onPressed: () =>
-              Navigator.of(context).pop(), // 关闭对话框
+          onPressed: () {
+            if (handled) return;
+            handled = true;
+            Navigator.of(context).pop(); // 关闭对话框
+          },
         ),
         TextButton(
           child: Text(tL10n.confirm),
           onPressed: () {
+            if (handled) return;
+            handled = true;
             //关闭对话框并返回true
             Navigator.of(context).pop(true);
             widget.methods.onResendMessage?.call();

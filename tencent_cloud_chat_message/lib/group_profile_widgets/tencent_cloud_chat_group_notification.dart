@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 
 class TencentCloudChatGroupNotification extends StatefulWidget {
   final V2TimGroupInfo groupInfo;
@@ -72,13 +73,13 @@ class TencentCloudChatGroupNotificationState
               CupertinoDialogAction(
                 onPressed: () {
                   _onSetGroupNotification(mid);
-                  Navigator.pop(context);
+                  popDialogIfCurrent(context);
                 },
                 child: Text(tL10n.confirm),
               ),
               CupertinoDialogAction(
                 onPressed: () {
-                  Navigator.pop(context);
+                  popDialogIfCurrent(context);
                 },
                 child: Text(tL10n.cancel),
               ),
@@ -110,7 +111,7 @@ class TencentCloudChatGroupNotificationState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         GestureDetector(
-                          onTap: () => Navigator.of(context).pop(),
+                          onTap: () => popDialogIfCurrent(context),
                           child: Padding(
                               padding: EdgeInsets.symmetric(
                                   vertical: getHeight(16),
@@ -152,7 +153,7 @@ class TencentCloudChatGroupNotificationState
               appBar: AppBar(
                 leadingWidth: getWidth(100),
                 leading: GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
+                    onTap: () => popDialogIfCurrent(context),
                     child: Padding(
                         padding: EdgeInsets.symmetric(
                             vertical: getHeight(16), horizontal: getWidth(16)),

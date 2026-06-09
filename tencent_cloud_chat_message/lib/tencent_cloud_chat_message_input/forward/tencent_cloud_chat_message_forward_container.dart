@@ -3,6 +3,7 @@ import 'package:tencent_cloud_chat_common/components/components_definition/tence
 import 'package:tencent_cloud_chat_common/models/tencent_cloud_chat_models.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_message/model/tencent_cloud_chat_message_separate_data_notifier.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_builders.dart';
 
@@ -54,10 +55,10 @@ class _TencentCloudChatMessageForwardContainerState
               if (widget.onCloseModal != null) {
                 widget.onCloseModal!();
               } else {
-                Navigator.pop(context);
+                popDialogIfCurrent(context);
               }
             },
-            onCancel: widget.onCloseModal ?? () => Navigator.pop(context),
+            onCancel: widget.onCloseModal ?? () => popDialogIfCurrent(context),
           ),
         ) ??
         Container();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class GroupTypesSelector extends StatefulWidget {
@@ -67,7 +68,7 @@ class _GroupTypesSelectorState extends TencentCloudChatState<GroupTypesSelector>
                 backgroundColor: colorTheme.backgroundColor,
                 title: Center(child: Text(tL10n.groupType, style: TextStyle(fontSize: textStyle.fontsize_16))),
                 leading: TextButton(
-                  onPressed: () => Navigator.pop(context, widget.selectedGroupType),
+                  onPressed: () => popDialogIfCurrent(context, widget.selectedGroupType),
                   child: Text(
                     tL10n.cancel,
                     style: TextStyle(color: colorTheme.primaryColor),
@@ -76,7 +77,7 @@ class _GroupTypesSelectorState extends TencentCloudChatState<GroupTypesSelector>
                 actions: [
                   TextButton(
                     onPressed: () {
-                      Navigator.pop(context, widget.selectedGroupType);
+                      popDialogIfCurrent(context, widget.selectedGroupType);
                     },
                     child: Text(
                       tL10n.confirm,

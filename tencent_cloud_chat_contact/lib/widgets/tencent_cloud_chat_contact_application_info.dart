@@ -5,6 +5,7 @@ import 'package:tencent_cloud_chat_common/data/theme/color/color_base.dart';
 import 'package:tencent_cloud_chat_common/data/theme/text_style/text_style.dart';
 import 'package:tencent_cloud_chat_common/models/tencent_cloud_chat_models.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_code_info.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/builders/tencent_cloud_chat_common_builders.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
@@ -39,7 +40,7 @@ class TencentCloudChatContactApplicationInfoState
               leadingWidth: getWidth(100),
               leading: TencentCloudChatThemeWidget(
                   build: (context, colorTheme, textStyle) => GestureDetector(
-                        onTap: () => Navigator.pop(context, widget.applicationResult),
+                        onTap: () => popDialogIfCurrent(context, widget.applicationResult),
                         child: Row(children: [
                           Padding(padding: EdgeInsets.only(left: getWidth(10))),
                           Icon(

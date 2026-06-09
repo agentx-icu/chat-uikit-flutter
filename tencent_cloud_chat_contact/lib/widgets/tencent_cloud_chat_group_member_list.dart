@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
 import 'package:tencent_cloud_chat_common/data/group_profile/tencent_cloud_chat_group_profile_data.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
@@ -107,7 +108,7 @@ class TencentCloudChatGroupMemberListState
         build: (context, colorTheme, textStyle) => Scaffold(
             appBar: AppBar(
               leading: IconButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => popDialogIfCurrent(context),
                 icon: const Icon(Icons.arrow_back_ios_rounded),
                 color: colorTheme.primaryColor,
               ),
@@ -133,7 +134,7 @@ class TencentCloudChatGroupMemberListState
         build: (context, colorTheme, textStyle) => Scaffold(
             appBar: AppBar(
               leading: IconButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => popDialogIfCurrent(context),
                 icon: const Icon(Icons.arrow_back_ios_rounded),
                 color: colorTheme.primaryColor,
               ),
@@ -498,9 +499,19 @@ class TencentCloudChatGroupMemberListItemState
     }
 
     int role = widget.memberFullInfo.role ?? 0;
+    // These actions capture this State's (outer) context, not the action
+    // sheet's builder context, so popDialogIfCurrent would test the wrong
+    // route. A double-fired onPressed (fast double-tap or a test harness)
+    // would otherwise pop twice — the second pop unwinding the page under the
+    // sheet and blanking the window. A shared one-shot flag makes any second
+    // tap a no-op. The cancel button below uses the builder context and is
+    // guarded with popDialogIfCurrent instead.
+    var handled = false;
     List<CupertinoActionSheetAction> actionList = [
       CupertinoActionSheetAction(
         onPressed: () {
+          if (handled) return;
+          handled = true;
           Navigator.pop(context);
           final isDesktop = TencentCloudChatPlatformAdapter().isDesktop;
           if (isDesktop) {
@@ -525,6 +536,8 @@ class TencentCloudChatGroupMemberListItemState
       actionList.add(
         CupertinoActionSheetAction(
           onPressed: () {
+            if (handled) return;
+            handled = true;
             if (role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_MEMBER) {
               _onSetMemberRole(
                   GroupMemberRoleTypeEnum.V2TIM_GROUP_MEMBER_ROLE_ADMIN);
@@ -544,6 +557,8 @@ class TencentCloudChatGroupMemberListItemState
       actionList.add(CupertinoActionSheetAction(
         key: const ValueKey('group_member_action_kick_button'),
         onPressed: () {
+          if (handled) return;
+          handled = true;
           widget.onDeleteGroupMember();
           Navigator.pop(context);
         },
@@ -558,7 +573,7 @@ class TencentCloudChatGroupMemberListItemState
                   actions: actionList,
                   cancelButton: CupertinoActionSheetAction(
                       onPressed: () {
-                        Navigator.pop(context);
+                        popDialogIfCurrent(context);
                       },
                       child: Text(tL10n.cancel)),
                 )));

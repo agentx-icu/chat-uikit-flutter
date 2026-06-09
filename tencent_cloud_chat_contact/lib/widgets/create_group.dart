@@ -8,6 +8,7 @@ import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_navigator.da
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/utils/error_message_converter.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_code_info.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_contact/model/contact_presenter.dart';
 import 'package:tencent_cloud_chat_contact/widgets/group_types_selector.dart';
 
@@ -322,7 +323,7 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
               appBar: AppBar(
                 backgroundColor: colorTheme.backgroundColor,
                 leading: TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => popDialogIfCurrent(context),
                   child: Text(
                     tL10n.cancel,
                     style: TextStyle(color: colorTheme.primaryColor),
