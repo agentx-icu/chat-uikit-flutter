@@ -43,7 +43,16 @@ class _TencentCloudChatMessageHeaderProfileImageState
 
   @override
   Widget? desktopBuilder(BuildContext context) {
+    // Key DIRECTLY on the GestureDetector (NOT a KeyedSubtree wrapper): the
+    // onTap only PUSHES a profile route, where a flutter_skill double-fire
+    // (synthetic pointer + the _tryInvokeCallback fallback that direct-invokes
+    // GestureDetector.onTap) is harmless — two stacked profile routes, the top
+    // one asserted then popped. The direct key is important because it lets
+    // _tryInvokeCallback GUARANTEE the navigation fires even if the synthetic
+    // pointer misses this small (34px) avatar; a KeyedSubtree wrapper would
+    // suppress that fallback and the open became unreliable.
     return GestureDetector(
+      key: const ValueKey('message_header_profile_avatar'),
       onTap: TencentCloudChatUtils.checkString(widget.conversation?.userID) !=
               null
           ? () => navigateToUserProfile(
@@ -77,7 +86,11 @@ class _TencentCloudChatMessageHeaderProfileImageState
 
   @override
   Widget defaultBuilder(BuildContext context) {
+    // Direct key on the GestureDetector — see desktopBuilder (lets
+    // _tryInvokeCallback guarantee the profile open even if the synthetic
+    // pointer misses the small avatar; double-fire is harmless for a push).
     return GestureDetector(
+      key: const ValueKey('message_header_profile_avatar'),
       onTap: () async {
         if (mounted) {
           if (TencentCloudChatUtils.checkString(widget.conversation?.userID) != null) {

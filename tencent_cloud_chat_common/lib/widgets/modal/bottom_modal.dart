@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 
 class TencentCloudChatModalAction {
   final String label;
@@ -38,7 +39,7 @@ void showTencentCloudChatBottomModal({
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
-                            Navigator.pop(context);
+                            popDialogIfCurrent(context);
                             e.onTap();
                           },
                           child: Container(

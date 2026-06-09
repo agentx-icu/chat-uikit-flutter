@@ -182,7 +182,7 @@ class TencentCloudChatUserProfileContentState
             actions: <Widget>[
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  popDialogIfCurrent(context);
                 },
                 child: Text(tL10n.cancel),
               ),
@@ -191,7 +191,7 @@ class TencentCloudChatUserProfileContentState
                     const ValueKey('user_profile_modify_remark_confirm_button'),
                 onPressed: () {
                   _onChangeFriendRemark(remark);
-                  Navigator.pop(context);
+                  popDialogIfCurrent(context);
                 },
                 child: Text(tL10n.confirm),
               ),
@@ -485,11 +485,10 @@ class TencentCloudChatUserProfileStateButtonState
         .indexWhere((element) =>
             element.conversationID == "c2c_${widget.userFullInfo.userID}");
     if (index > -1) {
-      pinChat = TencentCloudChat
-          .instance.dataInstance.conversation.conversationList[index].isPinned!;
-      disturb = TencentCloudChat.instance.dataInstance.conversation
-              .conversationList[index].recvOpt! ==
-          2;
+      final conversation = TencentCloudChat
+          .instance.dataInstance.conversation.conversationList[index];
+      pinChat = conversation.isPinned ?? false;
+      disturb = (conversation.recvOpt ?? 0) == 2;
     }
     int indexBlock = TencentCloudChat.instance.dataInstance.contact.blockList
         .indexWhere((element) => element.userID == widget.userFullInfo.userID);
@@ -644,18 +643,30 @@ class TencentCloudChatUserProfileDeleteButtonState
   }
 
   showClearChatHistoryDialog() async {
+    // The actions below capture this State's (outer) context, not a dialog
+    // builder context, so popDialogIfCurrent would test the wrong route. A
+    // double-fired onPressed (real fast double-click or a test harness) would
+    // otherwise pop twice — the second pop unwinding the root navigator and
+    // blanking the app. A shared one-shot flag makes the second tap a no-op.
+    var handled = false;
     TencentCloudChatDialog.showAdaptiveDialog(
       context: context,
       title: Text(tL10n.clearMsgTip),
       actions: <Widget>[
         TextButton(
           child: Text(tL10n.cancel),
-          onPressed: () => Navigator.of(context).pop(), // 关闭对话框
+          onPressed: () {
+            if (handled) return;
+            handled = true;
+            Navigator.of(context).pop(); // 关闭对话框
+          },
         ),
         TextButton(
           key: const ValueKey('user_profile_clear_history_confirm_button'),
           child: Text(tL10n.confirm),
           onPressed: () {
+            if (handled) return;
+            handled = true;
             //关闭对话框并返回true
             Navigator.of(context).pop(true);
             onClearChatHistory();

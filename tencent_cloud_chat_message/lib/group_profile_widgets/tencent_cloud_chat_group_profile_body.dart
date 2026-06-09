@@ -349,13 +349,13 @@ class TencentCloudChatGroupProfileContentState
                   if (mid.trim().isNotEmpty) {
                     _onChangeGroupName(mid.trim());
                   }
-                  Navigator.pop(context);
+                  popDialogIfCurrent(context);
                 },
                 child: Text(tL10n.confirm),
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  popDialogIfCurrent(context);
                 },
                 child: Text(tL10n.cancel),
               ),
@@ -675,17 +675,24 @@ class TencentCloudChatGroupProfileDeleteButtonState
   }
 
   showClearChatHistoryDialog() async {
+    var handled = false;
     TencentCloudChatDialog.showAdaptiveDialog(
       context: context,
       title: Text(tL10n.clearMsgTip),
       actions: <Widget>[
         TextButton(
           child: Text(tL10n.cancel),
-          onPressed: () => Navigator.of(context).pop(), // 关闭对话框
+          onPressed: () {
+            if (handled) return;
+            handled = true;
+            Navigator.of(context).pop(); // 关闭对话框
+          },
         ),
         TextButton(
           child: Text(tL10n.confirm),
           onPressed: () {
+            if (handled) return;
+            handled = true;
             //关闭对话框并返回true
             Navigator.of(context).pop(true);
             onClearChatHistory();
@@ -705,17 +712,24 @@ class TencentCloudChatGroupProfileDeleteButtonState
   }
 
   showQuitGroupDialog() async {
+    var handled = false;
     TencentCloudChatDialog.showAdaptiveDialog(
       context: context,
       title: quitGroup ? Text(tL10n.quitGroupTip) : Text(tL10n.dismissGroupTip),
       actions: <Widget>[
         TextButton(
           child: Text(tL10n.cancel),
-          onPressed: () => Navigator.of(context).pop(), // 关闭对话框
+          onPressed: () {
+            if (handled) return;
+            handled = true;
+            Navigator.of(context).pop(); // 关闭对话框
+          },
         ),
         TextButton(
           child: Text(tL10n.confirm),
           onPressed: () {
+            if (handled) return;
+            handled = true;
             //关闭对话框并返回true
             Navigator.of(context).pop(true);
             handleQuitGroup();

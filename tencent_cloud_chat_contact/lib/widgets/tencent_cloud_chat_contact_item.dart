@@ -8,6 +8,7 @@ import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_
 import 'package:tencent_cloud_chat_common/data/theme/color/color_base.dart';
 import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_navigator.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/builders/tencent_cloud_chat_common_builders.dart';
@@ -108,21 +109,21 @@ class TencentCloudChatContactItemState extends TencentCloudChatState<TencentClou
         actions: <CupertinoActionSheetAction>[
           CupertinoActionSheetAction(
             onPressed: () {
-              Navigator.pop(sheetContext);
+              popDialogIfCurrent(sheetContext);
               navigateToChat();
             },
             child: const Text('Open chat'),
           ),
           CupertinoActionSheetAction(
             onPressed: () {
-              Navigator.pop(sheetContext);
+              popDialogIfCurrent(sheetContext);
               _copyToxId();
             },
             child: const Text('Copy Tox ID'),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(sheetContext),
+          onPressed: () => popDialogIfCurrent(sheetContext),
           child: const Text('Cancel'),
         ),
       ),

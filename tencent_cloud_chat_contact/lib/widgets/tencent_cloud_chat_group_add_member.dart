@@ -77,16 +77,26 @@ class TencentCloudChatGroupAddMemberState
               ),
               centerTitle: true,
               actions: [
-                TextButton(
+                // Key on a KeyedSubtree wrapper, NOT the TextButton: this
+                // onPressed both invites and POPS, and flutter_skill's tap would
+                // otherwise fire it twice (synthetic pointer + the
+                // _tryInvokeCallback fallback that directly calls TextButton
+                // .onPressed) → a double Navigator.pop that blanks the app and a
+                // duplicate invite. A KeyedSubtree isn't a type
+                // _tryInvokeCallback invokes, so the harness fires it exactly
+                // once via the synthetic tap.
+                KeyedSubtree(
                   key: const ValueKey('group_member_invite_confirm_button'),
-                  onPressed: () async {
-                    submitAdd();
-                    Navigator.pop(context);
-                  },
-                  child: Text(
-                    tL10n.confirm,
-                    style: TextStyle(
-                      fontSize: textStyle.fontsize_16,
+                  child: TextButton(
+                    onPressed: () async {
+                      submitAdd();
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      tL10n.confirm,
+                      style: TextStyle(
+                        fontSize: textStyle.fontsize_16,
+                      ),
                     ),
                   ),
                 )
@@ -326,20 +336,33 @@ class TencentCloudChatGroupProfileAddMemberListState
         itemCount: list.length,
         itemBuilder: (context, index) {
           final item = list[index].memberInfo;
-          return InkWell(
-            onTap: () {
-              if (selectedMember.contains(item)) {
-                selectedMember.remove(item);
-              } else {
-                selectedMember.add(item);
-              }
-              if (widget.onSelectedMemberItemChange != null) {
-                widget.onSelectedMemberItemChange(selectedMember);
-              }
-              setState(() {});
-              return;
-            },
-            child: _buildItem(item),
+          // The selection key lives on a KeyedSubtree WRAPPER, not on the
+          // InkWell itself, on purpose. flutter_skill's tap both dispatches a
+          // synthetic pointer AND directly invokes InkWell.onTap as a fallback
+          // (_tryInvokeCallback). For a *toggle* onTap that double-fire would
+          // select-then-deselect (net empty selection → empty invite). A
+          // KeyedSubtree is not one of the widget types _tryInvokeCallback
+          // invokes, so the harness fires the toggle exactly once (the
+          // synthetic pointer hit-tests through to the InkWell), landing on a
+          // deterministic SELECTED state. element.renderObject descends to the
+          // InkWell's RenderBox, so the tap still centers correctly.
+          return KeyedSubtree(
+            key: ValueKey('add_member_contact_item:${item.userID}'),
+            child: InkWell(
+              onTap: () {
+                if (selectedMember.contains(item)) {
+                  selectedMember.remove(item);
+                } else {
+                  selectedMember.add(item);
+                }
+                if (widget.onSelectedMemberItemChange != null) {
+                  widget.onSelectedMemberItemChange(selectedMember);
+                }
+                setState(() {});
+                return;
+              },
+              child: _buildItem(item),
+            ),
           );
         },
         indexBarData: SuspensionUtil.getTagIndexList(list)

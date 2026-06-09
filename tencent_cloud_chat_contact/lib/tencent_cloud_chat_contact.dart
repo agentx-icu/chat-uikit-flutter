@@ -11,7 +11,6 @@ import 'package:tencent_cloud_chat_common/components/component_options/tencent_c
 import 'package:tencent_cloud_chat_common/components/component_options/tencent_cloud_chat_group_member_list_options.dart';
 import 'package:tencent_cloud_chat_common/components/component_options/tencent_cloud_chat_group_transfer_owner_options.dart';
 import 'package:tencent_cloud_chat_common/components/component_options/tencent_cloud_chat_user_profile_options.dart';
-import 'package:tencent_cloud_chat_common/components/tencent_cloud_chat_components_utils.dart';
 import 'package:tencent_cloud_chat_common/data/contact/tencent_cloud_chat_contact_data.dart';
 import 'package:tencent_cloud_chat_common/data/group_profile/tencent_cloud_chat_group_profile_data.dart';
 import 'package:tencent_cloud_chat_common/eventbus/tencent_cloud_chat_eventbus.dart';
@@ -22,6 +21,7 @@ import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_component_widg
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
 import 'package:tencent_cloud_chat_common/widgets/empty_page/tencent_cloud_chat_empty_page.dart';
+import 'package:tencent_cloud_chat_common/components/tencent_cloud_chat_components_utils.dart';
 import 'package:tencent_cloud_chat_contact/tencent_cloud_chat_contact_builders.dart';
 import 'package:tencent_cloud_chat_contact/tencent_cloud_chat_contact_controller.dart';
 import 'package:tencent_cloud_chat_contact/tencent_cloud_chat_contact_options.dart';
@@ -70,8 +70,6 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
 
   List<V2TimFriendInfo> _contactsList = [];
 
-  List<V2TimGroupApplication> _groupApplicationList = [];
-
   int _applicationUnreadCount = 0;
 
   Widget? _desktopModule;
@@ -98,10 +96,6 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
     } else if (data.currentUpdatedFields == TencentCloudChatContactDataKeys.applicationCount) {
       safeSetState(() {
         _applicationUnreadCount = data.applicationUnreadCount;
-      });
-    } else if (data.currentUpdatedFields == TencentCloudChatContactDataKeys.groupApplicationList) {
-      safeSetState(() {
-        _groupApplicationList = data.groupApplicationList;
       });
     } else if (data.currentUpdatedFields == TencentCloudChatContactDataKeys.builder ||
         data.currentUpdatedFields == TencentCloudChatContactDataKeys.config) {
@@ -146,7 +140,6 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
         _contactsList = TencentCloudChat.instance.dataInstance.contact.contactList;
         applicationList = TencentCloudChat.instance.dataInstance.contact.applicationList;
         _applicationUnreadCount = applicationList.length;
-        _groupApplicationList = TencentCloudChat.instance.dataInstance.contact.groupApplicationList;
         _groupList = TencentCloudChat.instance.dataInstance.contact.groupList;
         _blockList = TencentCloudChat.instance.dataInstance.contact.blockList;
       }
@@ -160,6 +153,13 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
   }
 
   void _updateGlobalData([TencentCloudChatContact? oldWidget]) {
+    TencentCloudChat.instance.logInstance.console(
+      componentName: 'TencentCloudChatContact',
+      logs:
+          '_updateGlobalData buildersNull=${widget.builders == null} '
+          'oldBuildersSame=${oldWidget != null && identical(oldWidget.builders, widget.builders)} '
+          'globalBuilder=${TencentCloudChat.instance.dataInstance.contact.contactBuilder.runtimeType}',
+    );
     if (widget.config != null || (oldWidget != null && oldWidget.config != widget.config && widget.config != null)) {
       TencentCloudChat.instance.dataInstance.contact.contactConfig = widget.config!;
     }
@@ -172,7 +172,7 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
     if (widget.builders != null ||
         (oldWidget != null && oldWidget.builders != widget.builders && widget.builders != null)) {
       TencentCloudChat.instance.dataInstance.contact.contactBuilder = widget.builders;
-    } else {
+    } else if (TencentCloudChat.instance.dataInstance.contact.contactBuilder == null) {
       TencentCloudChat.instance.dataInstance.contact.contactBuilder = TencentCloudChatContactBuilders();
     }
   }
@@ -194,19 +194,13 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
             },
             unreadCount: _applicationUnreadCount),
       );
-      tabItemList.add(
-        TTabItem(
-          id: "group_notification",
-          icon: Icons.notification_add_outlined,
-          name: tL10n.groupChatNotifications,
-          onTap: () {
-            setState(() {
-              _title = tL10n.groupChatNotifications;
-              _desktopModule = TencentCloudChatContactGroupApplicationList(groupApplicationList: _groupApplicationList);
-            });
-          },
-        ),
-      );
+      // toxee: the Tox bridge has no group-application concept —
+      // getGroupApplicationList() returns an empty list and
+      // acceptGroupApplication()/refuseGroupApplication() are no-ops
+      // (tim2tox_sdk_platform.dart). Group invites are delivered and accepted
+      // over the native onGroupInvited/auto-accept path, never surfaced as a
+      // pending application. The "Group notifications" entry therefore opened a
+      // permanently-empty, non-functional list, so it is intentionally omitted.
       tabItemList.add(
         TTabItem(
           id: "blocked_users",
@@ -274,20 +268,9 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
                 },
             unreadCount: _applicationUnreadCount),
       );
-      tabItemList.add(
-        TTabItem(
-          id: "group_notification",
-          icon: Icons.notification_add_outlined,
-          name: tL10n.groupChatNotifications,
-          onTap: () => {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        TencentCloudChatContactGroupApplicationList(groupApplicationList: _groupApplicationList)))
-          },
-        ),
-      );
+      // toxee: omitted — see the desktopBuilder note above. The Tox bridge has
+      // no group-application concept, so "Group notifications" only ever opened
+      // a permanently-empty, non-functional list.
       tabItemList.add(
         TTabItem(
           id: "groups",

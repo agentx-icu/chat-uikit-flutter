@@ -68,6 +68,13 @@ class TencentCloudChatPermissionHandler {
           TencentCloudChat.instance.cache.cachePermission(permissionString);
           return false;
         } else {
+          // toxee(double-pop guard): these action buttons capture the OUTER
+          // `context` (this method's param) and are handed to showAdaptiveDialog
+          // as a PREBUILT `actions:` list, so popDialogIfCurrent would test the
+          // page route, not the dialog. Use a one-shot flag shared across the
+          // two buttons (only one is reachable per dialog instance) so a
+          // double-fired onPressed cannot pop the page underneath.
+          var handled = false;
           TencentCloudChatDialog.showAdaptiveDialog(
             context: context,
             title: Text(tL10n.permissionDeniedTitle),
@@ -76,6 +83,8 @@ class TencentCloudChatPermissionHandler {
               TextButton(
                 child: Text(tL10n.goToSettingsButtonText),
                 onPressed: () async {
+                  if (handled) return;
+                  handled = true;
                   Navigator.pop(context);
                   await openAppSettings();
                 },
@@ -83,6 +92,8 @@ class TencentCloudChatPermissionHandler {
               TextButton(
                 child: Text(tL10n.cancel),
                 onPressed: () async {
+                  if (handled) return;
+                  handled = true;
                   Navigator.pop(context);
                 },
               ),

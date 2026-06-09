@@ -4,6 +4,7 @@ import 'package:tencent_cloud_chat_common/models/tencent_cloud_chat_models.dart'
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_common/widgets/dialog/tencent_cloud_chat_dialog.dart';
 
 class TencentCloudChatMessageInputSelectMode extends StatefulWidget {
@@ -73,7 +74,7 @@ class _TencentCloudChatMessageInputSelectModeState
                           ),
                           title: Text(tL10n.forwardIndividually),
                           onTap: () {
-                            Navigator.pop(context);
+                            popDialogIfCurrent(context);
                             widget.methods.onMessagesForward(TencentCloudChatForwardType.individually);
                           },
                         ),
@@ -93,7 +94,7 @@ class _TencentCloudChatMessageInputSelectModeState
                           ),
                           title: Text(tL10n.forwardCombined),
                           onTap: () {
-                            Navigator.pop(context);
+                            popDialogIfCurrent(context);
                             widget.methods.onMessagesForward(TencentCloudChatForwardType.combined);
                           },
                         ),
@@ -112,6 +113,7 @@ class _TencentCloudChatMessageInputSelectModeState
         break;
       }
     }
+    var handled = false;
     TencentCloudChatDialog.showAdaptiveDialog(
       context: context,
       title: Text(tL10n.confirmDeletion),
@@ -120,6 +122,8 @@ class _TencentCloudChatMessageInputSelectModeState
         if (widget.data.enableMessageDeleteForSelf)
           TextButton(
             onPressed: () {
+              if (handled) return;
+              handled = true;
               widget.methods.onDeleteForMe(widget.data.messages);
               Navigator.pop(context);
             },
@@ -127,6 +131,8 @@ class _TencentCloudChatMessageInputSelectModeState
           ),
         TextButton(
           onPressed: () {
+            if (handled) return;
+            handled = true;
             Navigator.pop(context);
           },
           child: Text(tL10n.cancel),

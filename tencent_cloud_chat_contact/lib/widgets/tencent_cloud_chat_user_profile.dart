@@ -99,7 +99,7 @@ class _TencentCloudChatUserProfileState extends TencentCloudChatState<TencentClo
     if (widget.builders != null ||
         (oldWidget != null && oldWidget.builders != widget.builders && widget.builders != null)) {
       TencentCloudChat.instance.dataInstance.contact.contactBuilder = widget.builders;
-    } else {
+    } else if (TencentCloudChat.instance.dataInstance.contact.contactBuilder == null) {
       TencentCloudChat.instance.dataInstance.contact.contactBuilder = TencentCloudChatContactBuilders();
     }
   }

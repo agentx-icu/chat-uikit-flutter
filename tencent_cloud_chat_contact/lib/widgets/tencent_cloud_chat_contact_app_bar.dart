@@ -114,13 +114,14 @@ class TencentCloudChatContactAppBarNameState extends TencentCloudChatState<Tence
                 key: const ValueKey('contact_app_bar_menu_button'),
                 icon: Icon(Icons.maps_ugc_outlined, size: getSquareSize(20), color: colorTheme.contactAppBarIconColor),
                 onPressed: () {
-                  if (controller.isOpen) {
-                    controller.close();
-                  } else {
-                    controller.open();
-                  }
+                  // toxee fallback path: if the custom trailing NewEntryButton
+                  // is missing after a builder reset, this default UIKit icon
+                  // becomes the only visible "new contact" affordance. Opening
+                  // the Tox-aware Add Contact dialog directly is more stable
+                  // than relying on MenuAnchor state here.
+                  addContacts();
                 },
-                tooltip: 'Show menu',
+                tooltip: 'Add Contact',
               );
             },
             menuChildren: [
@@ -160,13 +161,9 @@ class TencentCloudChatContactAppBarNameState extends TencentCloudChatState<Tence
                 key: const ValueKey('contact_app_bar_menu_button'),
                 icon: Icon(Icons.maps_ugc_outlined, size: getSquareSize(20), color: colorTheme.contactAppBarIconColor),
                 onPressed: () {
-                  if (controller.isOpen) {
-                    controller.close();
-                  } else {
-                    controller.open();
-                  }
+                  addContacts();
                 },
-                tooltip: 'Show menu',
+                tooltip: 'Add Contact',
               );
             },
             menuChildren: [

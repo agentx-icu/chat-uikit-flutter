@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tencent_cloud_chat_common/components/component_options/tencent_cloud_chat_user_profile_options.dart';
 import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_navigator.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
@@ -122,9 +123,44 @@ class TencentCloudChatGroupMemberInfoBodyState extends TencentCloudChatState<Ten
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: textStyle.fontsize_24, fontWeight: FontWeight.w600),
                         ),
-                        Text(
-                          "ID: ${widget.memberFullInfo.userID}",
-                          style: TextStyle(fontSize: textStyle.fontsize_12),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                "ID: ${widget.memberFullInfo.userID}",
+                                style:
+                                    TextStyle(fontSize: textStyle.fontsize_12),
+                              ),
+                            ),
+                            // toxee: a copy affordance for the member's Tox id.
+                            // Member info previously showed the id as plain text
+                            // with no copy path except the member-LIST desktop
+                            // right-click — leaving mobile users no way to copy.
+                            IconButton(
+                              key: const ValueKey(
+                                'group_member_info_copy_id_button',
+                              ),
+                              icon: const Icon(Icons.copy, size: 16),
+                              tooltip: 'Copy',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () async {
+                                await Clipboard.setData(
+                                  ClipboardData(
+                                    text: widget.memberFullInfo.userID ?? '',
+                                  ),
+                                );
+                                if (!mounted) return;
+                                ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Tox ID copied'),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         )
                       ],
                     ),
