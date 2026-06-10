@@ -427,13 +427,21 @@ class TencentCloudChatGroupMemberListItemState
       items.add(
         PopupMenuItem<String>(
           value: 'remove',
-          child: ListTile(
-            leading:
-                const Icon(Icons.person_remove_outlined, color: Colors.red),
-            title:
-                Text(tL10n.delete, style: const TextStyle(color: Colors.red)),
-            dense: true,
-            contentPadding: EdgeInsets.zero,
+          // toxee real-UI automation key for the DESKTOP kick affordance. The
+          // PopupMenuItem itself takes no key, so a KeyedSubtree wraps its child
+          // so a harness can tap the remove/kick item locale-independently (the
+          // mobile action sheet's kick already has
+          // `group_member_action_kick_button`). Automation-only.
+          child: KeyedSubtree(
+            key: const ValueKey('group_member_desktop_kick_item'),
+            child: ListTile(
+              leading: const Icon(Icons.person_remove_outlined,
+                  color: Colors.red),
+              title:
+                  Text(tL10n.delete, style: const TextStyle(color: Colors.red)),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
           ),
         ),
       );
@@ -587,6 +595,11 @@ class TencentCloudChatGroupMemberListItemState
         build: (context, colorTheme, textStyle) => Container(
               color: colorTheme.backgroundColor,
               child: GestureDetector(
+                  // toxee real-UI automation key — per-member row so a harness
+                  // can target a SPECIFIC member's row (e.g. right-click B to
+                  // open the desktop kick menu). Automation-only.
+                  key: ValueKey(
+                      'group_member_list_item:${widget.memberFullInfo.userID}'),
                   onTap: onManageMember,
                   onSecondaryTapDown:
                       TencentCloudChatPlatformAdapter().isDesktop

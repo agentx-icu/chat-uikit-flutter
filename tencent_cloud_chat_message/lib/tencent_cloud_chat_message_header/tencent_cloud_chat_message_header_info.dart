@@ -74,6 +74,11 @@ class _TencentCloudChatMessageHeaderInfoState
                   children: [
                     Expanded(
                         child: Text(
+                      // toxee real-UI automation key — the chat HEADER title
+                      // (group/conference/C2C name). Lets automation assert the
+                      // OPEN-chat header reflects a rename (distinct from the
+                      // conversation-LIST row showName). Automation-only.
+                      key: const ValueKey('chat_header_title_text'),
                       widget.showName ?? TencentCloudChatUtils.checkString(
                               widget.conversation?.showName) ??
                           widget.userID ??
