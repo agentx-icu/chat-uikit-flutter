@@ -11,13 +11,15 @@ class TencentCloudChatContactAzlist extends StatefulWidget {
   final List<V2TimFriendInfo> contactList;
   final List<TTabItem>? tabList;
 
-  const TencentCloudChatContactAzlist({super.key, required this.contactList, this.tabList});
+  const TencentCloudChatContactAzlist(
+      {super.key, required this.contactList, this.tabList});
 
   @override
   State<StatefulWidget> createState() => TencentCloudChatContactAzlistState();
 }
 
-class TencentCloudChatContactAzlistState extends TencentCloudChatState<TencentCloudChatContactAzlist> {
+class TencentCloudChatContactAzlistState
+    extends TencentCloudChatState<TencentCloudChatContactAzlist> {
   _getShowName(V2TimFriendInfo item) {
     final friendRemark = item.friendRemark ?? "";
     final nickName = item.userProfile?.nickName ?? "";
@@ -62,7 +64,8 @@ class TencentCloudChatContactAzlistState extends TencentCloudChatState<TencentCl
   Widget defaultBuilder(BuildContext context) {
     // Rebuild whenever the in-page contact search query changes (S49).
     return ValueListenableBuilder<String>(
-      valueListenable: TencentCloudChat.instance.dataInstance.contact.contactSearchQuery,
+      valueListenable:
+          TencentCloudChat.instance.dataInstance.contact.contactSearchQuery,
       builder: (context, query, _) => _buildList(context, query),
     );
   }
@@ -70,28 +73,38 @@ class TencentCloudChatContactAzlistState extends TencentCloudChatState<TencentCl
   Widget _buildList(BuildContext context, String query) {
     final showFriendList = _getFriendList(query);
     if (widget.tabList != null && widget.tabList!.isNotEmpty) {
-      final topList = widget.tabList!.map((e) => ISuspensionBeanImpl(friendInfo: e, tagIndex: '@')).toList();
+      final topList = widget.tabList!
+          .map((e) => ISuspensionBeanImpl(friendInfo: e, tagIndex: '@'))
+          .toList();
       showFriendList.insertAll(0, topList);
     }
     // Show the empty-state when there are no matching friend entries (either no
     // contacts at all, or none match the active search query). TTabItems (tag
     // '@') don't count as contacts for this check.
-    final hasFriendEntries = showFriendList.any((e) => e.getSuspensionTag() != '@');
+    final hasFriendEntries =
+        showFriendList.any((e) => e.getSuspensionTag() != '@');
     if (!hasFriendEntries) {
       return TencentCloudChatThemeWidget(
         build: (context, colors, fontSize) => Column(
           children: [
-            ...showFriendList.map((e) => TencentCloudChat.instance.dataInstance.contact.contactBuilder?.getContactListTabItemBuilder(e.friendInfo)).toList(),
-            Center(
-              child: Text(
-                tL10n.noContact,
-                style: TextStyle(
-                  fontSize: fontSize.fontsize_12,
-                  color: colors.contactNoListColor,
-                  fontWeight: FontWeight.w400,
+            ...showFriendList
+                .map((e) => TencentCloudChat
+                    .instance.dataInstance.contact.contactBuilder
+                    ?.getContactListTabItemBuilder(e.friendInfo))
+                .toList(),
+            Padding(
+              padding: EdgeInsets.only(top: getHeight(28)),
+              child: Center(
+                child: Text(
+                  tL10n.noContact,
+                  style: TextStyle(
+                    fontSize: fontSize.fontsize_14,
+                    color: colors.contactNoListColor,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-            )
+            ),
           ],
         ),
       );
@@ -99,13 +112,17 @@ class TencentCloudChatContactAzlistState extends TencentCloudChatState<TencentCl
 
     return Scrollbar(
         child: AzListView(
-      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      physics:
+          const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       data: showFriendList,
       itemCount: showFriendList.length,
-      indexBarData: SuspensionUtil.getTagIndexList(showFriendList).where((element) => element != "@").toList(),
+      indexBarData: SuspensionUtil.getTagIndexList(showFriendList)
+          .where((element) => element != "@")
+          .toList(),
       itemBuilder: (context, index) {
         if (showFriendList[index].friendInfo is TTabItem) {
-          return TencentCloudChat.instance.dataInstance.contact.contactBuilder?.getContactListTabItemBuilder(showFriendList[index].friendInfo);
+          return TencentCloudChat.instance.dataInstance.contact.contactBuilder
+              ?.getContactListTabItemBuilder(showFriendList[index].friendInfo);
         } else {
           final friend = showFriendList[index].friendInfo;
           return TencentCloudChatContactItem(friend: friend);
@@ -116,7 +133,8 @@ class TencentCloudChatContactAzlistState extends TencentCloudChatState<TencentCl
         if (tag.getSuspensionTag() == "@") {
           return Container();
         }
-        return TencentCloudChat.instance.dataInstance.contact.contactBuilder?.getContactListTagBuilder(tag.getSuspensionTag());
+        return TencentCloudChat.instance.dataInstance.contact.contactBuilder
+            ?.getContactListTagBuilder(tag.getSuspensionTag());
       },
       susItemHeight: getSquareSize(30),
     ));

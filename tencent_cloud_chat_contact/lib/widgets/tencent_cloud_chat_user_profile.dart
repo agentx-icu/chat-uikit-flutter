@@ -2,6 +2,7 @@ library tencent_cloud_chat_user_profile;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/components/component_config/tencent_cloud_chat_contact_config.dart';
 import 'package:tencent_cloud_chat_common/components/component_event_handlers/tencent_cloud_chat_contact_event_handlers.dart';
@@ -13,10 +14,12 @@ import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_component_widg
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_contact/tencent_cloud_chat_contact_builders.dart';
 import 'package:tencent_cloud_chat_contact/widgets/tencent_cloud_chat_user_profile_body.dart';
-import 'package:tencent_cloud_chat_intl/tencent_cloud_chat_intl.dart';
 
-class TencentCloudChatUserProfile extends TencentCloudChatComponent<TencentCloudChatUserProfileOptions,
-    TencentCloudChatContactConfig, TencentCloudChatContactBuilders, TencentCloudChatContactEventHandlers> {
+class TencentCloudChatUserProfile extends TencentCloudChatComponent<
+    TencentCloudChatUserProfileOptions,
+    TencentCloudChatContactConfig,
+    TencentCloudChatContactBuilders,
+    TencentCloudChatContactEventHandlers> {
   const TencentCloudChatUserProfile({
     required TencentCloudChatUserProfileOptions options,
     Key? key,
@@ -35,14 +38,18 @@ class TencentCloudChatUserProfile extends TencentCloudChatComponent<TencentCloud
   State<StatefulWidget> createState() => _TencentCloudChatUserProfileState();
 }
 
-class _TencentCloudChatUserProfileState extends TencentCloudChatState<TencentCloudChatUserProfile> {
-  final Stream<TencentCloudChatContactData<dynamic>>? _contactDataStream = TencentCloudChat.instance.eventBusInstance
-      .on<TencentCloudChatContactData<dynamic>>("TencentCloudChatContactData");
-  StreamSubscription<TencentCloudChatContactData<dynamic>>? _contactDataSubscription;
+class _TencentCloudChatUserProfileState
+    extends TencentCloudChatState<TencentCloudChatUserProfile> {
+  final Stream<TencentCloudChatContactData<dynamic>>? _contactDataStream =
+      TencentCloudChat.instance.eventBusInstance
+          .on<TencentCloudChatContactData<dynamic>>(
+              "TencentCloudChatContactData");
+  StreamSubscription<TencentCloudChatContactData<dynamic>>?
+      _contactDataSubscription;
 
   Future<V2TimUserFullInfo> _loadUserFullInfo() async {
-    final res =
-        await TencentCloudChat.instance.chatSDKInstance.manager.getUsersInfo(userIDList: [widget.options!.userID]);
+    final res = await TencentCloudChat.instance.chatSDKInstance.manager
+        .getUsersInfo(userIDList: [widget.options!.userID]);
     if (res.code == 0 && res.data?.first != null) {
       return res.data!.first;
     }
@@ -51,7 +58,9 @@ class _TencentCloudChatUserProfileState extends TencentCloudChatState<TencentClo
 
   String _getShowName({V2TimUserFullInfo? userFullInfo}) {
     if (userFullInfo != null) {
-      return TencentCloudChatUtils.checkString(userFullInfo.nickName) ?? userFullInfo.userID ?? widget.options!.userID;
+      return TencentCloudChatUtils.checkString(userFullInfo.nickName) ??
+          userFullInfo.userID ??
+          widget.options!.userID;
     }
     return userFullInfo?.userID ?? widget.options!.userID;
   }
@@ -76,7 +85,8 @@ class _TencentCloudChatUserProfileState extends TencentCloudChatState<TencentClo
   }
 
   _addUserProfileDataListener() {
-    _contactDataSubscription = _contactDataStream?.listen(_userProfileDataHandler);
+    _contactDataSubscription =
+        _contactDataStream?.listen(_userProfileDataHandler);
   }
 
   _userProfileDataHandler(TencentCloudChatContactData data) {
@@ -87,20 +97,31 @@ class _TencentCloudChatUserProfileState extends TencentCloudChatState<TencentClo
   }
 
   void _updateGlobalData([TencentCloudChatUserProfile? oldWidget]) {
-    if (widget.config != null || (oldWidget != null && oldWidget.config != widget.config && widget.config != null)) {
-      TencentCloudChat.instance.dataInstance.contact.contactConfig = widget.config!;
+    if (widget.config != null ||
+        (oldWidget != null &&
+            oldWidget.config != widget.config &&
+            widget.config != null)) {
+      TencentCloudChat.instance.dataInstance.contact.contactConfig =
+          widget.config!;
     }
 
     if (widget.eventHandlers != null ||
-        (oldWidget != null && oldWidget.eventHandlers != widget.eventHandlers && widget.eventHandlers != null)) {
-      TencentCloudChat.instance.dataInstance.contact.contactEventHandlers = widget.eventHandlers;
+        (oldWidget != null &&
+            oldWidget.eventHandlers != widget.eventHandlers &&
+            widget.eventHandlers != null)) {
+      TencentCloudChat.instance.dataInstance.contact.contactEventHandlers =
+          widget.eventHandlers;
     }
 
     if (widget.builders != null ||
-        (oldWidget != null && oldWidget.builders != widget.builders && widget.builders != null)) {
-      TencentCloudChat.instance.dataInstance.contact.contactBuilder = widget.builders;
-    } else if (TencentCloudChat.instance.dataInstance.contact.contactBuilder == null) {
-      TencentCloudChat.instance.dataInstance.contact.contactBuilder = TencentCloudChatContactBuilders();
+        (oldWidget != null &&
+            oldWidget.builders != widget.builders &&
+            widget.builders != null)) {
+      TencentCloudChat.instance.dataInstance.contact.contactBuilder =
+          widget.builders;
+    } else {
+      TencentCloudChat.instance.dataInstance.contact.contactBuilder ??=
+          TencentCloudChatContactBuilders();
     }
   }
 
@@ -109,25 +130,31 @@ class _TencentCloudChatUserProfileState extends TencentCloudChatState<TencentClo
     return ListenableBuilder(
       listenable: TencentCloudChatIntl(),
       builder: (context, _) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(_getShowName()),
-          ),
-          body: FutureBuilder(
-            initialData: widget.options?.userFullInfo,
-            future: _loadUserFullInfo(),
-            builder: (BuildContext context, AsyncSnapshot<V2TimUserFullInfo> snapshot) {
-              final userFullInfo = widget.options?.userFullInfo ?? snapshot.data;
-              return userFullInfo != null
+        final initialUserInfo = widget.options?.userFullInfo;
+        final userInfoFuture = initialUserInfo != null
+            ? SynchronousFuture(initialUserInfo)
+            : _loadUserFullInfo();
+        return FutureBuilder(
+          initialData: initialUserInfo,
+          future: userInfoFuture,
+          builder: (BuildContext context,
+              AsyncSnapshot<V2TimUserFullInfo> snapshot) {
+            final userFullInfo = initialUserInfo ?? snapshot.data;
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(_getShowName(userFullInfo: userFullInfo)),
+              ),
+              body: userFullInfo != null
                   ? TencentCloudChatUserProfileBody(
                       userFullInfo: userFullInfo,
                       startVideoCall: widget.options!.startVideoCall,
                       startVoiceCall: widget.options!.startVoiceCall,
-                      isNavigatedFromChat: widget.options!.isNavigatedFromChat ?? true,
+                      isNavigatedFromChat:
+                          widget.options!.isNavigatedFromChat ?? true,
                     )
-                  : Container();
-            },
-          ),
+                  : Container(),
+            );
+          },
         );
       },
     );

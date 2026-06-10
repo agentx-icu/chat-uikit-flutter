@@ -16,7 +16,8 @@ class TencentCloudChatContactAppBar extends StatefulWidget {
   State<StatefulWidget> createState() => TencentCloudChatContactAppBarState();
 }
 
-class TencentCloudChatContactAppBarState extends TencentCloudChatState<TencentCloudChatContactAppBar> {
+class TencentCloudChatContactAppBarState
+    extends TencentCloudChatState<TencentCloudChatContactAppBar> {
   @override
   Widget tabletAppBuilder(BuildContext context) {
     return Padding(
@@ -28,11 +29,13 @@ class TencentCloudChatContactAppBarState extends TencentCloudChatState<TencentCl
   @override
   Widget defaultBuilder(BuildContext context) {
     return Column(
-        children: [
-          TencentCloudChat.instance.dataInstance.contact.contactBuilder?.getContactAppBarNameBuilder(),
-          const TencentCloudChatAppBarSearchItem()
-        ],
-      );
+      children: [
+        TencentCloudChat.instance.dataInstance.contact.contactBuilder
+            ?.getContactAppBarNameBuilder(),
+        const SizedBox(height: 12),
+        const TencentCloudChatAppBarSearchItem()
+      ],
+    );
   }
 
   @override
@@ -52,9 +55,11 @@ class TencentCloudChatContactAppBarState extends TencentCloudChatState<TencentCl
         ),
         child: Column(
           children: [
-            TencentCloudChat.instance.dataInstance.contact.contactBuilder?.getContactAppBarNameBuilder(
+            TencentCloudChat.instance.dataInstance.contact.contactBuilder
+                ?.getContactAppBarNameBuilder(
               title: widget.title,
             ),
+            const SizedBox(height: 12),
             const TencentCloudChatAppBarSearchItem()
           ],
         ),
@@ -69,15 +74,17 @@ class TencentCloudChatContactAppBarName extends StatefulWidget {
   const TencentCloudChatContactAppBarName({super.key, this.title});
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatContactAppBarNameState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatContactAppBarNameState();
 }
 
-class TencentCloudChatContactAppBarNameState extends TencentCloudChatState<TencentCloudChatContactAppBarName> {
+class TencentCloudChatContactAppBarNameState
+    extends TencentCloudChatState<TencentCloudChatContactAppBarName> {
   AddContact? selectedMenu;
 
   addContacts() {
     showModalBottomSheet<void>(
-        barrierColor: Colors.white.withOpacity(0),
+        barrierColor: Colors.white.withValues(alpha: 0),
         backgroundColor: Colors.transparent,
         context: context,
         isScrollControlled: true,
@@ -88,7 +95,7 @@ class TencentCloudChatContactAppBarNameState extends TencentCloudChatState<Tence
 
   addGroup() {
     showModalBottomSheet<void>(
-        barrierColor: Colors.white.withOpacity(0),
+        barrierColor: Colors.white.withValues(alpha: 0),
         backgroundColor: Colors.transparent,
         context: context,
         isScrollControlled: true,
@@ -109,10 +116,13 @@ class TencentCloudChatContactAppBarNameState extends TencentCloudChatState<Tence
                       fontSize: textStyle.fontsize_34,
                       fontWeight: FontWeight.w600))),
           MenuAnchor(
-            builder: (BuildContext context, MenuController controller, Widget? child) {
+            builder: (BuildContext context, MenuController controller,
+                Widget? child) {
               return IconButton(
                 key: const ValueKey('contact_app_bar_menu_button'),
-                icon: Icon(Icons.maps_ugc_outlined, size: getSquareSize(20), color: colorTheme.contactAppBarIconColor),
+                icon: Icon(Icons.maps_ugc_outlined,
+                    size: getSquareSize(20),
+                    color: colorTheme.contactAppBarIconColor),
                 onPressed: () {
                   // toxee fallback path: if the custom trailing NewEntryButton
                   // is missing after a builder reset, this default UIKit icon
@@ -156,10 +166,13 @@ class TencentCloudChatContactAppBarNameState extends TencentCloudChatState<Tence
                 fontWeight: FontWeight.w600),
           )),
           MenuAnchor(
-            builder: (BuildContext context, MenuController controller, Widget? child) {
+            builder: (BuildContext context, MenuController controller,
+                Widget? child) {
               return IconButton(
                 key: const ValueKey('contact_app_bar_menu_button'),
-                icon: Icon(Icons.maps_ugc_outlined, size: getSquareSize(20), color: colorTheme.contactAppBarIconColor),
+                icon: Icon(Icons.maps_ugc_outlined,
+                    size: getSquareSize(20),
+                    color: colorTheme.contactAppBarIconColor),
                 onPressed: () {
                   addContacts();
                 },
@@ -189,10 +202,12 @@ class TencentCloudChatAppBarSearchItem extends StatefulWidget {
   const TencentCloudChatAppBarSearchItem({super.key});
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatAppBarSearchItemState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatAppBarSearchItemState();
 }
 
-class TencentCloudChatAppBarSearchItemState extends TencentCloudChatState<TencentCloudChatAppBarSearchItem> {
+class TencentCloudChatAppBarSearchItemState
+    extends TencentCloudChatState<TencentCloudChatAppBarSearchItem> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
@@ -205,7 +220,8 @@ class TencentCloudChatAppBarSearchItemState extends TencentCloudChatState<Tencen
   void _onChanged() {
     // Drive the AZ-list filter via the shared query notifier, and rebuild so the
     // clear-button suffix appears/disappears.
-    TencentCloudChat.instance.dataInstance.contact.contactSearchQuery.value = _searchController.text;
+    TencentCloudChat.instance.dataInstance.contact.contactSearchQuery.value =
+        _searchController.text;
     setState(() {});
   }
 
@@ -215,7 +231,8 @@ class TencentCloudChatAppBarSearchItemState extends TencentCloudChatState<Tencen
     _searchController.dispose();
     _focusNode.dispose();
     // Reset the filter so the contact list isn't left filtered after the bar is gone.
-    TencentCloudChat.instance.dataInstance.contact.contactSearchQuery.value = '';
+    TencentCloudChat.instance.dataInstance.contact.contactSearchQuery.value =
+        '';
     super.dispose();
   }
 

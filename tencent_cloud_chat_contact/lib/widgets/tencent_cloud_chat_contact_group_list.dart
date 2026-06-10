@@ -10,7 +10,6 @@ import 'package:tencent_cloud_chat_common/data/contact/tencent_cloud_chat_contac
 import 'package:tencent_cloud_chat_common/data/group_profile/tencent_cloud_chat_group_profile_data.dart';
 import 'package:tencent_cloud_chat_common/eventbus/tencent_cloud_chat_eventbus.dart';
 import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_navigator.dart';
-import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/builders/tencent_cloud_chat_common_builders.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
@@ -26,18 +25,25 @@ class TencentCloudChatContactGroupList extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatContactGroupListState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatContactGroupListState();
 }
 
-class TencentCloudChatContactGroupListState extends TencentCloudChatState<TencentCloudChatContactGroupList> {
-  final Stream<TencentCloudChatGroupProfileData<dynamic>>? _groupProfileDataStream = TencentCloudChat
-      .instance.eventBusInstance
-      .on<TencentCloudChatGroupProfileData<dynamic>>(TencentCloudChatEventBus.eventNameGroup);
-  StreamSubscription<TencentCloudChatGroupProfileData<dynamic>>? _groupProfileDataSubscription;
-  
-  final Stream<TencentCloudChatContactData<dynamic>>? _contactDataStream = TencentCloudChat.instance.eventBusInstance
-      .on<TencentCloudChatContactData<dynamic>>(TencentCloudChatEventBus.eventNameContact);
-  StreamSubscription<TencentCloudChatContactData<dynamic>>? _contactDataSubscription;
+class TencentCloudChatContactGroupListState
+    extends TencentCloudChatState<TencentCloudChatContactGroupList> {
+  final Stream<TencentCloudChatGroupProfileData<dynamic>>?
+      _groupProfileDataStream = TencentCloudChat.instance.eventBusInstance
+          .on<TencentCloudChatGroupProfileData<dynamic>>(
+              TencentCloudChatEventBus.eventNameGroup);
+  StreamSubscription<TencentCloudChatGroupProfileData<dynamic>>?
+      _groupProfileDataSubscription;
+
+  final Stream<TencentCloudChatContactData<dynamic>>? _contactDataStream =
+      TencentCloudChat.instance.eventBusInstance
+          .on<TencentCloudChatContactData<dynamic>>(
+              TencentCloudChatEventBus.eventNameContact);
+  StreamSubscription<TencentCloudChatContactData<dynamic>>?
+      _contactDataSubscription;
 
   @override
   void initState() {
@@ -47,7 +53,8 @@ class TencentCloudChatContactGroupListState extends TencentCloudChatState<Tencen
   }
 
   _addGroupDataListener() {
-    _groupProfileDataSubscription = _groupProfileDataStream?.listen(_groupProfileDataHandler);
+    _groupProfileDataSubscription =
+        _groupProfileDataStream?.listen(_groupProfileDataHandler);
   }
 
   _addContactDataListener() {
@@ -55,7 +62,8 @@ class TencentCloudChatContactGroupListState extends TencentCloudChatState<Tencen
   }
 
   _contactDataHandler(TencentCloudChatContactData data) {
-    if (data.currentUpdatedFields == TencentCloudChatContactDataKeys.groupList) {
+    if (data.currentUpdatedFields ==
+        TencentCloudChatContactDataKeys.groupList) {
       setState(() {
         // Force rebuild when group list is updated
       });
@@ -63,21 +71,27 @@ class TencentCloudChatContactGroupListState extends TencentCloudChatState<Tencen
   }
 
   _groupProfileDataHandler(TencentCloudChatGroupProfileData data) {
-    if (data.currentUpdatedFields == TencentCloudChatGroupProfileDataKeys.joinGroup) {
+    if (data.currentUpdatedFields ==
+        TencentCloudChatGroupProfileDataKeys.joinGroup) {
       setState(() {
         // Update both widget.groupList and data instance
-        int index = widget.groupList.indexWhere((element) => element.groupID == data.updateGroupInfo.groupID);
+        int index = widget.groupList.indexWhere(
+            (element) => element.groupID == data.updateGroupInfo.groupID);
         if (index < 0) {
           widget.groupList.add(data.updateGroupInfo);
         }
       });
-    } else if (data.currentUpdatedFields == TencentCloudChatGroupProfileDataKeys.quitGroup) {
+    } else if (data.currentUpdatedFields ==
+        TencentCloudChatGroupProfileDataKeys.quitGroup) {
       setState(() {
-        widget.groupList.removeWhere((element) => element.groupID == data.updateGroupID);
+        widget.groupList
+            .removeWhere((element) => element.groupID == data.updateGroupID);
       });
-    } else if (data.currentUpdatedFields == TencentCloudChatGroupProfileDataKeys.updateGroupInfo) {
+    } else if (data.currentUpdatedFields ==
+        TencentCloudChatGroupProfileDataKeys.updateGroupInfo) {
       setState(() {
-        int index = widget.groupList.indexWhere((element) => element.groupID == data.updateGroupInfo.groupID);
+        int index = widget.groupList.indexWhere(
+            (element) => element.groupID == data.updateGroupInfo.groupID);
         if (index >= 0) {
           widget.groupList[index] = data.updateGroupInfo;
         }
@@ -88,7 +102,8 @@ class TencentCloudChatContactGroupListState extends TencentCloudChatState<Tencen
   // Get the latest group list from TencentCloudChatContactData
   List<V2TimGroupInfo> get _currentGroupList {
     // Always get from data instance to ensure we have the latest data
-    final dataGroupList = TencentCloudChat.instance.dataInstance.contact.groupList;
+    final dataGroupList =
+        TencentCloudChat.instance.dataInstance.contact.groupList;
     if (dataGroupList.isNotEmpty) {
       return dataGroupList;
     }
@@ -99,41 +114,41 @@ class TencentCloudChatContactGroupListState extends TencentCloudChatState<Tencen
   @override
   Widget defaultBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) =>
-            Scaffold(
-                appBar: AppBar(
-                  leadingWidth: getWidth(100),
-                  leading: const TencentCloudChatContactLeading(),
-                  title: Text(
-                    tL10n.myGroup,
-                    style: TextStyle(
-                        fontSize: textStyle.fontsize_16,
-                        fontWeight: FontWeight.w600,
-                        color: colorTheme.contactItemFriendNameColor),
-                  ),
-                  centerTitle: true,
-                  backgroundColor: colorTheme.contactBackgroundColor,
-                  scrolledUnderElevation: 0.0,
-                ),
-                body: Container(
-                  color: colorTheme.contactApplicationBackgroundColor,
-                  child: Center(
-                    child: TencentCloudChatContactGroupAzList(groupList: _currentGroupList),
-                  ),
-                )));
+        build: (context, colorTheme, textStyle) => Scaffold(
+            appBar: AppBar(
+              leadingWidth: getWidth(100),
+              leading: const TencentCloudChatContactLeading(),
+              title: Text(
+                tL10n.myGroup,
+                style: TextStyle(
+                    fontSize: textStyle.fontsize_16,
+                    fontWeight: FontWeight.w600,
+                    color: colorTheme.contactItemFriendNameColor),
+              ),
+              centerTitle: true,
+              backgroundColor: colorTheme.contactBackgroundColor,
+              scrolledUnderElevation: 0.0,
+            ),
+            body: Container(
+              color: colorTheme.contactApplicationBackgroundColor,
+              child: Center(
+                child: TencentCloudChatContactGroupAzList(
+                    groupList: _currentGroupList),
+              ),
+            )));
   }
 
   @override
   Widget desktopBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
-      build: (context, colorTheme, textStyle) =>
-          Scaffold(
-              body: Container(
-                color: colorTheme.contactApplicationBackgroundColor,
-                child: Center(
-                  child: TencentCloudChatContactGroupAzList(groupList: _currentGroupList),
-                ),
-              )),
+      build: (context, colorTheme, textStyle) => Scaffold(
+          body: Container(
+        color: colorTheme.contactApplicationBackgroundColor,
+        child: Center(
+          child:
+              TencentCloudChatContactGroupAzList(groupList: _currentGroupList),
+        ),
+      )),
     );
   }
 
@@ -148,13 +163,16 @@ class TencentCloudChatContactGroupListState extends TencentCloudChatState<Tencen
 class TencentCloudChatContactGroupAzList extends StatefulWidget {
   final List<V2TimGroupInfo> groupList;
 
-  const TencentCloudChatContactGroupAzList({super.key, required this.groupList});
+  const TencentCloudChatContactGroupAzList(
+      {super.key, required this.groupList});
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatContactGroupAzListState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatContactGroupAzListState();
 }
 
-class TencentCloudChatContactGroupAzListState extends TencentCloudChatState<TencentCloudChatContactGroupAzList> {
+class TencentCloudChatContactGroupAzListState
+    extends TencentCloudChatState<TencentCloudChatContactGroupAzList> {
   Map tagCount = {};
 
   List<ISuspensionBeanImpl> _getGroupList() {
@@ -192,36 +210,39 @@ class TencentCloudChatContactGroupAzListState extends TencentCloudChatState<Tenc
     final showList = _getGroupList();
     if (showList.isEmpty) {
       return TencentCloudChatThemeWidget(
-          build: (context, colors, fontSize) =>
-              Center(
+          build: (context, colors, fontSize) => Center(
                 child: Text(
                   // localization tL10n.noContact
                   tL10n.noContact,
                   style: TextStyle(
-                    fontSize: fontSize.fontsize_12,
+                    fontSize: fontSize.fontsize_14,
                     color: colors.contactNoListColor,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ));
     }
     return Scrollbar(
         child: AzListView(
-          indexBarData: SuspensionUtil.getTagIndexList(showList).where((element) => element != "@").toList(),
-          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-          data: showList,
-          itemCount: showList.length,
-          itemBuilder: (context, index) {
-            final group = showList[index].friendInfo;
-            return TencentCloudChatContactGroupItem(group: group);
-          },
-          susItemBuilder: (context, index) {
-            ISuspensionBeanImpl tag = showList[index];
-            return TencentCloudChat.instance.dataInstance.contact.contactBuilder
-                ?.getContactGroupListTagBuilder(tag.getSuspensionTag(), tagCount[tag.getSuspensionTag()]);
-          },
-          susItemHeight: getSquareSize(30),
-        ));
+      indexBarData: SuspensionUtil.getTagIndexList(showList)
+          .where((element) => element != "@")
+          .toList(),
+      physics:
+          const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      data: showList,
+      itemCount: showList.length,
+      itemBuilder: (context, index) {
+        final group = showList[index].friendInfo;
+        return TencentCloudChatContactGroupItem(group: group);
+      },
+      susItemBuilder: (context, index) {
+        ISuspensionBeanImpl tag = showList[index];
+        return TencentCloudChat.instance.dataInstance.contact.contactBuilder
+            ?.getContactGroupListTagBuilder(
+                tag.getSuspensionTag(), tagCount[tag.getSuspensionTag()]);
+      },
+      susItemHeight: getSquareSize(30),
+    ));
   }
 }
 
@@ -231,16 +252,19 @@ class TencentCloudChatContactGroupItem extends StatefulWidget {
   const TencentCloudChatContactGroupItem({super.key, required this.group});
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatContactGroupItemState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatContactGroupItemState();
 }
 
-class TencentCloudChatContactGroupItemState extends TencentCloudChatState<TencentCloudChatContactGroupItem> {
-  final isDesktop = TencentCloudChatScreenAdapter.deviceScreenType == DeviceScreenType.desktop;
+class TencentCloudChatContactGroupItemState
+    extends TencentCloudChatState<TencentCloudChatContactGroupItem> {
+  final isDesktop = TencentCloudChatScreenAdapter.deviceScreenType ==
+      DeviceScreenType.desktop;
 
   navigateToChat() async {
-    final tryUseOnNavigateToChat = await TencentCloudChat
-        .instance.dataInstance.contact.contactEventHandlers?.uiEventHandlers.onNavigateToChat
-        ?.call(userID: null, groupID: widget.group.groupID) ??
+    final tryUseOnNavigateToChat = await TencentCloudChat.instance.dataInstance
+            .contact.contactEventHandlers?.uiEventHandlers.onNavigateToChat
+            ?.call(userID: null, groupID: widget.group.groupID) ??
         false;
     if (!tryUseOnNavigateToChat) {
       if (TencentCloudChat.instance.dataInstance.basic.usedComponents
@@ -254,10 +278,13 @@ class TencentCloudChatContactGroupItemState extends TencentCloudChatState<Tencen
             ),
           );
         } else {
-          final conv = await TencentCloudChat.instance.chatSDKInstance.conversationSDK.getConversation(
+          final conv = await TencentCloudChat
+              .instance.chatSDKInstance.conversationSDK
+              .getConversation(
             groupID: widget.group.groupID,
           );
-          TencentCloudChat.instance.dataInstance.conversation.currentConversation = conv;
+          TencentCloudChat
+              .instance.dataInstance.conversation.currentConversation = conv;
         }
       }
     }
@@ -266,8 +293,7 @@ class TencentCloudChatContactGroupItemState extends TencentCloudChatState<Tencen
   @override
   Widget defaultBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
-        build: (context, color, textStyle) =>
-            Material(
+        build: (context, color, textStyle) => Material(
               color: color.backgroundColor,
               child: InkWell(
                   onTap: navigateToChat,
@@ -277,9 +303,11 @@ class TencentCloudChatContactGroupItemState extends TencentCloudChatState<Tencen
                       horizontal: getWidth(3),
                     ),
                     child: Row(children: [
-                      TencentCloudChat.instance.dataInstance.contact.contactBuilder
+                      TencentCloudChat
+                          .instance.dataInstance.contact.contactBuilder
                           ?.getContactGroupListItemAvatarBuilder(widget.group),
-                      TencentCloudChat.instance.dataInstance.contact.contactBuilder
+                      TencentCloudChat
+                          .instance.dataInstance.contact.contactBuilder
                           ?.getContactGroupListItemContentBuilder(widget.group)
                     ]),
                   )),
@@ -296,7 +324,8 @@ class TencentCloudChatContactGroupItemAvatar extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatContactGroupItemAvatarState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatContactGroupItemAvatarState();
 }
 
 class TencentCloudChatContactGroupItemAvatarState
@@ -320,10 +349,12 @@ class TencentCloudChatContactGroupItemAvatarState
 class TencentCloudChatContactGroupItemContent extends StatefulWidget {
   final V2TimGroupInfo group;
 
-  const TencentCloudChatContactGroupItemContent({super.key, required this.group});
+  const TencentCloudChatContactGroupItemContent(
+      {super.key, required this.group});
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatContactGroupItemContentState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatContactGroupItemContentState();
 }
 
 class TencentCloudChatContactGroupItemContentState
@@ -332,8 +363,7 @@ class TencentCloudChatContactGroupItemContentState
   Widget defaultBuilder(BuildContext context) {
     return Expanded(
         child: TencentCloudChatThemeWidget(
-            build: (context, color, text) =>
-                Row(
+            build: (context, color, text) => Row(
                   children: [
                     Text(
                       widget.group.groupName ?? widget.group.groupID,
@@ -352,65 +382,60 @@ class TencentCloudChatContactGroupListTag extends StatefulWidget {
   final String tag;
   final int? count;
 
-  const TencentCloudChatContactGroupListTag({super.key, required this.tag, this.count});
+  const TencentCloudChatContactGroupListTag(
+      {super.key, required this.tag, this.count});
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatContactGroupListTagState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatContactGroupListTagState();
 }
 
-class TencentCloudChatContactGroupListTagState extends TencentCloudChatState<TencentCloudChatContactGroupListTag> {
+class TencentCloudChatContactGroupListTagState
+    extends TencentCloudChatState<TencentCloudChatContactGroupListTag> {
   @override
   Widget defaultBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) =>
-            Container(
-                color: colorTheme.contactApplicationBackgroundColor,
-                height: getSquareSize(40),
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width,
-                padding: const EdgeInsets.only(left: 16.0, bottom: 3),
-                // color: Color.fromARGB(255, 255, 255, 255),
-                alignment: Alignment.bottomLeft,
-                child: Text(
-                  "${widget.tag} (${widget.count})",
-                  style: TextStyle(
-                    fontSize: textStyle.fontsize_14,
-                    fontWeight: FontWeight.w400,
-                    color: colorTheme.contactItemFriendNameColor,
-                  ),
-                )));
+        build: (context, colorTheme, textStyle) => Container(
+            color: colorTheme.contactApplicationBackgroundColor,
+            height: getSquareSize(40),
+            width: MediaQuery.of(context).size.width,
+            padding: const EdgeInsets.only(left: 16.0, bottom: 3),
+            // color: Color.fromARGB(255, 255, 255, 255),
+            alignment: Alignment.bottomLeft,
+            child: Text(
+              "${widget.tag} (${widget.count})",
+              style: TextStyle(
+                fontSize: textStyle.fontsize_14,
+                fontWeight: FontWeight.w400,
+                color: colorTheme.contactItemFriendNameColor,
+              ),
+            )));
   }
 
   @override
   Widget desktopBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) =>
-            Container(
-                decoration: BoxDecoration(
-                  color: colorTheme.backgroundColor,
-                  border: Border(
-                      bottom: BorderSide(
-                        width: 1,
-                        color: colorTheme.contactItemTabItemBorderColor,
-                      )),
-                ),
-                height: getSquareSize(40),
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width,
-                padding: const EdgeInsets.only(left: 16.0, bottom: 3),
-                alignment: Alignment.bottomLeft,
-                child: Text(
-                  "${widget.tag} (${widget.count})",
-                  style: TextStyle(
-                    fontSize: textStyle.fontsize_14,
-                    fontWeight: FontWeight.w400,
-                    color: colorTheme.contactItemFriendNameColor,
-                  ),
-                )));
+        build: (context, colorTheme, textStyle) => Container(
+            decoration: BoxDecoration(
+              color: colorTheme.backgroundColor,
+              border: Border(
+                  bottom: BorderSide(
+                width: 1,
+                color: colorTheme.contactItemTabItemBorderColor,
+              )),
+            ),
+            height: getSquareSize(40),
+            width: MediaQuery.of(context).size.width,
+            padding: const EdgeInsets.only(left: 16.0, bottom: 3),
+            alignment: Alignment.bottomLeft,
+            child: Text(
+              "${widget.tag} (${widget.count})",
+              style: TextStyle(
+                fontSize: textStyle.fontsize_14,
+                fontWeight: FontWeight.w400,
+                color: colorTheme.contactItemFriendNameColor,
+              ),
+            )));
   }
 }
 
@@ -423,7 +448,9 @@ class TencentCloudChatContactGroupListData {
     return {'groupList': groupList.toString()};
   }
 
-  static TencentCloudChatContactGroupListData fromMap(Map<String, dynamic> map) {
-    return TencentCloudChatContactGroupListData(groupList: map['groupList'] as List<V2TimGroupInfo>);
+  static TencentCloudChatContactGroupListData fromMap(
+      Map<String, dynamic> map) {
+    return TencentCloudChatContactGroupListData(
+        groupList: map['groupList'] as List<V2TimGroupInfo>);
   }
 }
