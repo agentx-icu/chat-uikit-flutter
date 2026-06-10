@@ -30,10 +30,19 @@ class TencentCloudChatMessageInputMobile extends StatefulWidget {
   final MessageInputBuilderData inputData;
   final MessageInputBuilderMethods inputMethods;
 
+  /// Test seam (canonical optional-ctor pattern): resolves whether the current
+  /// platform is "mobile" for the press-and-hold voice-record gate in
+  /// [_onStartRecording]. Production leaves this null and falls back to the
+  /// real [TencentCloudChatPlatformAdapter] check, so behaviour is unchanged on
+  /// device. A widget test on a desktop host (where the adapter reports
+  /// non-mobile) can inject `() => true` to drive the real record handler.
+  final bool Function()? debugIsMobile;
+
   const TencentCloudChatMessageInputMobile({
     super.key,
     required this.inputData,
     required this.inputMethods,
+    this.debugIsMobile,
   });
 
   @override
@@ -257,7 +266,9 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
 
   void _onStartRecording(PointerDownEvent event) async {
     isStarted = true;
-    if (TencentCloudChatPlatformAdapter().isMobile &&
+    final bool isMobilePlatform =
+        widget.debugIsMobile?.call() ?? TencentCloudChatPlatformAdapter().isMobile;
+    if (isMobilePlatform &&
         await TencentCloudChatPermissionHandler.checkPermission("microphone", context) &&
         isStarted) {
       _recordingStarter?.cancel();

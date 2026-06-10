@@ -192,7 +192,11 @@ class _TencentCloudChatMessageRowState
               }
             }
           } catch (err) {
-            return Container();
+            // Non-JSON custom-elem data: fall through to the standard row
+            // layout below, which renders via widget.widgets.messageRowMessageItem
+            // (the custom fallback widget).  This matches desktopBuilder, which
+            // has no custom-elem guard and always falls through to the same
+            // messageRowMessageItem path.
           }
         }
       }

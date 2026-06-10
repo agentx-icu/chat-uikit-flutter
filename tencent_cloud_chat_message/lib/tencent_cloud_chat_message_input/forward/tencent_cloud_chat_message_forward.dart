@@ -41,29 +41,45 @@ class _TencentCloudChatMessageForwardState extends TencentCloudChatState<Tencent
   Widget _renderHeader() => TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => Padding(
           padding: EdgeInsets.only(top: getHeight(8), left: getWidth(4), right: getWidth(4)),
+          // Equal-flex side slots keep the title geometrically centered on the
+          // sheet even when the Cancel/Send labels differ in width (zh/ja
+          // locales), on every breakpoint that shares this header.
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TextButton(
-                onPressed: widget.methods.onCancel,
-                child: Text(
-                  tL10n.cancel,
-                  style: TextStyle(fontSize: textStyle.fontsize_14, color: colorTheme.primaryColor),
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton(
+                    onPressed: widget.methods.onCancel,
+                    child: Text(
+                      tL10n.cancel,
+                      style: TextStyle(fontSize: textStyle.fontsize_14, color: colorTheme.primaryColor),
+                    ),
+                  ),
                 ),
               ),
-              Text(
-                widget.data.type == TencentCloudChatForwardType.individually
-                    ? tL10n.forwardIndividually
-                    : tL10n.forwardCombined,
-                style: TextStyle(fontSize: textStyle.fontsize_16),
-              ),
-              TextButton(
-                onPressed: () {
-                  widget.methods.onSelectConversations(_selectedConversations);
-                },
+              Flexible(
                 child: Text(
-                  tL10n.send,
-                  style: TextStyle(fontSize: textStyle.fontsize_14, color: colorTheme.primaryColor),
+                  widget.data.type == TencentCloudChatForwardType.individually
+                      ? tL10n.forwardIndividually
+                      : tL10n.forwardCombined,
+                  style: TextStyle(fontSize: textStyle.fontsize_16),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton(
+                    onPressed: () {
+                      widget.methods.onSelectConversations(_selectedConversations);
+                    },
+                    child: Text(
+                      tL10n.send,
+                      style: TextStyle(fontSize: textStyle.fontsize_14, color: colorTheme.primaryColor),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -192,19 +208,21 @@ class _TencentCloudChatMessageForwardState extends TencentCloudChatState<Tencent
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            TabBar(
-              tabAlignment: TabAlignment.start,
-              isScrollable: true,
-              labelColor: colorTheme.primaryTextColor,
-              unselectedLabelColor: colorTheme.secondaryTextColor,
-              labelStyle: TextStyle(fontSize: textStyle.fontsize_14),
-              indicatorColor: colorTheme.primaryColor,
-              indicatorWeight: 2,
-              tabs: [
-                Tab(text: tL10n.recent),
-                Tab(text: tL10n.contacts),
-                Tab(text: tL10n.groups),
-              ],
+            Expanded(
+              child: TabBar(
+                tabAlignment: TabAlignment.start,
+                isScrollable: true,
+                labelColor: colorTheme.primaryTextColor,
+                unselectedLabelColor: colorTheme.secondaryTextColor,
+                labelStyle: TextStyle(fontSize: textStyle.fontsize_14),
+                indicatorColor: colorTheme.primaryColor,
+                indicatorWeight: 2,
+                tabs: [
+                  Tab(text: tL10n.recent),
+                  Tab(text: tL10n.contacts),
+                  Tab(text: tL10n.groups),
+                ],
+              ),
             ),
             Container(
               margin: EdgeInsets.only(right: getWidth(16)),

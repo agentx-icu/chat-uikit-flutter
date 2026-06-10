@@ -45,6 +45,22 @@ class TencentCloudChatMessageSound extends TencentCloudChatMessageItemBase {
     required super.methods,
   });
 
+  /// Test seam: when non-null, a tap-to-play that reaches a `playAudio`
+  /// dispatch routes the resolved [AudioPlayInfo] here instead of driving the
+  /// real `audioplayers` plugin (whose `AudioPlayer` is only constructed during
+  /// full UIKit `register()` and whose channel/event plumbing is not reliably
+  /// available in a bare widget test). All of `playSound`'s real branch logic
+  /// (playing/paused/local/online resolution) still runs first; only the final
+  /// platform dispatch is captured. Production behaviour is unchanged when this
+  /// stays null. Shared Dart → covers mobile + desktop.
+  @visibleForTesting
+  static void Function(AudioPlayInfo info)? debugPlayAudioOverride;
+
+  /// Clears [debugPlayAudioOverride] — call from test setUp/tearDown so a
+  /// forgotten override can never bleed across tests.
+  @visibleForTesting
+  static void debugResetPlayAudioOverride() => debugPlayAudioOverride = null;
+
   @override
   State<StatefulWidget> createState() => _TencentCloudChatMessageSoundState();
 }
@@ -323,8 +339,7 @@ class _TencentCloudChatMessageSoundState extends TencentCloudChatMessageState<Te
     }
     if (hasLocalSound()) {
       var localu = getLocalUrl();
-      return await TencentCloudChat.instance.dataInstance.messageData.playAudio(
-          source: AudioPlayInfo(
+      return await _dispatchPlay(AudioPlayInfo(
         type: AudioPlayType.path,
         path: localu,
         msgID: (widget.data.message.msgID ?? ""),
@@ -336,8 +351,7 @@ class _TencentCloudChatMessageSoundState extends TencentCloudChatMessageState<Te
     if (hasSelfClientPath()) {
       var localp = getLocalPath();
 
-      return await TencentCloudChat.instance.dataInstance.messageData.playAudio(
-          source: AudioPlayInfo(
+      return await _dispatchPlay(AudioPlayInfo(
         type: AudioPlayType.path,
         path: localp,
         msgID: (widget.data.message.msgID ?? ""),
@@ -348,8 +362,7 @@ class _TencentCloudChatMessageSoundState extends TencentCloudChatMessageState<Te
     }
 
     if (currentRenderSoundInfo?.type == TimSoundCurrentRenderType.online) {
-      return await TencentCloudChat.instance.dataInstance.messageData.playAudio(
-          source: AudioPlayInfo(
+      return await _dispatchPlay(AudioPlayInfo(
         type: AudioPlayType.online,
         path: currentRenderSoundInfo?.path ?? "",
         msgID: (widget.data.message.msgID ?? ""),
@@ -359,6 +372,19 @@ class _TencentCloudChatMessageSoundState extends TencentCloudChatMessageState<Te
       ));
     }
     console("play error. ${currentRenderSoundInfo?.toJson()}");
+  }
+
+  /// Final play dispatch. Routes to the test seam when set (capturing the
+  /// resolved [AudioPlayInfo]), otherwise to the real audio plugin via
+  /// `messageData.playAudio`.
+  Future<void> _dispatchPlay(AudioPlayInfo source) async {
+    final override = TencentCloudChatMessageSound.debugPlayAudioOverride;
+    if (override != null) {
+      override(source);
+      return;
+    }
+    return await TencentCloudChat.instance.dataInstance.messageData
+        .playAudio(source: source);
   }
 
   DownloadMessageQueueData? currentdownload;

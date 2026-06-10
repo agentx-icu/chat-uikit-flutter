@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/components/component_options/tencent_cloud_chat_message_options.dart';
+import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
 import 'package:tencent_cloud_chat_common/components/tencent_cloud_chat_components_utils.dart';
 import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_navigator.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
@@ -430,6 +432,9 @@ class TencentCloudChatUserProfileChatButtonState
                 const SizedBox(width: 18),
                 Expanded(
                   child: _buildClickableItem(
+                      // Per-tile automation anchor (sibling of the Send tile
+                      // key above) so voice can be key-tapped directly too.
+                      tileKey: const ValueKey('friend_profile_voice_call_tile'),
                       icon: Icons.call,
                       label: tL10n.voiceCall,
                       onTap: callActionsEnabled
@@ -445,6 +450,9 @@ class TencentCloudChatUserProfileChatButtonState
                 const SizedBox(width: 18),
                 Expanded(
                     child: _buildClickableItem(
+                        // Per-tile automation anchor (sibling of the Send tile
+                        // key above) so video can be key-tapped directly too.
+                        tileKey: const ValueKey('friend_profile_video_call_tile'),
                         icon: Icons.videocam_outlined,
                         label: tL10n.videoCall,
                         onTap: callActionsEnabled
@@ -461,11 +469,28 @@ class TencentCloudChatUserProfileChatButtonState
   }
 }
 
+/// Signature of the SDK-boundary dispatch behind the Do-Not-Disturb switch
+/// (matches `contactSDK.setC2CReceiveMessageOpt`).
+typedef UserProfileSetC2CReceiveMessageOpt = Future<V2TimCallback> Function({
+  required List<String> userIDList,
+  required ReceiveMsgOptEnum opt,
+});
+
 class TencentCloudChatUserProfileStateButton extends StatefulWidget {
   final V2TimUserFullInfo userFullInfo;
 
+  /// Test seam (canonical toxee pattern: function-typed optional constructor
+  /// parameter defaulting to the real implementation). Unlike the other
+  /// profile operations (setFriendInfo / clearC2CHistoryMessage /
+  /// deleteFromFriendList), the vendored SDK only routes
+  /// setC2CReceiveMessageOpt through `TencentCloudChatSdkPlatform` on web
+  /// (`if (kIsWeb)` in v2_tim_message_manager.dart), so widget tests cannot
+  /// observe this dispatch at the platform layer; this seam exposes the same
+  /// SDK-boundary call instead. Production behavior is unchanged when null.
+  final UserProfileSetC2CReceiveMessageOpt? setC2CReceiveMessageOpt;
+
   const TencentCloudChatUserProfileStateButton(
-      {super.key, required this.userFullInfo});
+      {super.key, required this.userFullInfo, this.setC2CReceiveMessageOpt});
 
   @override
   State<StatefulWidget> createState() =>
@@ -508,12 +533,14 @@ class TencentCloudChatUserProfileStateButtonState
   }
 
   _setC2CReceiveOpt(bool value) async {
-    var result = await TencentCloudChat.instance.chatSDKInstance.contactSDK
-        .setC2CReceiveMessageOpt(
-            userIDList: [widget.userFullInfo.userID!],
-            opt: value
-                ? ReceiveMsgOptEnum.V2TIM_RECEIVE_NOT_NOTIFY_MESSAGE
-                : ReceiveMsgOptEnum.V2TIM_RECEIVE_MESSAGE);
+    final dispatch = widget.setC2CReceiveMessageOpt ??
+        TencentCloudChat
+            .instance.chatSDKInstance.contactSDK.setC2CReceiveMessageOpt;
+    var result = await dispatch(
+        userIDList: [widget.userFullInfo.userID!],
+        opt: value
+            ? ReceiveMsgOptEnum.V2TIM_RECEIVE_NOT_NOTIFY_MESSAGE
+            : ReceiveMsgOptEnum.V2TIM_RECEIVE_MESSAGE);
 
     if (result.code != 0) {
       setState(() {
@@ -643,6 +670,98 @@ class TencentCloudChatUserProfileDeleteButtonState
     }
   }
 
+  /// Resolves the friend's display name (remark > nickname > id) so the
+  /// delete-confirmation body can name who is about to be removed. Mirrors the
+  /// resolution used by the profile header (`_getFriendRemark`).
+  String _getDisplayName() {
+    final remark = TencentCloudChat
+        .instance.dataInstance.contact.contactList
+        .firstWhere((e) => e.userID == widget.userFullInfo.userID,
+            orElse: () => V2TimFriendInfo(
+                  userID: widget.userFullInfo.userID ?? "",
+                ))
+        .friendRemark;
+    if (remark != null && remark.isNotEmpty) {
+      return remark;
+    }
+    // `??` alone would surface an EMPTY nickname and render a blank dialog
+    // body — fall through to the userID whenever the nickname is missing OR
+    // empty, so the destructive dialog always names its target.
+    final nickName = widget.userFullInfo.nickName;
+    if (nickName != null && nickName.isNotEmpty) {
+      return nickName;
+    }
+    return widget.userFullInfo.userID ?? "";
+  }
+
+  /// Deleting a friend is destructive and irreversible, so confirm first
+  /// instead of dispatching on the single tap. Mirrors
+  /// [showClearChatHistoryDialog]: a one-shot `handled` flag guards against a
+  /// double-fired button (fast double-click or a real-UI test harness) popping
+  /// the root navigator and blanking the app.
+  showDeleteFriendDialog() async {
+    var handled = false;
+    void onCancelPressed() {
+      if (handled) return;
+      handled = true;
+      Navigator.of(context).pop(); // 关闭对话框
+    }
+
+    void onConfirmPressed() {
+      if (handled) return;
+      handled = true;
+      //关闭对话框并执行删除
+      Navigator.of(context).pop(true);
+      onDeleteContact();
+    }
+
+    // Match TencentCloudChatDialog.showAdaptiveDialog's own platform branch:
+    // a CupertinoAlertDialog gets Cupertino actions (destructive-marked
+    // confirm), the Material AlertDialog gets TextButtons (error-colored
+    // confirm). Keys are identical on both branches so tests stay
+    // platform-agnostic.
+    final isApple = TencentCloudChatPlatformAdapter().isIOS ||
+        TencentCloudChatPlatformAdapter().isMacOS;
+    final actions = isApple
+        ? <Widget>[
+            CupertinoDialogAction(
+              key: const ValueKey('user_profile_delete_friend_cancel_button'),
+              onPressed: onCancelPressed,
+              child: Text(tL10n.cancel),
+            ),
+            CupertinoDialogAction(
+              key: const ValueKey('user_profile_delete_friend_confirm_button'),
+              isDestructiveAction: true,
+              onPressed: onConfirmPressed,
+              child: Text(tL10n.confirm),
+            ),
+          ]
+        : <Widget>[
+            TextButton(
+              key: const ValueKey('user_profile_delete_friend_cancel_button'),
+              onPressed: onCancelPressed,
+              child: Text(tL10n.cancel),
+            ),
+            TextButton(
+              key: const ValueKey('user_profile_delete_friend_confirm_button'),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              onPressed: onConfirmPressed,
+              child: Text(tL10n.confirm),
+            ),
+          ];
+
+    TencentCloudChatDialog.showAdaptiveDialog(
+      key: const ValueKey('user_profile_delete_friend_dialog'),
+      context: context,
+      barrierDismissible: true,
+      title: Text(tL10n.delete),
+      content: Text(_getDisplayName()),
+      actions: actions,
+    );
+  }
+
   showClearChatHistoryDialog() async {
     // The actions below capture this State's (outer) context, not a dialog
     // builder context, so popDialogIfCurrent would test the wrong route. A
@@ -764,7 +883,7 @@ class TencentCloudChatUserProfileDeleteButtonState
                     child: GestureDetector(
                         key:
                             const ValueKey('user_profile_delete_friend_button'),
-                        onTap: onDeleteContact,
+                        onTap: showDeleteFriendDialog,
                         child: Text(
                           tL10n.delete,
                           style: TextStyle(

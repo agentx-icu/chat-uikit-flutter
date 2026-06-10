@@ -66,6 +66,19 @@ class TencentCloudChatMessageFile extends TencentCloudChatMessageItemBase {
     required super.methods,
   });
 
+  /// Test seam: when non-null, [_openFile] routes the resolved local path here
+  /// instead of invoking the real `OpenFile.open` platform plugin (which would
+  /// hit a MethodChannel on macOS/iOS/Android and `Process.run` on Linux — not
+  /// uniformly interceptable in a widget test). Production behaviour is
+  /// unchanged when this stays null. Shared Dart → covers mobile + desktop.
+  @visibleForTesting
+  static Future<void> Function(String path)? debugOpenFileOverride;
+
+  /// Clears [debugOpenFileOverride] — call from test setUp/tearDown so a
+  /// forgotten override can never bleed across tests.
+  @visibleForTesting
+  static void debugResetOpenFileOverride() => debugOpenFileOverride = null;
+
   @override
   State<StatefulWidget> createState() => _TencentCloudChatMessageFileState();
 }
@@ -431,6 +444,12 @@ class _TencentCloudChatMessageFileState extends TencentCloudChatMessageState<Ten
 
     if (pathToOpen == null) {
       console("message has not local path . download first");
+      return;
+    }
+
+    final override = TencentCloudChatMessageFile.debugOpenFileOverride;
+    if (override != null) {
+      await override(pathToOpen);
       return;
     }
 
