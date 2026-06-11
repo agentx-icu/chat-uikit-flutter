@@ -78,6 +78,12 @@ class _TencentCloudChatMessageHeaderInfoState
                               widget.conversation?.showName) ??
                           widget.userID ??
                           tL10n.chat,
+                      // Toxee automation-only key: the OPEN-chat header title.
+                      // The real-UI harness reads it via interactiveStructured
+                      // (`_keyedText('chat_header_title_text')`) to assert which
+                      // conversation the chat surface shows — distinct from the
+                      // conversation-LIST row's showName.
+                      key: const ValueKey('chat_header_title_text'),
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                           fontSize: textStyle.standardLargeText,

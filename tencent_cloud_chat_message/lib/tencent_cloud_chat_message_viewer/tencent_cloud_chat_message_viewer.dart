@@ -395,6 +395,12 @@ class TencentCloudChatMessageViewerState extends State<TencentCloudChatMessageVi
     var bottom = (h / 2) + (boxWid / 2) - 40; // remove appbar height
 
     return GestureDetector(
+      // Toxee automation-only key: stable identity for the fullscreen media
+      // viewer dialog (image/video preview). The real-UI harness waits on it to
+      // prove the preview route mounted, and taps it (onTap: closeViewer) to
+      // dismiss. On the GestureDetector itself so interactiveStructured
+      // surfaces it as an interactive element.
+      key: const ValueKey('message_viewer_root'),
       onTap: closeViewer,
       child: Container(
         color: Colors.black,
