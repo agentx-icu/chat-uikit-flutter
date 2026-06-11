@@ -73,6 +73,7 @@ class TencentCloudChatDesktopImageTools {
                     width: 20,
                   ),
                   ElevatedButton(
+                      key: const ValueKey('desktop_send_image_confirm_button'),
                       onPressed: () {
                         sendImageMessage(
                           imagePath: imagePath,
