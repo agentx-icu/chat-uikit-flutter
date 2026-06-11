@@ -87,15 +87,18 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
   }
 
   Widget _renderSendingStatus(TencentCloudChatThemeColors colorTheme) {
-      return Container(
-        margin: const EdgeInsets.only(right: 6),
-        width: 12.0,
-        height: 12.0,
-        child: CircularProgressIndicator(
-          strokeWidth: 1.0,
-          color: colorTheme.secondaryTextColor,
-        ),
-      );
+    return Container(
+      key: ValueKey(
+        'message_send_status:${widget.data.message.msgID ?? ''}:sending',
+      ),
+      margin: const EdgeInsets.only(right: 6),
+      width: 12.0,
+      height: 12.0,
+      child: CircularProgressIndicator(
+        strokeWidth: 1.0,
+        color: colorTheme.secondaryTextColor,
+      ),
+    );
   }
 
   void _showResendDialog() {
