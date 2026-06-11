@@ -629,7 +629,10 @@ class MessageListState extends State<MessageList> {
   }
 
   Widget _renderNewMessagesButton(int newMsgCount) {
-    return receivedMsgButtonBuilder(scrollToLatestMessage, context, newMsgCount);
+    return Container(
+      key: const ValueKey('new_messages_chip'),
+      child: receivedMsgButtonBuilder(scrollToLatestMessage, context, newMsgCount),
+    );
   }
 
   Widget _renderScrollToTop() {

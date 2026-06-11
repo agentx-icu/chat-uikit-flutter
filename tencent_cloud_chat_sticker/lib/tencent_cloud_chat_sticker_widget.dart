@@ -129,8 +129,10 @@ class TencentCloudChatStickerTabState extends State<TencentCloudChatStickerTab> 
               int index = TencentCloudChatStickerPlugin.initData.customStickerLists!.indexOf(e);
               bool showActiveStyle = index == widget.activeTabIndex;
               bool isLastIndex = index == TencentCloudChatStickerPlugin.initData.customStickerLists!.length - 1;
-              
+
+              final tabKind = e.type == 1 ? 'face' : 'emoji';
               return GestureDetector(
+                key: ValueKey('sticker_${tabKind}_tab:${e.index}'),
                 onTap: () {
                   widget.onTabClickCallback(index);
                 },
@@ -217,19 +219,27 @@ class TencentCloudChatStickerContentState extends State<TencentCloudChatStickerC
                 crossAxisSpacing: 10,
               ),
               children: currentStickerList
+                  .asMap()
+                  .entries
                   .map(
-                    (e) => GestureDetector(
-                      onTap: () {
-                        sendStickerMessage(
-                          stickerType,
-                          e.name,
-                          stickerIndex,
-                        );
-                      },
-                      child: Image(
-                        image: AssetImage(e.path, package: "tencent_cloud_chat_sticker"),
-                      ),
-                    ),
+                    (entry) {
+                      final cellIndex = entry.key;
+                      final e = entry.value;
+                      final cellKind = stickerType == 1 ? 'face' : 'emoji';
+                      return GestureDetector(
+                        key: ValueKey('sticker_${cellKind}_cell:$stickerIndex:$cellIndex'),
+                        onTap: () {
+                          sendStickerMessage(
+                            stickerType,
+                            e.name,
+                            stickerIndex,
+                          );
+                        },
+                        child: Image(
+                          image: AssetImage(e.path, package: "tencent_cloud_chat_sticker"),
+                        ),
+                      );
+                    },
                   )
                   .toList(),
             ),

@@ -483,6 +483,10 @@ class TencentCloudChatConversationItemAvatarState
                 bottom: 0,
                 right: 0,
                 child: SizedBox(
+                  key: ValueKey(
+                    'conversation_item_online_dot:${widget.conversation.conversationID}:'
+                    '${widget.isOnline ? 'online' : 'offline'}',
+                  ),
                   width: getSquareSize(isDesktop ? 9 : 10),
                   height: getSquareSize(isDesktop ? 9 : 10),
                   child: Container(
