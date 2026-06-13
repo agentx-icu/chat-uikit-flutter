@@ -132,10 +132,15 @@ class TencentCloudChatMessageItemContainerState extends State<TencentCloudChatMe
   Widget build(BuildContext context) {
     String? messageText;
     if (widget.message.status == MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED) {
-      if (widget.message.revokerInfo != null &&
-          TencentCloudChatUtils.checkString(widget.message.revokerInfo?.userID) != null) {
-        messageText = tL10n.memberRecalledMessage(TencentCloudChatUtils.checkString(widget.message.revokerInfo?.nickName) ??
-            widget.message.revokerInfo!.userID!);
+      // toxee: accept a revoker identified by nickName OR userID. toxee's
+      // currentUser can carry a display nickName with an empty placeholder
+      // userID (the V2TIM identity is not the Tox pubkey), so guarding on userID
+      // alone dropped the named "<nick> Recalled a Message" tip in favour of the
+      // generic fallback.
+      final revokerName = TencentCloudChatUtils.checkString(widget.message.revokerInfo?.nickName) ??
+          TencentCloudChatUtils.checkString(widget.message.revokerInfo?.userID);
+      if (widget.message.revokerInfo != null && revokerName != null) {
+        messageText = tL10n.memberRecalledMessage(revokerName);
       } else {
         messageText = tL10n.messageRecalled;
       }

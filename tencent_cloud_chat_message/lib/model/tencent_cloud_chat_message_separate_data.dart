@@ -1238,25 +1238,66 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
   Future recallMessage({
     required V2TimMessage message,
   }) async {
+    // toxee: capture ONLY the target row reference before the revoke call (not
+    // the whole list). revokeMessage (on the Tox platform) deletes the message
+    // from persistence and refreshes the conversation preview, which can race a
+    // reload that removes the row from the live list. Capturing the target lets
+    // us re-insert it as a tombstone if a reload dropped it, WITHOUT writing a
+    // stale pre-revoke list back wholesale (which would clobber any incoming
+    // message / pagination that landed during the await — codex P2).
+    final String key = TencentCloudChatUtils.checkString(_topicID) ??
+        TencentCloudChatUtils.checkString(_groupID) ??
+        _userID ??
+        "";
+    final List<V2TimMessage> currentHistoryMsgList =
+        TencentCloudChat.instance.dataInstance.messageData.getMessageList(key: key);
+    V2TimMessage? target;
+    for (final element in currentHistoryMsgList) {
+      if (element.msgID == message.msgID || element.id == message.id) {
+        target = element;
+        break;
+      }
+    }
+
     final res = await TencentCloudChat.instance.chatSDKInstance.manager
         .getMessageManager()
         .revokeMessage(msgID: message.msgID ?? "", webMessageInstatnce: message.messageFromWeb);
 
-    List<V2TimMessage> currentHistoryMsgList = TencentCloudChat.instance.dataInstance.messageData.getMessageList(
-        key: TencentCloudChatUtils.checkString(_topicID) ??
-            TencentCloudChatUtils.checkString(_groupID) ??
-            _userID ??
-            "");
-
-    if (res.code == 0) {
-      final target =
-          currentHistoryMsgList.firstWhere((element) => element.msgID == message.msgID || element.id == message.id);
-      target.status = MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED;
-      target.revokerInfo = TencentCloudChat.instance.dataInstance.basic.currentUser;
+    // Skip entirely on a failed revoke or an untracked message (codex P2: never
+    // re-publish the list when there is nothing to flip).
+    if (res.code != 0 || target == null) {
+      return;
     }
 
+    target.status = MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED;
+    target.revokerInfo = TencentCloudChat.instance.dataInstance.basic.currentUser;
+
+    // toxee: re-publish the captured list (now carrying the flipped tombstone)
+    // and drive the per-message `messageNeedUpdate` signal. CRITICAL: the
+    // published list and the `messageNeedUpdate` object must be the SAME
+    // identity as `target` — the rendered item matches `messageNeedUpdate` by
+    // identity, so flipping a freshly re-fetched copy and signalling the
+    // captured object (or vice-versa) silently fails to re-render. We therefore
+    // publish the captured list rather than a post-revoke re-fetch.
+    //
+    // KNOWN MINOR LIMITATION (codex P2, self-healing): if a brand-new message
+    // arrived during the (short) revoke await, re-publishing the captured
+    // pre-revoke list briefly drops it from the rendered list until the next
+    // conversation event/reload re-adds it. Acceptable for a quick
+    // user-initiated recall; a precise single-row in-place update is a
+    // follow-up.
+    //
+    // Upstream set disableNotify:true because the Tencent SDK's own
+    // onRecvMessageRevoked callback drove the notify; tim2tox fires the legacy
+    // onRecvMessageRevoked into the fork's no-op handler, so without an explicit
+    // notify here the recalled bubble lingers as its original text.
     TencentCloudChat.instance.dataInstance.messageData.updateMessageList(
-        messageList: currentHistoryMsgList, userID: _userID, groupID: _groupID, topicID: _topicID, disableNotify: true);
+        messageList: currentHistoryMsgList,
+        userID: _userID,
+        groupID: _groupID,
+        topicID: _topicID,
+        disableNotify: false);
+    TencentCloudChat.instance.dataInstance.messageData.messageNeedUpdate = target;
   }
 
   Future setLocalCustomData(String msgID, String localCustomData) async {

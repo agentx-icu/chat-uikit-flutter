@@ -73,10 +73,12 @@ class _TencentCloudChatMessageForwardState extends TencentCloudChatState<Tencent
                   alignment: AlignmentDirectional.centerEnd,
                   child: TextButton(
                     // Stable automation handle for the forward picker's Send
-                    // action. The picker renders in a desktop Overlay popup that
-                    // flutter_skill's interactiveStructured does not surface
-                    // (text-by-bounds tap finds no element), so UI automation
-                    // taps this via the element-tree resolver (ui_key_center).
+                    // action. The picker renders inside a centered showDialog /
+                    // AlertDialog (showPopupWindow with no offset), so UI
+                    // automation taps this via the element-tree resolver
+                    // (ui_key_center). It is only reachable while the dialog is
+                    // up — selecting a target via the keyed row (not a text tap
+                    // on the background sidebar) keeps the dialog open.
                     key: const ValueKey('forward_picker_send_button'),
                     onPressed: () {
                       widget.methods.onSelectConversations(_selectedConversations);
@@ -95,8 +97,18 @@ class _TencentCloudChatMessageForwardState extends TencentCloudChatState<Tencent
 
   Widget _chatItem({required ({String? userID, String? groupID}) conversation, String? showName, String? faceUrl}) {
     final isSelected = _selectedConversations.any((element) => _matchChats(conversation, element));
+    // Stable automation handle for a forward-picker target row, keyed by the
+    // conversation's group/user id. UI automation taps THIS keyed row (inside
+    // the modal dialog) rather than matching the target's display name by text,
+    // which would also match the same conversation's row in the background
+    // sidebar (behind the barrier) and dismiss the picker on tap.
+    final pickerItemId = TencentCloudChatUtils.checkString(conversation.groupID) ??
+        TencentCloudChatUtils.checkString(conversation.userID) ??
+        showName ??
+        '';
     return TencentCloudChatThemeWidget(
       build: (context, colorTheme, textStyle) => AnimatedContainer(
+        key: ValueKey('forward_picker_item:$pickerItemId'),
         padding: EdgeInsets.symmetric(horizontal: getWidth(8), vertical: getHeight(8)),
         color: isSelected ? colorTheme.messageBeenChosenBackgroundColor : Colors.transparent,
         duration: const Duration(milliseconds: 300),
