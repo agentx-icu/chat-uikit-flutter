@@ -311,6 +311,13 @@ class TencentCloudChatDesktopPopup {
                         Container(
                           margin: const EdgeInsets.only(right: 16),
                           child: ElevatedButton(
+                              // Stable automation handle for the primary action
+                              // of the onConfirm/onCancel popup variant (e.g. the
+                              // recall confirm via showSecondaryConfirmDialog).
+                              // Mirrors the actions-path button key above so UI
+                              // automation can confirm regardless of which
+                              // showPopupWindow variant rendered the dialog.
+                              key: const ValueKey('confirm_dialog_primary_button'),
                               onPressed: () {
                                 if (handled) return;
                                 handled = true;

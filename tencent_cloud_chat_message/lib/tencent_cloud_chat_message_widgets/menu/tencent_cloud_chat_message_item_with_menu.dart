@@ -239,7 +239,16 @@ class _TencentCloudChatMessageItemWithMenuState extends TencentCloudChatState<Te
     );
   }
 
-  Widget _buildDesktopMenu({GlobalKey? key}) {
+  // [keyed] controls whether the per-item automation ValueKeys
+  // (`message_menu_item:<action>`) are attached. The desktopBuilder renders a
+  // HIDDEN measurement copy of this menu (an Offstage child used only to size
+  // the popup); that copy must pass `keyed: false` so it does NOT duplicate the
+  // visible overlay menu's keys. Without this, two `message_menu_item:recall`
+  // (etc.) widgets exist whenever a message is mounted, and key-based UI
+  // automation (flutter_skill matches OFFSTAGE subtrees too) can resolve/tap the
+  // stale offstage copy instead of the real menu — the tap then lands on the
+  // dismiss barrier and the action (recall/forward/…) silently never fires.
+  Widget _buildDesktopMenu({GlobalKey? key, bool keyed = true}) {
     final list = widget.methods.getMenuOptions(selectedText: _selectedText);
     return TencentCloudChatThemeWidget(
       build: (context, colorTheme, textStyle) => TencentCloudChatColumnMenu(
@@ -250,8 +259,9 @@ class _TencentCloudChatMessageItemWithMenuState extends TencentCloudChatState<Te
           // Preserve id so the action token resolves the same as mobile.
           id: e.id,
           // Stable test/automation handle for the desktop context-menu entry.
-          // Mirrors the mobile long-press menu key contract.
-          valueKey: tencentCloudChatMessageMenuKeyForOption(e),
+          // Mirrors the mobile long-press menu key contract. Suppressed on the
+          // offstage measurement copy (see [keyed] above) to avoid duplicates.
+          valueKey: keyed ? tencentCloudChatMessageMenuKeyForOption(e) : null,
           onTap: ({Offset? offset}) {
             _removeDesktopMenu();
             e.onTap();
@@ -267,6 +277,12 @@ class _TencentCloudChatMessageItemWithMenuState extends TencentCloudChatState<Te
   List<TableRow> _buildMobileMenuItems({
     required TencentCloudChatThemeColors colorTheme,
     required TencentCloudChatTextStyle textStyle,
+    // See [_buildDesktopMenu]'s `keyed`: the mobile menu is ALSO built twice
+    // (visible overlay + an offstage measurement copy), so the measurement copy
+    // must pass keyed:false to avoid duplicating the `message_menu_item:<action>`
+    // automation keys (flutter_skill matches offstage subtrees → the stale copy
+    // could be tapped instead of the real menu).
+    bool keyed = true,
   }) {
     List<TableRow> menuItems = [];
 
@@ -283,7 +299,8 @@ class _TencentCloudChatMessageItemWithMenuState extends TencentCloudChatState<Te
                 // Stable test/automation handle for the long-press menu entry.
                 // Action token is derived from the option id (e.g. copy, reply,
                 // multiSelect, forward, delete, recall) so it survives locale changes.
-                key: tencentCloudChatMessageMenuKeyForOption(e),
+                // Suppressed on the offstage measurement copy (see [keyed]).
+                key: keyed ? tencentCloudChatMessageMenuKeyForOption(e) : null,
                 onTap: () {
                   _closeMobileMenu();
                   e.onTap();
@@ -352,7 +369,7 @@ class _TencentCloudChatMessageItemWithMenuState extends TencentCloudChatState<Te
     return menuItems;
   }
 
-  Widget _buildMobileMenuWidget({Key? key}) {
+  Widget _buildMobileMenuWidget({Key? key, bool keyed = true}) {
     return TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => Material(
               color: Colors.transparent,
@@ -380,7 +397,7 @@ class _TencentCloudChatMessageItemWithMenuState extends TencentCloudChatState<Te
                     columnWidths: const <int, TableColumnWidth>{
                       0: IntrinsicColumnWidth(),
                     },
-                    children: _buildMobileMenuItems(colorTheme: colorTheme, textStyle: textStyle),
+                    children: _buildMobileMenuItems(colorTheme: colorTheme, textStyle: textStyle, keyed: keyed),
                   ),
                 ),
               ),
@@ -614,7 +631,10 @@ class _TencentCloudChatMessageItemWithMenuState extends TencentCloudChatState<Te
         ),
         Offstage(
           offstage: true,
-          child: _buildMobileMenuWidget(key: _reactionKey),
+          // Measurement-only copy: NO automation keys (see [_buildMobileMenuItems]
+          // keyed param) so it never duplicates the visible menu's
+          // `message_menu_item:<action>` handles.
+          child: _buildMobileMenuWidget(key: _reactionKey, keyed: false),
         ),
       ],
     );
@@ -694,7 +714,10 @@ class _TencentCloudChatMessageItemWithMenuState extends TencentCloudChatState<Te
         ),
         Offstage(
           offstage: true,
-          child: _buildDesktopMenu(key: _menuKey),
+          // Measurement-only copy: NO automation keys (see [_buildDesktopMenu]
+          // keyed param) so it never duplicates the visible menu's
+          // `message_menu_item:<action>` handles.
+          child: _buildDesktopMenu(key: _menuKey, keyed: false),
         ),
         Offstage(
           offstage: true,

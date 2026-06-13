@@ -72,6 +72,12 @@ class _TencentCloudChatMessageForwardState extends TencentCloudChatState<Tencent
                 child: Align(
                   alignment: AlignmentDirectional.centerEnd,
                   child: TextButton(
+                    // Stable automation handle for the forward picker's Send
+                    // action. The picker renders in a desktop Overlay popup that
+                    // flutter_skill's interactiveStructured does not surface
+                    // (text-by-bounds tap finds no element), so UI automation
+                    // taps this via the element-tree resolver (ui_key_center).
+                    key: const ValueKey('forward_picker_send_button'),
                     onPressed: () {
                       widget.methods.onSelectConversations(_selectedConversations);
                     },
