@@ -86,6 +86,16 @@ class _TencentCloudChatDesktopMemberMentionPanelState
                     child: Material(
                       color: colorTheme.backgroundColor,
                       child: InkWell(
+                        // Stable, member-identifying automation key (the row's
+                        // AutoScrollTag ValueKey is positional-only). @All gets a
+                        // fixed suffix; members get their NGC group userID — the
+                        // same identity `l3_group_member_list` exposes — so a
+                        // real-UI driver can target a specific member or @All.
+                        key: ValueKey(
+                          isAtAll
+                              ? 'mention_member:atAll'
+                              : 'mention_member:${memberItem.userID}',
+                        ),
                         onTap: () {
                           widget.onSelectMember((memberFullInfo: memberItem, index: index));
                         },
