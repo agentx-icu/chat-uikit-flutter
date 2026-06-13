@@ -154,7 +154,15 @@ class _TencentCloudChatGroupProfileState extends TencentCloudChatState<TencentCl
     if (widget.builders != null ||
         (oldWidget != null && oldWidget.builders != widget.builders && widget.builders != null)) {
       groupProfileData.groupProfileBuilder = widget.builders;
-    } else {
+    } else if (groupProfileData.groupProfileBuilder == null) {
+      // Only install a fresh default when NONE exists yet — do NOT wipe an
+      // already-installed global builder (e.g. toxee's group-profile override
+      // registered at startup) when this route is pushed without per-widget
+      // `builders`. The previous unconditional reset made the pushed
+      // group-profile route render the UPSTREAM keyless body instead of the
+      // installed override (so toxee's keyed edit-name / id-text / members
+      // surfaces vanished on the live route). Mirrors the null-guarded pattern
+      // the contact component's _updateGlobalData already uses.
       groupProfileData.groupProfileBuilder = TencentCloudChatGroupProfileBuilders();
     }
   }

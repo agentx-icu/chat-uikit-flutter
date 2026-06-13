@@ -87,15 +87,18 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
   }
 
   Widget _renderSendingStatus(TencentCloudChatThemeColors colorTheme) {
-      return Container(
-        margin: const EdgeInsets.only(right: 6),
-        width: 12.0,
-        height: 12.0,
-        child: CircularProgressIndicator(
-          strokeWidth: 1.0,
-          color: colorTheme.secondaryTextColor,
-        ),
-      );
+    return Container(
+      key: ValueKey(
+        'message_send_status:${widget.data.message.msgID ?? ''}:sending',
+      ),
+      margin: const EdgeInsets.only(right: 6),
+      width: 12.0,
+      height: 12.0,
+      child: CircularProgressIndicator(
+        strokeWidth: 1.0,
+        color: colorTheme.secondaryTextColor,
+      ),
+    );
   }
 
   void _showResendDialog() {
@@ -197,18 +200,29 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
                 return _renderFailedStatus(colorTheme, textStyle);
               }
 
+              // Toxee automation-only key: expose the success-state read/sent
+              // distinction as a stable, state-suffixed ValueKey so UI tests
+              // can assert "delivered-but-not-read" vs "peer-read" without
+              // parsing icon glyphs. States: 'read' (done_all — C2C isPeerRead
+              // or group readCount>0), 'sent' (done — SEND_SUCC, not read),
+              // 'other' (deleted/revoked/default gray done).
+              String sendStatusState;
               switch (widget.data.message.status) {
                 case MessageStatus.V2TIM_MSG_STATUS_SEND_SUCC:
                   iconData = showReadByOthersStatus ? Icons.done_all : Icons.done;
+                  sendStatusState = showReadByOthersStatus ? 'read' : 'sent';
                   break;
                 case MessageStatus.V2TIM_MSG_STATUS_HAS_DELETED:
                 case MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED:
                 default:
                   iconData = Icons.done;
                   iconColor = colorTheme.secondaryTextColor;
+                  sendStatusState = 'other';
               }
 
               return Container(
+                key: ValueKey(
+                    'message_send_status:${widget.data.message.msgID ?? ''}:$sendStatusState'),
                 margin: const EdgeInsets.only(right: 4),
                 child: Icon(
                   iconData,

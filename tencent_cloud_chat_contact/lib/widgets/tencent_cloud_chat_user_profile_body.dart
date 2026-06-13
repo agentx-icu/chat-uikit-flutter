@@ -774,6 +774,7 @@ class TencentCloudChatUserProfileDeleteButtonState
       title: Text(tL10n.clearMsgTip),
       actions: <Widget>[
         TextButton(
+          key: const ValueKey('user_profile_clear_history_cancel_button'),
           child: Text(tL10n.cancel),
           onPressed: () {
             if (handled) return;

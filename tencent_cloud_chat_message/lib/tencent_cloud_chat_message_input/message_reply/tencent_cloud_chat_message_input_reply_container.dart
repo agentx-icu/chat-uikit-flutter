@@ -8,10 +8,13 @@ import 'package:tencent_cloud_chat_message/model/tencent_cloud_chat_message_sepa
 class TencentCloudChatMessageInputReplyContainer extends StatefulWidget {
   final V2TimMessage? repliedMessage;
 
-  const TencentCloudChatMessageInputReplyContainer({super.key, this.repliedMessage});
+  const TencentCloudChatMessageInputReplyContainer(
+      {Key? key, this.repliedMessage})
+      : super(key: key ?? const ValueKey('message_input_reply_container'));
 
   @override
-  State<TencentCloudChatMessageInputReplyContainer> createState() => _TencentCloudChatMessageInputReplyContainerState();
+  State<TencentCloudChatMessageInputReplyContainer> createState() =>
+      _TencentCloudChatMessageInputReplyContainerState();
 }
 
 class _TencentCloudChatMessageInputReplyContainerState
@@ -32,8 +35,8 @@ class _TencentCloudChatMessageInputReplyContainerState
           ),
           methods: MessageInputReplyBuilderMethods(
             onCancel: () => dataProvider.quotedMessage = null,
-            onClickReply: () =>
-                TencentCloudChat.instance.dataInstance.messageData.messageHighlighted = widget.repliedMessage,
+            onClickReply: () => TencentCloudChat.instance.dataInstance
+                .messageData.messageHighlighted = widget.repliedMessage,
           ),
         ) ??
         Container();
