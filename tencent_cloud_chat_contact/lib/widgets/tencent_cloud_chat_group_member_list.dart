@@ -246,21 +246,30 @@ class TencentCloudChatGroupMemberListAzListState
       itemCount: list.length,
       itemBuilder: (context, index) {
         final item = list[index].memberInfo;
-        return TencentCloudChatGroupMemberListItem(
-          onDeleteGroupMember: () async {
-            final deleteRes = await contactPresenter.kickGroupMember(
-                groupID: widget.groupInfo.groupID, memberList: [item.userID]);
-            if (deleteRes.code == 0) {
-              safeSetState(() {
-                list.removeWhere(
-                    (element) => element.memberInfo.userID == item.userID);
-              });
-            }
-          },
-          memberFullInfo: item,
-          myRole: myRole,
-          groupInfo: widget.groupInfo,
-          lastMessageTime: widget.lastMessageTimeMap?[item.userID],
+        // Stable per-member row key for real-UI automation (the desktop
+        // right-click member menu / kick / role flows resolve the row by this
+        // key, then secondary-tap its center). KeyedSubtree because the item
+        // widget itself takes no key parameter. Automation-only, shared Dart →
+        // mobile covered.
+        return KeyedSubtree(
+          key: ValueKey('group_member_list_item:${item.userID}'),
+          child: TencentCloudChatGroupMemberListItem(
+            onDeleteGroupMember: () async {
+              final deleteRes = await contactPresenter.kickGroupMember(
+                  groupID: widget.groupInfo.groupID,
+                  memberList: [item.userID]);
+              if (deleteRes.code == 0) {
+                safeSetState(() {
+                  list.removeWhere(
+                      (element) => element.memberInfo.userID == item.userID);
+                });
+              }
+            },
+            memberFullInfo: item,
+            myRole: myRole,
+            groupInfo: widget.groupInfo,
+            lastMessageTime: widget.lastMessageTimeMap?[item.userID],
+          ),
         );
       },
       indexBarData: SuspensionUtil.getTagIndexList(list)
@@ -390,20 +399,26 @@ class TencentCloudChatGroupMemberListItemState
     final List<PopupMenuEntry<String>> items = <PopupMenuEntry<String>>[
       const PopupMenuItem<String>(
         value: 'info',
-        child: ListTile(
-          leading: Icon(Icons.person_outline),
-          title: Text('Info'),
-          dense: true,
-          contentPadding: EdgeInsets.zero,
+        child: KeyedSubtree(
+          key: ValueKey('group_member_desktop_info_item'),
+          child: ListTile(
+            leading: Icon(Icons.person_outline),
+            title: Text('Info'),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
         ),
       ),
       const PopupMenuItem<String>(
         value: 'copy',
-        child: ListTile(
-          leading: Icon(Icons.copy),
-          title: Text('Copy Tox ID'),
-          dense: true,
-          contentPadding: EdgeInsets.zero,
+        child: KeyedSubtree(
+          key: ValueKey('group_member_desktop_copy_id_item'),
+          child: ListTile(
+            leading: Icon(Icons.copy),
+            title: Text('Copy Tox ID'),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
         ),
       ),
     ];
@@ -411,14 +426,17 @@ class TencentCloudChatGroupMemberListItemState
       items.add(
         PopupMenuItem<String>(
           value: 'admin',
-          child: ListTile(
-            leading: const Icon(Icons.shield_outlined),
-            title: Text(
-                role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_MEMBER
-                    ? tL10n.setAsAdmin
-                    : tL10n.dismissAdmin),
-            dense: true,
-            contentPadding: EdgeInsets.zero,
+          child: KeyedSubtree(
+            key: const ValueKey('group_member_desktop_role_item'),
+            child: ListTile(
+              leading: const Icon(Icons.shield_outlined),
+              title: Text(
+                  role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_MEMBER
+                      ? tL10n.setAsAdmin
+                      : tL10n.dismissAdmin),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
           ),
         ),
       );
@@ -427,13 +445,16 @@ class TencentCloudChatGroupMemberListItemState
       items.add(
         PopupMenuItem<String>(
           value: 'remove',
-          child: ListTile(
-            leading:
-                const Icon(Icons.person_remove_outlined, color: Colors.red),
-            title:
-                Text(tL10n.delete, style: const TextStyle(color: Colors.red)),
-            dense: true,
-            contentPadding: EdgeInsets.zero,
+          child: KeyedSubtree(
+            key: const ValueKey('group_member_desktop_kick_item'),
+            child: ListTile(
+              leading:
+                  const Icon(Icons.person_remove_outlined, color: Colors.red),
+              title:
+                  Text(tL10n.delete, style: const TextStyle(color: Colors.red)),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
           ),
         ),
       );
@@ -535,6 +556,7 @@ class TencentCloudChatGroupMemberListItemState
     if (canSetAdmin()) {
       actionList.add(
         CupertinoActionSheetAction(
+          key: const ValueKey('group_member_action_role_button'),
           onPressed: () {
             if (handled) return;
             handled = true;
