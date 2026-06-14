@@ -583,12 +583,12 @@ class TencentCloudChatGroupProfileStateButtonState
   @override
   void initState() {
     super.initState();
-    if (widget.groupInfo.recvOpt ==
-        ReceiveMsgOptEnum.V2TIM_RECEIVE_MESSAGE.index) {
-      disturb = false;
-    } else {
-      disturb = true;
-    }
+    // Default to NOT muted unless the group is EXPLICITLY do-not-disturb
+    // (recvOpt == 2). Tox NGC groups don't populate recvOpt, so it arrives
+    // null — the old `!= RECEIVE(0)` test wrongly defaulted that null to
+    // muted=true, so the switch rendered ON and couldn't be toggled cleanly.
+    disturb = widget.groupInfo.recvOpt ==
+        ReceiveMsgOptEnum.V2TIM_RECEIVE_NOT_NOTIFY_MESSAGE.index;
 
     int index = TencentCloudChat
         .instance.dataInstance.conversation.conversationList
@@ -607,6 +607,14 @@ class TencentCloudChatGroupProfileStateButtonState
     } else {
       opt = ReceiveMsgOptEnum.V2TIM_RECEIVE_MESSAGE;
     }
+    // NOTE: Tox has no native group receive-option, so this bridge call is a
+    // no-op stub that reports non-zero for an NGC group; the conversation's
+    // recvOpt stays 0 and the UI only flips when code==0. A real group mute
+    // needs a LOCAL Prefs-backed recv-opt (keyed by account+group) projected
+    // into the conversation recvOpt + read by the notification suppressor —
+    // tracked as a follow-up. We deliberately do NOT flip the switch
+    // unconditionally here: that would display "muted" while still notifying
+    // (a misleading cosmetic state).
     final res = await TencentCloudChat.instance.chatSDKInstance.groupSDK
         .setGroupReceiveMessageOpt(groupID: widget.groupInfo.groupID, opt: opt);
     if (res.code == 0) {
