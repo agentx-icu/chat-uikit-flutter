@@ -207,20 +207,33 @@ class TencentCloudChatGroupProfileData<T> extends TencentCloudChatDataAB<T> {
           dedupedList.add(member);
         }
       }
-      groupMemberListCache.set(groupID, dedupedList);
-      updateGroupID = groupID;
-      
-      // Create and store the future before notifying
-      final completedFuture = Future.value(dedupedList);
-      _pendingLoads[groupID] = completedFuture;
-      
-      notifyListener(TencentCloudChatGroupProfileDataKeys.membersChange as T);
-      
-      // Clear loading state after a delay to prevent rapid successive calls
-      Future.delayed(_minLoadInterval, () {
+      // Only CACHE + serve a completed future on SUCCESS. On a transient
+      // code != 0 — e.g. a freshly-created same-host NGC group whose member
+      // list isn't ready yet (the founder add still returns code 0 normally,
+      // but a create→open race / not-yet-connected join can return non-zero) —
+      // `list` is empty. Caching that empty result + a pending empty future
+      // would serve a STALE empty member list for _minLoadInterval, so the page
+      // renders blank and never recovers. Instead leave the cache untouched and
+      // clear the loading flag immediately so the next open re-fetches.
+      if (res?.code == 0) {
+        groupMemberListCache.set(groupID, dedupedList);
+        updateGroupID = groupID;
+
+        // Create and store the future before notifying
+        final completedFuture = Future.value(dedupedList);
+        _pendingLoads[groupID] = completedFuture;
+
+        notifyListener(TencentCloudChatGroupProfileDataKeys.membersChange as T);
+
+        // Clear loading state after a delay to prevent rapid successive calls
+        Future.delayed(_minLoadInterval, () {
+          _loadingGroups[groupID] = false;
+          _pendingLoads.remove(groupID);
+        });
+      } else {
         _loadingGroups[groupID] = false;
         _pendingLoads.remove(groupID);
-      });
+      }
       return dedupedList;
     }
     return list;
