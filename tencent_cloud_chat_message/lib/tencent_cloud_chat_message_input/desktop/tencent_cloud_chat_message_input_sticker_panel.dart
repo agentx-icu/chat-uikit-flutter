@@ -43,6 +43,12 @@ class _TencentCloudChatDesktopStickerPanelState extends TencentCloudChatState<Te
       bottom: positionY,
       child: TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => Container(
+          // Stable automation handle for the desktop emoji/sticker panel. The
+          // box mounts synchronously when the panel opens (its content is behind
+          // a ~60ms FutureBuilder), so real-UI tests detect "panel opened" via
+          // this key (resolveKeyCenter walks the Positioned overlay). Was
+          // missing, so chat_emoji/chat_sticker could never observe the panel.
+          key: const ValueKey('desktop_sticker_panel'),
           height: height,
           width: width,
           decoration: BoxDecoration(
