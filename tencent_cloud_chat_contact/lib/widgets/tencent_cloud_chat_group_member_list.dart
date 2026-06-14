@@ -203,6 +203,38 @@ class TencentCloudChatGroupMemberListAzListState
     }
   }
 
+  @override
+  void didUpdateWidget(TencentCloudChatGroupMemberListAzList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Recompute the rendered rows when the member list changes AFTER mount —
+    // e.g. the wrapper re-fetches a non-empty list where the first mount got an
+    // empty one (fresh same-host NGC group), or a peer joins / is kicked.
+    // Without this the AzList keeps its initState snapshot and renders a
+    // stale/blank list. The wrapper hands a NEW list instance on every fetch,
+    // so identity inequality reliably detects a real refresh (a plain parent
+    // rebuild reuses the same instance and is skipped).
+    if (identical(widget.memberInfoList, oldWidget.memberInfoList) &&
+        widget.memberInfoList.length == oldWidget.memberInfoList.length) {
+      return;
+    }
+    final loginID =
+        TencentCloudChat.instance.dataInstance.basic.currentUser!.userID;
+    int role;
+    try {
+      role = widget.memberInfoList
+              .firstWhere((element) => element.userID == loginID)
+              .role ??
+          0;
+    } catch (e) {
+      role = 0;
+    }
+    setState(() {
+      tagCount = {};
+      list = _getListTag();
+      myRole = role;
+    });
+  }
+
   List<ISuspensionBeanImpl> _getListTag() {
     final List<ISuspensionBeanImpl> showList = List.empty(growable: true);
     final List<ISuspensionBeanImpl> adminAndOwner = List.empty(growable: true);
