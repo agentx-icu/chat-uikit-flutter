@@ -632,6 +632,12 @@ class TencentCloudChatGroupProfileStateButtonState
         build: (context, colorTheme, textStyle) => Column(
               children: [
                 TencentCloudChatOperationBar(
+                  // Keyed so the real-UI harness can drive the group
+                  // do-not-disturb toggle (matches the friend-profile mute
+                  // switch precedent; the key was declared in UiKeys but never
+                  // attached because toxee doesn't override this state-button
+                  // slot, so the upstream unkeyed bar rendered).
+                  controlKey: const ValueKey('group_profile_mute_switch'),
                   label: tL10n.doNotDisturb,
                   operationBarType: OperationBarType.switchControl,
                   value: disturb,
