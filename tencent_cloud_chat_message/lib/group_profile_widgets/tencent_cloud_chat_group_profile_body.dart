@@ -609,14 +609,12 @@ class TencentCloudChatGroupProfileStateButtonState
     } else {
       opt = ReceiveMsgOptEnum.V2TIM_RECEIVE_MESSAGE;
     }
-    // NOTE: Tox has no native group receive-option, so this bridge call is a
-    // no-op stub that reports non-zero for an NGC group; the conversation's
-    // recvOpt stays 0 and the UI only flips when code==0. A real group mute
-    // needs a LOCAL Prefs-backed recv-opt (keyed by account+group) projected
-    // into the conversation recvOpt + read by the notification suppressor —
-    // tracked as a follow-up. We deliberately do NOT flip the switch
-    // unconditionally here: that would display "muted" while still notifying
-    // (a misleading cosmetic state).
+    // Tox has no native group receive-option, so the bridge persists it LOCALLY
+    // (Prefs, keyed by account+group) and projects it into the conversation
+    // recvOpt — read by the notification suppressor — and into
+    // V2TimGroupInfo.recvOpt (this switch's initial state). The call returns
+    // code 0 on success, so flipping only on code==0 (below) is correct and no
+    // longer cosmetic-only.
     final res = await TencentCloudChat.instance.chatSDKInstance.groupSDK
         .setGroupReceiveMessageOpt(groupID: widget.groupInfo.groupID, opt: opt);
     if (res.code == 0) {

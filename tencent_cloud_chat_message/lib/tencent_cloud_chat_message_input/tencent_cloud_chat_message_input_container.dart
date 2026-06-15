@@ -717,8 +717,14 @@ class _TencentCloudChatMessageInputContainerState
         MaterialPageRoute(
             builder: (context) => TencentCloudChatAtGroupMemberList(
                   groupInfo: _dataProvider.groupInfo,
+                  // Parity with the desktop inline mention: gate @All on admin
+                  // and exclude self by normalized public-key match. The mobile
+                  // picker previously got the raw list (self included) and
+                  // inserted @All for ANY member.
+                  isGroupAdmin: _resolveIsGroupAdmin(),
                   memberInfoList: _dataProvider.groupMemberList
-                      .where((element) => element != null)
+                      .where((element) =>
+                          element != null && !_idIsSelf(element.userID))
                       .map((e) => e!)
                       .toList(),
                 )));
@@ -734,24 +740,51 @@ class _TencentCloudChatMessageInputContainerState
       .getPlugin("sticker")
       ?.pluginInstance;
 
+  // toxee identities have two surface forms — the logged-in id (`currentUserid`,
+  // from currentUser.userID) is the 76-char Tox ID, while group member rows
+  // carry the bare 64-char public key. Match EXACT first (so non-toxee
+  // case-sensitive ids are never conflated, e.g. `alice` vs `ALICE`), then fold
+  // to the shared 64-char public-key prefix (case-insensitive) ONLY when both
+  // look like Tox ids. Mirrors group_member_list.isSelf. An exact-only `==` left
+  // self unmatched → isGroupAdmin always false → @All never rendered, and self
+  // was never excluded from the @-mention list.
+  static bool _idsMatch(String? a, String? b) {
+    if (a == null || b == null) return false;
+    if (a == b) return true;
+    if (a.length >= 64 && b.length >= 64) {
+      return a.substring(0, 64).toUpperCase() ==
+          b.substring(0, 64).toUpperCase();
+    }
+    return false;
+  }
+
+  bool _idIsSelf(String? id) => _idsMatch(id, currentUserid);
+
+  // Self's group role gates the @All entry (V2TIM convention: admins/owner
+  // only). Shared by the desktop inline mention (defaultBuilder) and the mobile
+  // @-mention picker (_onChooseGroupMembers) so both platforms gate @All
+  // identically (mobile previously inserted @All for ANY member → parity gap).
+  bool _resolveIsGroupAdmin() {
+    try {
+      if (TencentCloudChatUtils.checkString(widget.groupID) == null) {
+        return false;
+      }
+      final selfInfo = _dataProvider.groupMemberList.firstWhere((element) =>
+          element != null &&
+          TencentCloudChatUtils.checkString(element.userID) != null &&
+          _idIsSelf(element.userID));
+      if (selfInfo == null) return false;
+      final selfRole = selfInfo.role;
+      return selfRole == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_ADMIN ||
+          selfRole == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_OWNER;
+    } catch (e) {
+      return false;
+    }
+  }
+
   @override
   Widget defaultBuilder(BuildContext context) {
-    bool isGroupAdmin = false;
-    try {
-      if (TencentCloudChatUtils.checkString(widget.groupID) != null) {
-        final selfInfo = _dataProvider.groupMemberList.firstWhere((element) =>
-            element?.userID == currentUserid &&
-            TencentCloudChatUtils.checkString(element?.userID) != null);
-        if (selfInfo != null) {
-          final selfRole = selfInfo.role;
-          isGroupAdmin = (selfRole ==
-                  GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_ADMIN ||
-              selfRole == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_OWNER);
-        }
-      }
-    } catch (e) {
-      isGroupAdmin = false;
-    }
+    final bool isGroupAdmin = _resolveIsGroupAdmin();
 
     String showName = _dataProvider.conversation?.showName ?? "";
     if (showName.isEmpty) {
@@ -795,7 +828,11 @@ class _TencentCloudChatMessageInputContainerState
                 groupMemberList: _groupMemberList
                     .where((element) => element != null)
                     .map((e) => e!)
-                    .where((element) => element.userID != currentUserid)
+                    // Exclude self by normalized public-key match (see _idIsSelf)
+                    // — an exact `!= currentUserid` left self in the @-mention
+                    // list because the 76-char login id never equals the
+                    // member's 64-char pubkey.
+                    .where((element) => !_idIsSelf(element.userID))
                     .toList(),
                 activeMentionIndex: _activeMentionIndex,
                 specifiedMessageText: _specifiedMessageText,

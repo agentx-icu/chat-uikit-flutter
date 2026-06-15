@@ -21,11 +21,17 @@ class ISuspensionBeanImpl<T> extends ISuspensionBean {
 class TencentCloudChatAtGroupMemberList extends StatefulWidget {
   final V2TimGroupInfo groupInfo;
   final List<V2TimGroupMemberFullInfo> memberInfoList;
+  // Whether the @All entry is offered — admin/owner only, parity with the
+  // desktop inline mention. Defaults true to preserve upstream behavior for any
+  // caller that doesn't pass it; toxee's _onChooseGroupMembers passes the
+  // resolved admin state so a non-admin member doesn't get @All on mobile.
+  final bool isGroupAdmin;
 
   const TencentCloudChatAtGroupMemberList({
     Key? key,
     required this.groupInfo,
     required this.memberInfoList,
+    this.isGroupAdmin = true,
   }) : super(key: key);
 
   @override
@@ -59,6 +65,7 @@ class TencentCloudChatAtGroupMemberListState extends TencentCloudChatState<Tence
               child: TencentCloudChatGroupProfileMemberListAzList(
                 groupInfo: widget.groupInfo,
                 memberInfoList: widget.memberInfoList,
+                isGroupAdmin: widget.isGroupAdmin,
                 onSelectGroupMember: _onSelectGroupMember,
               ),
             )));
@@ -122,12 +129,14 @@ class TencentCloudChatAtGroupMemberListState extends TencentCloudChatState<Tence
 class TencentCloudChatGroupProfileMemberListAzList extends StatefulWidget {
   final V2TimGroupInfo groupInfo;
   final List<V2TimGroupMemberFullInfo> memberInfoList;
+  final bool isGroupAdmin;
   final Function(bool isSelect, V2TimGroupMemberFullInfo memberFullInfo) onSelectGroupMember;
 
   const TencentCloudChatGroupProfileMemberListAzList({
     Key? key,
     required this.groupInfo,
     required this.memberInfoList,
+    this.isGroupAdmin = true,
     required this.onSelectGroupMember,
   }) : super(key: key);
 
@@ -164,9 +173,12 @@ class TencentCloudChatGroupProfileMemberListAzListState
       }
     }
     SuspensionUtil.sortListBySuspensionTag(showList);
-    // add @everyone item
+    // add @everyone item — admin/owner only (parity with the desktop inline
+    // mention, which gates @All on isGroupAdmin; mobile previously offered @All
+    // to every member regardless of role).
     final canAtGroupType = ["Work", "Public", "Meeting"];
-    if (canAtGroupType.contains(widget.groupInfo.groupType)) {
+    if (widget.isGroupAdmin &&
+        canAtGroupType.contains(widget.groupInfo.groupType)) {
       showList.insert(
           0,
           ISuspensionBeanImpl(
