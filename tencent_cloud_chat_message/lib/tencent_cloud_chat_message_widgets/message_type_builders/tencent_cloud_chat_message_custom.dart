@@ -257,12 +257,7 @@ class _TencentCloudChatMessageCustomState
                 ? colorTheme.selfMessageBubbleBorderColor
                 : colorTheme.othersMessageBubbleBorderColor,
           ),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(getSquareSize(16)),
-            topRight: Radius.circular(getSquareSize(16)),
-            bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-            bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-          ),
+          borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -737,9 +737,11 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
                       '$_byteCount / $_kToxMaxMessageBytes',
                       style: TextStyle(
                         fontSize: getFontSize(11),
+                        // Over the hard cap -> error; nearing it -> warning tone
+                        // (#FF8800, no dedicated colorTheme warning slot).
                         color: _byteCount > _kToxMaxMessageBytes
                             ? colorTheme.error
-                            : const Color(0xFFE8A317),
+                            : const Color(0xFFFF8800),
                       ),
                     ),
                   ),

@@ -115,12 +115,13 @@ class TencentCloudChatColumnMenuState
                   color: colorTheme.backgroundColor,
                   border: Border.all(color: colorTheme.dividerColor),
                   borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  boxShadow: [
+                  // Subtle, evenly-cast elevation (reference design) instead of
+                  // a heavy offset divider-colored drop shadow.
+                  boxShadow: const [
                     BoxShadow(
-                      color: colorTheme.dividerColor,
-                      offset: const Offset(5, 5),
-                      blurRadius: 10,
-                      spreadRadius: 1,
+                      color: Color(0x1F000000),
+                      offset: Offset(0, 4),
+                      blurRadius: 16,
                     ),
                   ],
                 ),

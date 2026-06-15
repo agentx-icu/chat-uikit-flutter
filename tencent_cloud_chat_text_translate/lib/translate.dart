@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:extended_text/extended_text.dart';
 import 'package:flutter/material.dart';
+import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/utils/sdk_const.dart';
 import 'package:tencent_cloud_chat_intl/tencent_cloud_chat_intl.dart';
 import 'package:tencent_cloud_chat_message/common/text_compiler/tencent_cloud_chat_message_text_compiler.dart';
@@ -60,89 +61,91 @@ class _TencentCloudChatTranslateState extends State<TencentCloudChatTranslate> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Flexible(
-          child: Container(
-              decoration: widget.decoration ??
-                  const BoxDecoration(
-                      color: Color(0xFFF2F7FF),
-                      borderRadius: BorderRadius.all(Radius.circular(5))),
-              padding: widget.padding ??
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  isTranslating
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 1,
-                            color: Colors.grey,
-                          ))
-                      : ExtendedText(
-                          translatedText,
-                          specialTextSpanBuilder: TencentCloudChatSpecialTextSpanBuilder(
-                            onTapUrl: (String value) {},
-                            showAtBackground: true,
-                            stickerPluginInstance: dataProvider.stickerPluginInstance,
+    return TencentCloudChatThemeWidget(
+      build: (context, colorTheme, textStyle) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Container(
+                decoration: widget.decoration ??
+                    BoxDecoration(
+                        color: colorTheme.primaryColor.withOpacity(0.06),
+                        borderRadius: const BorderRadius.all(Radius.circular(8))),
+                padding: widget.padding ??
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    isTranslating
+                        ? SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1,
+                              color: colorTheme.secondaryTextColor,
+                            ))
+                        : ExtendedText(
+                            translatedText,
+                            specialTextSpanBuilder: TencentCloudChatSpecialTextSpanBuilder(
+                              onTapUrl: (String value) {},
+                              showAtBackground: true,
+                              stickerPluginInstance: dataProvider.stickerPluginInstance,
+                              linkColor: colorTheme.primaryColor,
+                            ),
+                            style: widget.textStyle ??
+                                TextStyle(fontSize: 14, color: colorTheme.primaryTextColor),
                           ),
-                          style:
-                              widget.textStyle ?? const  TextStyle(fontSize: 14),
-                        ),
-                  if (!isTranslating) ...[
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 10,
-                          height: 10,
-                          child: Transform.scale(
-                            scale: 0.6,
-                            child: Checkbox(
-                              mouseCursor: SystemMouseCursors.basic,
-                              splashRadius: 0,
-                              shape: const CircleBorder(),
-                              activeColor: const Color(0xffA0A0A0),
-                              value: true,
-                              onChanged: (bool? value) {},
+                    if (!isTranslating) ...[
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 10,
+                            height: 10,
+                            child: Transform.scale(
+                              scale: 0.6,
+                              child: Checkbox(
+                                mouseCursor: SystemMouseCursors.basic,
+                                splashRadius: 0,
+                                shape: const CircleBorder(),
+                                activeColor: colorTheme.secondaryTextColor,
+                                value: true,
+                                onChanged: (bool? value) {},
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(
-                          width: 4,
-                        ),
-                        Text(
-                          tL10n.translatedBy,
-                          style:
-                              const TextStyle(fontSize: 10, color: Color(0xffA0A0A0)),
-                        ),
-                      ],
-                    )
-                  ]
-                ],
-              )),
-        ),
-        if (isError) ...[
-          const SizedBox(
-            width: 4,
+                          const SizedBox(
+                            width: 4,
+                          ),
+                          Text(
+                            tL10n.translatedBy,
+                            style: TextStyle(fontSize: 10, color: colorTheme.secondaryTextColor),
+                          ),
+                        ],
+                      )
+                    ]
+                  ],
+                )),
           ),
-          InkWell(
-              onTap: () {
-                translateText();
-              },
-              child: const Icon(
-                size: 20,
-                Icons.refresh_outlined,
-                color: Colors.grey,
-              ))
-        ]
-      ],
+          if (isError) ...[
+            const SizedBox(
+              width: 4,
+            ),
+            InkWell(
+                onTap: () {
+                  translateText();
+                },
+                child: Icon(
+                  size: 20,
+                  Icons.refresh_outlined,
+                  color: colorTheme.secondaryTextColor,
+                ))
+          ]
+        ],
+      ),
     );
   }
 

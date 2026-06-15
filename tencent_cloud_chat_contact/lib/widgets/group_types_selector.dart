@@ -107,7 +107,7 @@ class _GroupTypesSelectorState extends TencentCloudChatState<GroupTypesSelector>
                               color: colorTheme.backgroundColor,
                               borderRadius: BorderRadius.circular(8.0),
                               border: Border.all(
-                                color: isSelected ? colorTheme.primaryColor : Colors.grey[300]!,
+                                color: isSelected ? colorTheme.primaryColor : colorTheme.dividerColor,
                                 width: 1.0,
                               ),
                             ),

@@ -69,32 +69,25 @@ class TencentCloudChatRobotCardMessageState
 
   @override
   Widget build(BuildContext context) {
+    // The robot plugin has no tencent_cloud_chat_common dependency, so it reads
+    // Flutter's own theme — the toxee app wires the ColorScheme to the design
+    // tokens, so these slots stay mode-correct (was hardcoded white/black/grey).
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final Color secondaryColor = scheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      // decoration: BoxDecoration(
-      //   color: const Color(0xFFFFFFFF),
-      //   border: Border.all(
-      //     color: const Color(0xFFECEBEB),
-      //   ),
-      //   borderRadius: const BorderRadius.only(
-      //     topLeft: Radius.circular(16),
-      //     topRight: Radius.circular(16),
-      //     bottomLeft: Radius.circular(0),
-      //     bottomRight: Radius.circular(16),
-      //   ),
-      // ),
       width: 290,
       child: Row(
         children: [
           Expanded(
             child: Container(
-              color: const Color(0xFFFFFFFF),
+              color: scheme.surface,
               child: Column(
                 children: [
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Icon(Icons.question_answer_outlined),
+                      Icon(Icons.question_answer_outlined, color: scheme.onSurface),
                       const SizedBox(
                         width: 6,
                       ),
@@ -103,10 +96,10 @@ class TencentCloudChatRobotCardMessageState
                           widget.robotData.content.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: Color(0XFF000000),
+                            color: scheme.onSurface,
                           ),
                         ),
                       ),
@@ -121,17 +114,17 @@ class TencentCloudChatRobotCardMessageState
                             widget.robotData.content.content,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Color(0XFF666666),
+                              color: secondaryColor,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  const Divider(
-                    color: Color(0xFFECEBEB),
+                  Divider(
+                    color: scheme.outlineVariant,
                   ),
                   ...widget.robotData.content.items
                       .map(
@@ -144,11 +137,11 @@ class TencentCloudChatRobotCardMessageState
                               Container(
                                 width: 6,
                                 height: 6,
-                                decoration: const BoxDecoration(
-                                  borderRadius: BorderRadius.all(
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.all(
                                     Radius.circular(3),
                                   ),
-                                  color: Color(0XFF666666),
+                                  color: secondaryColor,
                                 ),
                               ),
                               const SizedBox(
@@ -159,16 +152,16 @@ class TencentCloudChatRobotCardMessageState
                                   e.content,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Color(0XFF666666),
+                                  style: TextStyle(
+                                    color: secondaryColor,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
                               ),
-                              const Icon(
+                              Icon(
                                 Icons.chevron_right_sharp,
-                                color: Color(0XFF666666),
+                                color: secondaryColor,
                               )
                             ],
                           ),

@@ -75,12 +75,7 @@ class _TencentCloudChatMessageStickerState extends TencentCloudChatMessageState<
           border: Border.all(
             color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
           ),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(getSquareSize(16)),
-            topRight: Radius.circular(getSquareSize(16)),
-            bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-            bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-          ),
+          borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

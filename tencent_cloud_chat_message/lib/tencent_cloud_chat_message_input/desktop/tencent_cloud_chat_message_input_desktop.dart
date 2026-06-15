@@ -806,60 +806,83 @@ class _TencentCloudChatMessageInputDesktopState
                                     widget.statusText) ==
                                 null)
                               Expanded(
-                                child: Stack(
-                                  alignment: Alignment.bottomRight,
-                                  children: [
-                                    ExtendedTextField(
-                                      key: desktopInputKey,
-                                      scrollController: _scrollController,
-                                      autofocus: true,
-                                      onChanged: _onTextChanged,
-                                      maxLines: maxLines,
-                                      minLines: maxLines,
-                                      focusNode: _textEditingFocusNode,
-                                      keyboardType: TextInputType.multiline,
-                                      onEditingComplete: () {
-                                        //   // widget.onSubmitted();
-                                      },
-                                      textAlignVertical: TextAlignVertical.top,
-                                      style: const TextStyle(fontSize: 14),
-                                      decoration: InputDecoration(
-                                        hoverColor: Colors.transparent,
-                                        border: InputBorder.none,
-                                        hintStyle: const TextStyle(
-                                          color: Color(0xffAEA4A3),
-                                        ),
-                                        fillColor: colorTheme.backgroundColor,
-                                        filled: true,
-                                        isDense: true,
-                                      ),
-                                      controller: _textEditingController,
-                                      specialTextSpanBuilder:
-                                          TencentCloudChatSpecialTextSpanBuilder(
-                                        onTapUrl: (_) {},
-                                        stickerPluginInstance: widget
-                                            .inputData.stickerPluginInstance,
-                                      ),
-                                      onTap: () {
-                                        widget.inputMethods.closeSticker();
-                                      },
+                                child: Container(
+                                  // Rounded composer field: subtle fill + a
+                                  // hairline border so it reads as an inset box
+                                  // against the flat input area (the reference
+                                  // design). Radius 8.
+                                  decoration: BoxDecoration(
+                                    color: colorTheme.inputAreaBackground,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: colorTheme.inputFieldBorderColor,
                                     ),
-                                    if (_byteCount >= _kToxByteCounterThreshold)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                            right: 6, bottom: 2),
-                                        child: Text(
-                                          '$_byteCount / $_kToxMaxMessageBytes',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: _byteCount >
-                                                    _kToxMaxMessageBytes
-                                                ? colorTheme.error
-                                                : const Color(0xFFE8A317),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 2),
+                                  child: Stack(
+                                    alignment: Alignment.bottomRight,
+                                    children: [
+                                      ExtendedTextField(
+                                        key: desktopInputKey,
+                                        scrollController: _scrollController,
+                                        autofocus: true,
+                                        onChanged: _onTextChanged,
+                                        maxLines: maxLines,
+                                        minLines: maxLines,
+                                        focusNode: _textEditingFocusNode,
+                                        keyboardType: TextInputType.multiline,
+                                        onEditingComplete: () {
+                                          //   // widget.onSubmitted();
+                                        },
+                                        textAlignVertical:
+                                            TextAlignVertical.top,
+                                        style: const TextStyle(fontSize: 14),
+                                        decoration: InputDecoration(
+                                          hoverColor: Colors.transparent,
+                                          border: InputBorder.none,
+                                          hintStyle: TextStyle(
+                                            color:
+                                                colorTheme.secondaryTextColor,
+                                          ),
+                                          // Fill comes from the rounded wrapper.
+                                          fillColor: Colors.transparent,
+                                          filled: true,
+                                          isDense: true,
+                                        ),
+                                        controller: _textEditingController,
+                                        specialTextSpanBuilder:
+                                            TencentCloudChatSpecialTextSpanBuilder(
+                                          onTapUrl: (_) {},
+                                          stickerPluginInstance: widget
+                                              .inputData.stickerPluginInstance,
+                                        ),
+                                        onTap: () {
+                                          widget.inputMethods.closeSticker();
+                                        },
+                                      ),
+                                      if (_byteCount >=
+                                          _kToxByteCounterThreshold)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              right: 6, bottom: 2),
+                                          child: Text(
+                                            '$_byteCount / $_kToxMaxMessageBytes',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              // Over the hard cap -> error;
+                                              // nearing it -> warning tone
+                                              // (#FF8800, no colorTheme warning
+                                              // slot).
+                                              color: _byteCount >
+                                                      _kToxMaxMessageBytes
+                                                  ? colorTheme.error
+                                                  : const Color(0xFFFF8800),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                           ],

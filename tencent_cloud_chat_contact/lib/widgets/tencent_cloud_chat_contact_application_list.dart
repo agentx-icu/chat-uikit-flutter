@@ -164,6 +164,11 @@ class TencentCloudChatContactApplicationItemState
   Future<void> _showDesktopContextMenu(Offset globalPosition) async {
     final overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox?;
+    final colorTheme = TencentCloudChat.instance.dataInstance.theme.colorTheme;
+    // Accept → success green (reference design success token). No generic
+    // "success" theme slot exists, so the sampled hex is inlined here. Reject →
+    // themed error color.
+    const Color acceptColor = Color(0xFF2BB344);
     final selected = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -176,11 +181,11 @@ class TencentCloudChatContactApplicationItemState
             ? globalPosition.dy
             : overlay.size.height - globalPosition.dy,
       ),
-      items: const <PopupMenuEntry<String>>[
-        PopupMenuItem<String>(
+      items: <PopupMenuEntry<String>>[
+        const PopupMenuItem<String>(
           value: 'accept',
           child: ListTile(
-            leading: Icon(Icons.check, color: Colors.green),
+            leading: Icon(Icons.check, color: acceptColor),
             title: Text('Accept'),
             dense: true,
             contentPadding: EdgeInsets.zero,
@@ -189,13 +194,13 @@ class TencentCloudChatContactApplicationItemState
         PopupMenuItem<String>(
           value: 'reject',
           child: ListTile(
-            leading: Icon(Icons.close, color: Colors.red),
-            title: Text('Reject'),
+            leading: Icon(Icons.close, color: colorTheme.error),
+            title: const Text('Reject'),
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
         ),
-        PopupMenuItem<String>(
+        const PopupMenuItem<String>(
           value: 'copy',
           child: ListTile(
             leading: Icon(Icons.copy),
@@ -284,7 +289,8 @@ class TencentCloudChatContactApplicationItemAvatarState
           imageList: [widget.application.faceUrl],
           width: getSquareSize(40),
           height: getSquareSize(40),
-          borderRadius: getSquareSize(29),
+          // Friend application (person) → circle (radius = size / 2).
+          borderRadius: getSquareSize(20),
         ));
   }
 }

@@ -12,10 +12,17 @@ class TencentCloudChatSpecialTextSpanBuilder extends SpecialTextSpanBuilder {
     this.showAtBackground = false,
     required this.onTapUrl,
     this.stickerPluginInstance,
+    this.linkColor,
   });
 
   /// whether show background for @somebody
   final bool showAtBackground;
+
+  /// Color for tappable URL/link spans. When null the renderer keeps the
+  /// legacy link blue, so call sites that don't opt in (e.g. the message
+  /// input) are visually unchanged. Theme-aware call sites (the message
+  /// bubble, translated-message bubble) pass `colorTheme.primaryColor`.
+  final Color? linkColor;
 
   @override
   SpecialText? createSpecialText(String flag,
@@ -26,7 +33,8 @@ class TencentCloudChatSpecialTextSpanBuilder extends SpecialTextSpanBuilder {
 
     ///index is end index of start flag, so text start index should be index-(flag.length-1)
     if (isStart(flag, HttpText.flag)) {
-      return HttpText(textStyle, onTap, onTapUrl: onTapUrl, start: index! - (HttpText.flag.length - 1));
+      return HttpText(textStyle, onTap,
+          onTapUrl: onTapUrl, start: index! - (HttpText.flag.length - 1), linkColor: linkColor);
     } else if (isStart(flag, EmojiText.flag)) {
       return EmojiText(
         textStyle,
@@ -72,12 +80,17 @@ class EmojiText extends SpecialText {
 }
 
 class HttpText extends SpecialText {
-  HttpText(TextStyle? textStyle, SpecialTextGestureTapCallback? onTap, {required this.onTapUrl, this.start})
+  HttpText(TextStyle? textStyle, SpecialTextGestureTapCallback? onTap,
+      {required this.onTapUrl, this.start, this.linkColor})
       : super(flag, flag, textStyle, onTap: onTap);
   final ValueChanged<String> onTapUrl;
 
   static const String flag = '!@TURL#*&\$';
   final int? start;
+
+  /// Link span color; falls back to the legacy link blue when not supplied so
+  /// non-opted-in call sites (message input) stay visually unchanged.
+  final Color? linkColor;
 
   @override
   InlineSpan finishText() {
@@ -91,7 +104,7 @@ class HttpText extends SpecialText {
 
             ///caret can move into special text
             deleteAll: true,
-            style: const TextStyle(color: Colors.blueAccent),
+            style: TextStyle(color: linkColor ?? Colors.blueAccent),
             recognizer: TapGestureRecognizer()
               ..onTap = () {
                 onTapUrl(text);

@@ -87,7 +87,8 @@ class _TencentCloudChatMessageHeaderInfoState
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                           fontSize: textStyle.standardLargeText,
-                          fontWeight: FontWeight.bold,
+                          // Semibold (600) per the reference design — not bold.
+                          fontWeight: FontWeight.w600,
                           color: colorTheme.primaryTextColor),
                     ))
                   ],

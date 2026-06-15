@@ -86,12 +86,7 @@ class _TencentCloudChatMessageMergeState extends TencentCloudChatMessageState<Te
             border: Border.all(
               color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
             ),
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(getSquareSize(16)),
-              topRight: Radius.circular(getSquareSize(16)),
-              bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-              bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-            ),
+            borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,7 +115,7 @@ class _TencentCloudChatMessageMergeState extends TencentCloudChatMessageState<Te
               ).toList().sublist(0, displayLen)),
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 4),
-                color: Colors.grey.withOpacity(0.3),
+                color: colorTheme.dividerColor,
                 height: 1,
               ),
               Row(

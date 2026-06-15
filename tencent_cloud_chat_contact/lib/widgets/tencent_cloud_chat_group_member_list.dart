@@ -488,6 +488,8 @@ class TencentCloudChatGroupMemberListItemState
       );
     }
     if (canDeleteMember()) {
+      final destructiveColor =
+          TencentCloudChat.instance.dataInstance.theme.colorTheme.error;
       items.add(
         PopupMenuItem<String>(
           value: 'remove',
@@ -495,9 +497,9 @@ class TencentCloudChatGroupMemberListItemState
             key: const ValueKey('group_member_desktop_kick_item'),
             child: ListTile(
               leading:
-                  const Icon(Icons.person_remove_outlined, color: Colors.red),
+                  Icon(Icons.person_remove_outlined, color: destructiveColor),
               title:
-                  Text(tL10n.delete, style: const TextStyle(color: Colors.red)),
+                  Text(tL10n.delete, style: TextStyle(color: destructiveColor)),
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),

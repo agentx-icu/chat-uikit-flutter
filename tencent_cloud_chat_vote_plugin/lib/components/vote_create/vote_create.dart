@@ -35,7 +35,10 @@ class TencentCloudChatVoteCreateState extends State<TencentCloudChatVoteCreate> 
         onCreateVoteError: widget.onCreateVoteError,
       ),
       child: Container(
-        color: Colors.white,
+        // Mode-aware surface (was hardcoded white). The vote plugin has no
+        // tencent_cloud_chat_common dependency, so it reads Flutter's own
+        // theme — the toxee app wires colorScheme.surface to the design token.
+        color: Theme.of(context).colorScheme.surface,
         child: const Row(
           children: [
             Expanded(

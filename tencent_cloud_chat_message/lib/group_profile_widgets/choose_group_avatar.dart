@@ -112,9 +112,9 @@ class ChooseGroupAvatarState extends TencentCloudChatState<ChooseGroupAvatar> {
                                 color: Theme.of(context).primaryColor,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.check,
-                                color: Colors.white,
+                                color: colorTheme.onPrimary,
                                 size: 14,
                               ),
                             ),

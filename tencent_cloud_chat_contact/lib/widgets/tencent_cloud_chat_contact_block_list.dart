@@ -176,7 +176,8 @@ class TencentCloudChatContactBlockListItemAvatarState extends TencentCloudChatSt
           imageList: [TencentCloudChatUtils.checkString(widget.friend.userProfile?.faceUrl)],
           width: getSquareSize(40),
           height: getSquareSize(40),
-          borderRadius: getSquareSize(58),
+          // Person → circle (radius = size / 2).
+          borderRadius: getSquareSize(20),
         ));
   }
 }

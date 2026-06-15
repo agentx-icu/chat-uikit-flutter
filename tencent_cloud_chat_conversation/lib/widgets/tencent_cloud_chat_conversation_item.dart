@@ -280,16 +280,19 @@ class TencentCloudChatConversationItemState
     final isDesktopScreen = TencentCloudChatScreenAdapter.deviceScreenType ==
         DeviceScreenType.desktop;
 
+    // Selected/active row tint per the reference design (DesignTokens
+    // selectedLight #E5ECF4 / selectedDark #21314A). Picked by brightness;
+    // UIKit cannot import toxee's DesignTokens, so the values are inlined here.
+    final bool isDark = Theme.of(actionContext).brightness == Brightness.dark;
+    const Color selectedRowTintLight = Color(0xFFE5ECF4);
+    const Color selectedRowTintDark = Color(0xFF21314A);
+
+    // Reference design separates conversation rows by whitespace, with no
+    // hairline divider between them.
     return Ink(
       decoration: BoxDecoration(
-        border: const Border(
-          bottom: BorderSide(
-            width: 1,
-            color: Color.fromARGB(8, 0, 0, 0),
-          ),
-        ),
         color: widget.isSelected
-            ? colors.primaryColor.withOpacity(0.05)
+            ? (isDark ? selectedRowTintDark : selectedRowTintLight)
             : (pinned
                 ? colors.conversationItemIsPinedBgColor
                 : colors.conversationItemNormalBgColor),
@@ -305,8 +308,10 @@ class TencentCloudChatConversationItemState
         onLongPressStart: (startDetails) => _handleLongPress(
             startDetails, isDesktopScreen, actionContext, fontSize, colors),
         child: Padding(
+          // Reference design row metrics: desktop ≈58 (avatar 40 + 9*2),
+          // mobile ≈72 (avatar 48 + 12*2).
           padding: EdgeInsets.symmetric(
-            vertical: getHeight(12),
+            vertical: getHeight(isDesktopScreen ? 9 : 12),
             horizontal: getWidth(8),
           ),
           child: Row(
@@ -458,14 +463,22 @@ class TencentCloudChatConversationItemAvatarState
   Widget defaultBuilder(BuildContext context) {
     final isDesktop = TencentCloudChatScreenAdapter.deviceScreenType ==
         DeviceScreenType.desktop;
+    // Reference design: desktop avatar 40, mobile avatar 48.
+    final double avatarSize = isDesktop ? 40 : 48;
+    // Avatar shape by conversation type: group → rounded square (≈28% of
+    // size), person → circle (size / 2).
+    final bool isGroup =
+        widget.conversation.type == ConversationType.V2TIM_GROUP;
+    final double avatarRadius =
+        isGroup ? avatarSize * 0.28 : avatarSize / 2;
     return TencentCloudChatThemeWidget(
       build: (ctx, colors, fonts) => Padding(
         padding: EdgeInsets.symmetric(
           horizontal: getWidth(isDesktop ? 10 : 8),
         ),
         child: SizedBox(
-          width: getSquareSize(isDesktop ? 38 : 40),
-          height: getSquareSize(isDesktop ? 38 : 40),
+          width: getSquareSize(avatarSize),
+          height: getSquareSize(avatarSize),
           child: Stack(
             children: [
               Positioned(
@@ -473,9 +486,9 @@ class TencentCloudChatConversationItemAvatarState
                 top: 0,
                 child: TencentCloudChatCommonBuilders.getCommonAvatarBuilder(
                   imageList: getAvatar(),
-                  width: getSquareSize(isDesktop ? 38 : 40),
-                  height: getSquareSize(isDesktop ? 38 : 40),
-                  borderRadius: getSquareSize(isDesktop ? 19 : 20),
+                  width: getSquareSize(avatarSize),
+                  height: getSquareSize(avatarSize),
+                  borderRadius: getSquareSize(avatarRadius),
                   scene: TencentCloudChatAvatarScene.conversationList,
                 ),
               ),

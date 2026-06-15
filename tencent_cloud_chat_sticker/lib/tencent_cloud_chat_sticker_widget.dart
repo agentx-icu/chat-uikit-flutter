@@ -140,7 +140,13 @@ class TencentCloudChatStickerTabState extends State<TencentCloudChatStickerTab> 
                   height: 40,
                   width: 40,
                   decoration: BoxDecoration(
-                    color: showActiveStyle ? const Color.fromARGB(255, 230, 230, 230) : Colors.transparent,
+                    // Mode-aware active-tab highlight (was a fixed light grey
+                    // that washed out on dark panels). The sticker plugin has no
+                    // tencent_cloud_chat_common dependency, so it derives the
+                    // selected fill from Flutter's own theme.
+                    color: showActiveStyle
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.12)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   margin: EdgeInsets.only(right: isLastIndex ? 0 : 10),

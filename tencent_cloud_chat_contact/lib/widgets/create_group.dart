@@ -34,26 +34,32 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
   int selectedAvatarIndex = 0;
   bool isCreating = false;
 
-  Widget _buildTextField({required TextEditingController controller, required String hintText}) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    required dynamic colorTheme,
+  }) {
     return TextField(
       controller: controller,
+      style: TextStyle(color: colorTheme.primaryTextColor),
+      cursorColor: colorTheme.primaryColor,
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: TextStyle(color: Colors.grey[500]),
+        hintStyle: TextStyle(color: colorTheme.secondaryTextColor),
         border: UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey[300]!, width: 0.5),
+          borderSide: BorderSide(color: colorTheme.dividerColor, width: 0.5),
         ),
         enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey[300]!, width: 0.5),
+          borderSide: BorderSide(color: colorTheme.dividerColor, width: 0.5),
         ),
         focusedBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey[300]!, width: 0.5),
+          borderSide: BorderSide(color: colorTheme.primaryColor, width: 1),
         ),
       ),
     );
   }
 
-  Widget _buildGroupTypeSelector() {
+  Widget _buildGroupTypeSelector(dynamic colorTheme) {
     return GestureDetector(
       onTap: () async {
         String selectGroupType = await Navigator.push(
@@ -69,16 +75,16 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
           children: [
             Text(
               tL10n.groupOfType,
-              style: const TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, color: colorTheme.primaryTextColor),
             ),
             Row(
               children: [
                 Text(
                   groupType,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 14, color: colorTheme.secondaryTextColor),
                 ),
                 const SizedBox(width: 4),
-                Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[600]),
+                Icon(Icons.arrow_forward_ios, size: 16, color: colorTheme.secondaryTextColor),
               ],
             ),
           ],
@@ -87,7 +93,7 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
     );
   }
 
-  Widget _buildAvatarList() {
+  Widget _buildAvatarList(dynamic colorTheme) {
     return SizedBox(
       height: 150,
       child: GridView.builder(
@@ -115,27 +121,27 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
                   Container(
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: isSelected ? Colors.blue : Colors.transparent,
+                        color: isSelected ? colorTheme.primaryColor : Colors.transparent,
                         width: 2,
                       ),
                       shape: BoxShape.circle,
                     ),
                     child: CircleAvatar(
                       radius: 30,
-                      backgroundColor: Colors.white,
+                      backgroundColor: colorTheme.backgroundColor,
                       backgroundImage: NetworkImage(groupAvatars[index]),
                       onBackgroundImageError: (_, __) {},
                       child: Container(),
                     ),
                   ),
                   if (isSelected)
-                    const Positioned(
+                    Positioned(
                       right: 0,
                       bottom: 0,
                       child: CircleAvatar(
                         radius: 10,
-                        backgroundColor: Colors.blue,
-                        child: Icon(Icons.check, size: 12, color: Colors.white),
+                        backgroundColor: colorTheme.primaryColor,
+                        child: Icon(Icons.check, size: 12, color: colorTheme.onPrimary),
                       ),
                     ),
                 ],
@@ -147,7 +153,7 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
     );
   }
 
-  Widget _buildSelectedMemberList(TencentCloudChatTextStyle textStyle) {
+  Widget _buildSelectedMemberList(TencentCloudChatTextStyle textStyle, dynamic colorTheme) {
     return Visibility(
       visible: widget.selectedMembers.isNotEmpty,
       child: SizedBox(
@@ -165,7 +171,7 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
                     children: [
                       CircleAvatar(
                         radius: 20,
-                        backgroundColor: Colors.grey[200],
+                        backgroundColor: colorTheme.dividerColor,
                         child: ClipOval(
                           child: FadeInImage(
                             placeholder: const AssetImage(
@@ -192,10 +198,10 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
                               widget.selectedMembers.removeAt(index);
                             });
                           },
-                          child: const CircleAvatar(
+                          child: CircleAvatar(
                             radius: 6,
-                            backgroundColor: Colors.red,
-                            child: Icon(Icons.close, size: 8, color: Colors.white),
+                            backgroundColor: colorTheme.error,
+                            child: Icon(Icons.close, size: 8, color: colorTheme.onError),
                           ),
                         ),
                       ),
@@ -332,7 +338,7 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
                 title: Center(
                   child: Text(
                     tL10n.createGroupTips,
-                    style: TextStyle(fontSize: textStyle.fontsize_16, color: Colors.black),
+                    style: TextStyle(fontSize: textStyle.fontsize_16, color: colorTheme.primaryTextColor),
                   ),
                 ),
                 centerTitle: true,
@@ -341,7 +347,7 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
                     onPressed: _createGroup,
                     child: Text(
                       tL10n.create,
-                      style: TextStyle(color: Colors.blue),
+                      style: TextStyle(color: colorTheme.primaryColor),
                     ),
                   ),
                 ],
@@ -356,25 +362,29 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
                       _buildTextField(
                         controller: groupNameController,
                         hintText: tL10n.groupName,
+                        colorTheme: colorTheme,
                       ),
                       _buildTextField(
                         controller: groupIdController,
                         hintText: tL10n.groupIDOption,
+                        colorTheme: colorTheme,
                       ),
-                      _buildGroupTypeSelector(),
-                      Divider(height: 0.5, color: Colors.grey[300]),
+                      _buildGroupTypeSelector(colorTheme),
+                      Divider(height: 0.5, color: colorTheme.dividerColor),
                       const SizedBox(height: 20),
                       Text(
                         tL10n.groupFaceUrl,
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold, color: colorTheme.primaryTextColor),
                       ),
-                      _buildAvatarList(),
+                      _buildAvatarList(colorTheme),
                       const SizedBox(height: 20),
                       Text(
                         tL10n.groupMemberSelected,
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold, color: colorTheme.primaryTextColor),
                       ),
-                      _buildSelectedMemberList(textStyle),
+                      _buildSelectedMemberList(textStyle, colorTheme),
                     ],
                   ),
                 ),

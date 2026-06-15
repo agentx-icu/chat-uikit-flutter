@@ -21,11 +21,20 @@ void showTencentCloudChatBottomModal({
   showModalBottomSheet(
     context: context,
     useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    // Rounded-top sheet surface (reference design); transparent host so the
+    // themed, clipped container below owns the rounded corners.
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
     builder: (BuildContext context) {
       return TencentCloudChatThemeWidget(
-          build: (context, colorTheme, textStyle) => Container(
+          build: (context, colorTheme, textStyle) => ClipRRect(
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(16)),
+            child: Container(
                 padding: EdgeInsets.only(
-                  top: 0,
+                  top: 8,
                   right: 0,
                   left: 0,
                   bottom: MediaQuery.paddingOf(context).bottom,
@@ -66,7 +75,7 @@ void showTencentCloudChatBottomModal({
                     ),
                   ],
                 ),
-              ));
+              )));
     },
   );
 }

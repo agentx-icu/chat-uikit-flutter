@@ -519,7 +519,7 @@ class _TencentCloudChatMessageVideoState extends TencentCloudChatMessageState<Te
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: Colors.black,
+            color: colorTheme.primaryTextColor,
             fontSize: textStyle.fontsize_14,
             fontWeight: FontWeight.w500,
           ),
@@ -541,12 +541,7 @@ class _TencentCloudChatMessageVideoState extends TencentCloudChatMessageState<Te
               border: Border.all(
                 color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
               ),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(getSquareSize(16)),
-                topRight: Radius.circular(getSquareSize(16)),
-                bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-                bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-              ),
+              borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -554,12 +549,7 @@ class _TencentCloudChatMessageVideoState extends TencentCloudChatMessageState<Te
                 Stack(
                   children:[
                     ClipRRect(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(getSquareSize(16)),
-                        topRight: Radius.circular(getSquareSize(16)),
-                        bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-                        bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-                      ),
+                      borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
                       child: TencentCloudChatCacheImage(
                         width: getWidth(localDefaultWidth),
                         height: getHeight(localDefaultHeight),
@@ -617,20 +607,10 @@ class _TencentCloudChatMessageVideoState extends TencentCloudChatMessageState<Te
                 border: Border.all(
                   color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
                 ),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(getSquareSize(16)),
-                  topRight: Radius.circular(getSquareSize(16)),
-                  bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-                  bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-                ),
+                borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(getSquareSize(16)),
-                  topRight: Radius.circular(getSquareSize(16)),
-                  bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-                  bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-                ),
+                borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -693,27 +673,25 @@ class _TencentCloudChatMessageVideoState extends TencentCloudChatMessageState<Te
 
   getLoadingWidget(double w, double h) {
     (w, h) = formatwh(w, h, 'getLoadingWidget');
+    // Live theme colours (mode-accurate) without a builder param: same source
+    // the TencentCloudChatThemeWidget itself reads from.
+    final colorTheme = TencentCloudChat.instance.dataInstance.theme.colorTheme;
 
     console("render image loading $w $h");
     return Container(
       width: getWidth(w),
       height: getHeight(h),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(getSquareSize(16)),
-          topRight: Radius.circular(getSquareSize(16)),
-          bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-          bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-        ),
+        borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
         color: Colors.transparent,
       ),
       child: Center(
         child: SizedBox(
           width: getWidth(20),
           height: getHeight(20),
-          child: const CircularProgressIndicator(
+          child: CircularProgressIndicator(
             strokeWidth: 1,
-            color: Colors.grey,
+            color: colorTheme.secondaryTextColor,
           ),
         ),
       ),
@@ -722,19 +700,16 @@ class _TencentCloudChatMessageVideoState extends TencentCloudChatMessageState<Te
 
   getErrorWidget(double w, double h) {
     (w, h) = formatwh(w, h, 'getErrorWidget');
+    final colorTheme = TencentCloudChat.instance.dataInstance.theme.colorTheme;
 
     console("render image error $w $h");
     return Container(
       width: getWidth(w),
       height: getHeight(h),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(getSquareSize(16)),
-          topRight: Radius.circular(getSquareSize(16)),
-          bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-          bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-        ),
-        color: Colors.grey.withOpacity(0.2),
+        borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+        // Theme-driven neutral placeholder fill (secondary text @ ~20%).
+        color: colorTheme.secondaryTextColor.withOpacity(0.2),
       ),
       child: Center(
         child: SizedBox(
@@ -970,7 +945,9 @@ class _TencentCloudChatMessageVideoState extends TencentCloudChatMessageState<Te
         child: CircularProgressIndicator(
           value: progress,
           backgroundColor: Colors.transparent,
-          valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+          // Brand blue (#3370FF == colorTheme.primaryColor, identical in light
+          // & dark); const here as this helper has no `colorTheme` in scope.
+          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3370FF)),
           strokeWidth: 2,
         ),
       ),

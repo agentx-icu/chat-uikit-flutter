@@ -485,7 +485,10 @@ class _TencentCloudChatMessageSoundState extends TencentCloudChatMessageState<Te
         child: CircularProgressIndicator(
           value: progress,
           backgroundColor: Colors.transparent,
-          valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+          // Brand blue (#3370FF == colorTheme.primaryColor, identical in light
+          // & dark). Const-coloured here because this download-progress helper
+          // has no `colorTheme` in scope.
+          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3370FF)),
           strokeWidth: 2,
         ),
       ),
@@ -583,12 +586,7 @@ class _TencentCloudChatMessageSoundState extends TencentCloudChatMessageState<Te
           border: Border.all(
             color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
           ),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(getSquareSize(16)),
-            topRight: Radius.circular(getSquareSize(16)),
-            bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-            bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-          ),
+          borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -631,12 +629,7 @@ class _TencentCloudChatMessageSoundState extends TencentCloudChatMessageState<Te
           border: Border.all(
             color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
           ),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(getSquareSize(16)),
-            topRight: Radius.circular(getSquareSize(16)),
-            bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-            bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-          ),
+          borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

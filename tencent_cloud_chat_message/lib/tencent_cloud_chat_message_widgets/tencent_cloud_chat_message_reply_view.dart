@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/components/components_definition/tencent_cloud_chat_component_builder_definitions.dart';
+import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
@@ -28,6 +29,10 @@ class _TencentCloudChatMessageReplyViewState
     final showMessageDetail =
         TencentCloudChatUtils.checkString(widget.data.messageSender) != null &&
             TencentCloudChatUtils.checkString(widget.data.messageAbstract) != null;
+    // Quoted-reply preview (per the reference design): a 2px left rule in
+    // secondary text, a muted "reply to <name>:" prefix line, then the quoted
+    // body — both 13px secondary text.
+    const double replyFontSize = 13.0;
     return TencentCloudChatThemeWidget(build: (context, colorTheme, textStyle) => Container(
       margin: const EdgeInsets.only(top: 4),
       child: ClipRRect(
@@ -37,53 +42,57 @@ class _TencentCloudChatMessageReplyViewState
             color: colorTheme.messageTipsBackgroundColor,
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Container(
-                  width: 8,
-                  color: colorTheme.secondaryTextColor.withOpacity(0.2),
+                  width: 2,
+                  color: colorTheme.secondaryTextColor,
                 ),
-                Container(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (showMessageDetail)
-                        ConstrainedBox(
-                            constraints: BoxConstraints(
-                                maxWidth: MediaQuery.of(context).size.width * 0.4),
-                            child: Text(
-                              widget.data.messageSender!,
-                              style: TextStyle(
-                                color: colorTheme.secondaryTextColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: textStyle.standardSmallText,
-                              ),
-                            )),
-                      const SizedBox(height: 4,),
-                      if (showMessageDetail)
-                        ConstrainedBox(
-                            constraints: BoxConstraints(
-                                maxWidth: MediaQuery.of(context).size.width * 0.4),
-                            child: Text(
-                              widget.data.messageAbstract!,
-                              maxLines: 5,
-                              style: TextStyle(
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (showMessageDetail)
+                          ConstrainedBox(
+                              constraints: BoxConstraints(
+                                  maxWidth: MediaQuery.of(context).size.width * 0.4),
+                              child: Text(
+                                "${tL10n.replyTo(widget.data.messageSender!)}:",
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                color: colorTheme.secondaryTextColor,
-                                fontSize: textStyle.standardSmallText,
-                              ),
-                            )),
-                      if (!showMessageDetail)
-                        Text(
-                          "Reply to a message",
-                          style: TextStyle(
-                            color: colorTheme.secondaryTextColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: textStyle.standardSmallText,
-                          ),
-                        )
-                    ],
+                                style: TextStyle(
+                                  color: colorTheme.secondaryTextColor,
+                                  fontSize: replyFontSize,
+                                ),
+                              )),
+                        if (showMessageDetail)
+                          const SizedBox(height: 2,),
+                        if (showMessageDetail)
+                          ConstrainedBox(
+                              constraints: BoxConstraints(
+                                  maxWidth: MediaQuery.of(context).size.width * 0.4),
+                              child: Text(
+                                widget.data.messageAbstract!,
+                                maxLines: 5,
+                                style: TextStyle(
+                                  overflow: TextOverflow.ellipsis,
+                                  color: colorTheme.secondaryTextColor,
+                                  fontSize: replyFontSize,
+                                ),
+                              )),
+                        if (!showMessageDetail)
+                          Text(
+                            tL10n.reply,
+                            style: TextStyle(
+                              color: colorTheme.secondaryTextColor,
+                              fontSize: replyFontSize,
+                            ),
+                          )
+                      ],
+                    ),
                   ),
                 ),
               ],

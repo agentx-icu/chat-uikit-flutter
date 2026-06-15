@@ -160,7 +160,9 @@ class TencentCloudChatGroupProfileAvatarState
             imageList: [groupFaceUrl],
             width: getSquareSize(94),
             height: getSquareSize(94),
-            borderRadius: getSquareSize(48),
+            // Group avatar = rounded square (squircle, radius ≈ 28% of size),
+            // per the person=circle / group=square avatar rule.
+            borderRadius: getSquareSize(94 * 0.28),
           ),
         ),
       ],

@@ -47,7 +47,8 @@ class _TencentCloudChatMessageHeaderSelectModeState
                 tL10n.numSelect(widget.selectAmount),
                 style: TextStyle(
                   fontSize: textStyle.fontsize_16,
-                  fontWeight: FontWeight.bold,
+                  // Semibold (600) to match the chat header title weight.
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const Spacer(),

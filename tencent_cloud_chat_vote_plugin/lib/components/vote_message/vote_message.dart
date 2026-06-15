@@ -52,7 +52,10 @@ class TencentCloudChatVoteMessageState extends State<TencentCloudChatVoteMessage
             child: TencentCloudChatVoteMessageWithProvider(
               message: widget.message,
               child: Container(
-                color: Colors.white,
+                // Mode-aware surface (was hardcoded white). The vote plugin has
+                // no tencent_cloud_chat_common dependency, so it reads Flutter's
+                // own theme — toxee wires colorScheme.surface to the token.
+                color: Theme.of(context).colorScheme.surface,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [

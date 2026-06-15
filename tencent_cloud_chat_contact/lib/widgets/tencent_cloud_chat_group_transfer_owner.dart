@@ -250,40 +250,46 @@ class CheckBoxButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    BoxDecoration boxDecoration = !isChecked ? BoxDecoration(border: Border.all(color: Colors.black), shape: BoxShape.circle, color: Colors.white) : const BoxDecoration(shape: BoxShape.circle, color: Colors.blue);
+    return TencentCloudChatThemeWidget(build: (context, colorTheme, textStyle) {
+      BoxDecoration boxDecoration = !isChecked
+          ? BoxDecoration(
+              border: Border.all(color: colorTheme.secondaryTextColor),
+              shape: BoxShape.circle,
+              color: colorTheme.backgroundColor)
+          : BoxDecoration(shape: BoxShape.circle, color: colorTheme.primaryColor);
 
-    if (disabled) {
-      boxDecoration = const BoxDecoration(shape: BoxShape.circle, color: Colors.grey);
-    }
-    return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) => Center(
-            child: onlyShow
-                ? Container(
+      if (disabled) {
+        boxDecoration = BoxDecoration(shape: BoxShape.circle, color: colorTheme.dividerColor);
+      }
+      return Center(
+          child: onlyShow
+              ? Container(
+                  height: size ?? 22,
+                  width: size ?? 22,
+                  decoration: boxDecoration,
+                  child: Icon(
+                    Icons.check,
+                    size: size != null ? (size! / 2) : 11,
+                    color: colorTheme.onPrimary,
+                  ),
+                )
+              : InkWell(
+                  onTap: () {
+                    if (onChanged != null && !disabled) {
+                      onChanged!(!isChecked);
+                    }
+                  },
+                  child: Container(
                     height: size ?? 22,
                     width: size ?? 22,
                     decoration: boxDecoration,
                     child: Icon(
                       Icons.check,
                       size: size != null ? (size! / 2) : 11,
-                      color: Colors.white,
+                      color: colorTheme.onPrimary,
                     ),
-                  )
-                : InkWell(
-                    onTap: () {
-                      if (onChanged != null && !disabled) {
-                        onChanged!(!isChecked);
-                      }
-                    },
-                    child: Container(
-                      height: size ?? 22,
-                      width: size ?? 22,
-                      decoration: boxDecoration,
-                      child: Icon(
-                        Icons.check,
-                        size: size != null ? (size! / 2) : 11,
-                        color: Colors.white,
-                      ),
-                    ),
-                  )));
+                  ),
+                ));
+    });
   }
 }

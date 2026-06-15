@@ -160,7 +160,8 @@ class TencentCloudChatContactGroupApplicationItemState
                     imageList: [widget.groupApplication.fromUserFaceUrl],
                     width: getSquareSize(40),
                     height: getSquareSize(40),
-                    borderRadius: getSquareSize(34),
+                    // Applicant (person) → circle (radius = size / 2).
+                    borderRadius: getSquareSize(20),
                   ),
                   SizedBox(width: getWidth(8)),
                   Expanded(

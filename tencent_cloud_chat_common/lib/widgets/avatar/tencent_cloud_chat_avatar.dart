@@ -202,12 +202,18 @@ class _TencentCloudChatAvatarState extends TencentCloudChatState<TencentCloudCha
     }
   }
 
+  /// Default avatar corner radius when the caller doesn't pass an explicit
+  /// [borderRadius]: a rounded square (squircle) at ~28% of the avatar size,
+  /// matching the reference design. Callers that want a full circle (people)
+  /// still pass `size / 2` and win via the `widget.borderRadius ??` fallback.
+  double _defaultRadius(double size) => size * 0.28;
+
   Widget _buildSkeletonAnimation(double width, double height) {
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(widget.borderRadius ?? TencentCloudChatScreenAdapter.getRadius(6)),
+        borderRadius: BorderRadius.circular(widget.borderRadius ?? _defaultRadius(min(width, height))),
         color: Colors.grey[300],
       ),
     );
@@ -217,7 +223,10 @@ class _TencentCloudChatAvatarState extends TencentCloudChatState<TencentCloudCha
   Widget defaultBuilder(BuildContext context) {
     final avatarHeight = widget.height ?? TencentCloudChatScreenAdapter.getSquareSize(36);
     final avatarWidth = widget.width ?? TencentCloudChatScreenAdapter.getSquareSize(36);
-    final avatarRadius = widget.borderRadius ?? TencentCloudChatScreenAdapter.getRadius(6);
+    // Default to a rounded square (squircle ≈ size * 0.28) when no explicit
+    // radius is supplied; an explicit `borderRadius` (e.g. `size / 2` for a
+    // person's circular avatar) still overrides.
+    final avatarRadius = widget.borderRadius ?? _defaultRadius(min(avatarWidth, avatarHeight));
 
     final images = _filteredImages.getRange(0, min(_filteredImages.length, 9)).toList();
 

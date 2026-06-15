@@ -714,12 +714,7 @@ class _TencentCloudChatMessageFileState extends TencentCloudChatMessageState<Ten
           border: Border.all(
             color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
           ),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(getSquareSize(16)),
-            topRight: Radius.circular(getSquareSize(16)),
-            bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-            bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-          ),
+          borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -745,7 +740,7 @@ class _TencentCloudChatMessageFileState extends TencentCloudChatMessageState<Ten
                       Text(
                         fileSize,
                         style: TextStyle(
-                          color: const Color(0XFF7A7A7A),
+                          color: colorTheme.secondaryTextColor,
                           fontSize: textStyle.fontsize_12,
                           fontWeight: FontWeight.w400,
                         ),
@@ -777,12 +772,7 @@ class _TencentCloudChatMessageFileState extends TencentCloudChatMessageState<Ten
             border: Border.all(
               color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
             ),
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(getSquareSize(16)),
-              topRight: Radius.circular(getSquareSize(16)),
-              bottomLeft: Radius.circular(getSquareSize(sentFromSelf ? 16 : 0)),
-              bottomRight: Radius.circular(getSquareSize(sentFromSelf ? 0 : 16)),
-            ),
+            borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -808,7 +798,7 @@ class _TencentCloudChatMessageFileState extends TencentCloudChatMessageState<Ten
                         Text(
                           fileSize,
                           style: TextStyle(
-                            color: const Color(0XFF7A7A7A),
+                            color: colorTheme.secondaryTextColor,
                             fontSize: textStyle.fontsize_12,
                             fontWeight: FontWeight.w400,
                           ),

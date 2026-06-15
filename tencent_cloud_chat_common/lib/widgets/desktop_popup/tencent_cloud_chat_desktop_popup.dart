@@ -187,12 +187,14 @@ class TencentCloudChatDesktopPopup {
 
     final Widget contentWidget = TencentCloudChatThemeWidget(
       build: (context, colorTheme, textStyle) => ClipRRect(
-        borderRadius: borderRadius ?? const BorderRadius.all(Radius.circular(16)),
+        // Reference-design popup/sheet corner radius (12); explicit callers
+        // (e.g. the column menu passing 10) still override.
+        borderRadius: borderRadius ?? const BorderRadius.all(Radius.circular(12)),
         child: Container(
           width: width,
           height: height,
           decoration: BoxDecoration(
-            borderRadius: borderRadius ?? const BorderRadius.all(Radius.circular(16)),
+            borderRadius: borderRadius ?? const BorderRadius.all(Radius.circular(12)),
             color: colorTheme.backgroundColor,
             border: isDarkBackground
                 ? Border.all(

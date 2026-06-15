@@ -107,10 +107,10 @@ class TencentCloudChatContactApplicationInfoBodyState
                   margin: EdgeInsets.only(top: getHeight(28)),
                   padding: EdgeInsets.symmetric(vertical: getHeight(10), horizontal: getWidth(16)),
                   decoration: BoxDecoration(
-                    border: const Border(
+                    border: Border(
                         bottom: BorderSide(
                       width: 1,
-                      color: Color.fromARGB(8, 0, 0, 0),
+                      color: colorTheme.contactItemTabItemBorderColor,
                     )),
                     color: colorTheme.contactBackgroundColor,
                   ),
@@ -160,7 +160,8 @@ class TencentCloudChatContactApplicationInfoAvatarState
             imageList: [widget.application.faceUrl],
             width: getSquareSize(43),
             height: getSquareSize(43),
-            borderRadius: getSquareSize(38),
+            // Friend application (person) → circle (radius = size / 2).
+            borderRadius: getSquareSize(21.5),
           ));
     }
     return Padding(

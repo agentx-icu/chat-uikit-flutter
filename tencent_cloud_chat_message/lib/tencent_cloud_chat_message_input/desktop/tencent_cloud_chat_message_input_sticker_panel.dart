@@ -53,13 +53,14 @@ class _TencentCloudChatDesktopStickerPanelState extends TencentCloudChatState<Te
           width: width,
           decoration: BoxDecoration(
             color: colorTheme.appBarBackgroundColor,
-            // border: Border.all(color: colorTheme.inputFieldBorderColor),
+            border: Border.all(color: colorTheme.inputFieldBorderColor),
             boxShadow: [
+              // Subtle neutral elevation (no shadow-color theme slot); softer
+              // than the previous heavy grey to match the flat reference design.
               BoxShadow(
-                color: Colors.grey.withOpacity(0.5),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: const Offset(0, 3), // 阴影偏移量
+                color: Colors.black.withValues(alpha: 0.16),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
             ],
             borderRadius: const BorderRadius.only(

@@ -39,7 +39,7 @@ class _StartGroupChatState extends TencentCloudChatState<StartGroupChat> {
     return showList;
   }
 
-  Widget _buildSelectedList(TencentCloudChatTextStyle textStyle) {
+  Widget _buildSelectedList(TencentCloudChatTextStyle textStyle, dynamic colorTheme) {
     return Visibility(
       visible: selectedMembers.isNotEmpty,
       child: Container(
@@ -57,7 +57,7 @@ class _StartGroupChatState extends TencentCloudChatState<StartGroupChat> {
                     children: [
                       CircleAvatar(
                         radius: 20,
-                        backgroundColor: Colors.grey[200],
+                        backgroundColor: colorTheme.dividerColor,
                         child: ClipOval(
                           child: FadeInImage(
                             placeholder: const AssetImage(
@@ -84,10 +84,10 @@ class _StartGroupChatState extends TencentCloudChatState<StartGroupChat> {
                               selectedMembers.removeAt(index);
                             });
                           },
-                          child: const CircleAvatar(
+                          child: CircleAvatar(
                             radius: 6,
-                            backgroundColor: Colors.red,
-                            child: Icon(Icons.close, size: 8, color: Colors.white),
+                            backgroundColor: colorTheme.error,
+                            child: Icon(Icons.close, size: 8, color: colorTheme.onError),
                           ),
                         ),
                       ),
@@ -172,7 +172,7 @@ class _StartGroupChatState extends TencentCloudChatState<StartGroupChat> {
                     ),
                   ],
                 ),
-                _buildCustomCheckbox(isSelected),
+                _buildCustomCheckbox(isSelected, colorTheme),
               ],
             ),
           ),
@@ -198,21 +198,21 @@ class _StartGroupChatState extends TencentCloudChatState<StartGroupChat> {
     );
   }
 
-  Widget _buildCustomCheckbox(bool isSelected) {
+  Widget _buildCustomCheckbox(bool isSelected, dynamic colorTheme) {
     return Container(
       width: 24,
       height: 24,
       margin: const EdgeInsets.only(right: 8.0),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isSelected ? Colors.blue : Colors.transparent,
-        border: Border.all(color: isSelected ? Colors.blue : Colors.grey),
+        color: isSelected ? colorTheme.primaryColor : Colors.transparent,
+        border: Border.all(color: isSelected ? colorTheme.primaryColor : colorTheme.secondaryTextColor),
       ),
       child: isSelected
-          ? const Icon(
+          ? Icon(
               Icons.check,
               size: 16,
-              color: Colors.white,
+              color: colorTheme.onPrimary,
             )
           : null,
     );
@@ -264,7 +264,10 @@ class _StartGroupChatState extends TencentCloudChatState<StartGroupChat> {
                     onPressed: selectedMembers.isNotEmpty ? _createGroupChat : null,
                     child: Text(
                       tL10n.next,
-                      style: TextStyle(color: selectedMembers.isNotEmpty ? colorTheme.primaryColor : Colors.grey),
+                      style: TextStyle(
+                          color: selectedMembers.isNotEmpty
+                              ? colorTheme.primaryColor
+                              : colorTheme.secondaryTextColor),
                     ),
                   ),
                 ],
@@ -272,8 +275,8 @@ class _StartGroupChatState extends TencentCloudChatState<StartGroupChat> {
               ),
               body: Column(
                 children: [
-                  Divider(height: 1, color: Colors.grey[300]),
-                  _buildSelectedList(textStyle),
+                  Divider(height: 1, color: colorTheme.dividerColor),
+                  _buildSelectedList(textStyle, colorTheme),
                   Expanded(child: _buildMemberList(colorTheme, textStyle)),
                 ],
               ),

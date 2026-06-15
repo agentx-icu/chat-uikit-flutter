@@ -341,7 +341,8 @@ class TencentCloudChatContactGroupItemAvatarState
           imageList: [widget.group.faceUrl ?? ''],
           width: getSquareSize(40),
           height: getSquareSize(40),
-          borderRadius: getSquareSize(58),
+          // Group → rounded square (radius ≈ 28% of size).
+          borderRadius: getSquareSize(40 * 0.28),
         ));
   }
 }

@@ -65,9 +65,13 @@ class TencentCloudChatMessageReactionListDetailItem extends StatelessWidget {
                   builder: (BuildContext context) {
                     return Container(
                       clipBehavior: Clip.antiAlias,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
+                      decoration: BoxDecoration(
+                        // Mode-aware sheet surface (was hardcoded white, which
+                        // broke dark mode). Uses Flutter's own theme because this
+                        // package resolves tencent_cloud_chat_common from pub.dev
+                        // and cannot import the UIKit theme widget here.
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(20.0),
                           topRight: Radius.circular(20.0),
                         ),

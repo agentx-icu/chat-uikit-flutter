@@ -215,9 +215,9 @@ class TencentCloudChatGroupProfileAddMuteMemberState
               onTap: () {
                 submitDelete(info.userID);
               },
-              child: const Icon(
+              child: Icon(
                 Icons.remove_circle,
-                color: Colors.red,
+                color: colorTheme.error,
               )),
         ))
       ]),

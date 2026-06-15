@@ -196,7 +196,8 @@ class TencentCloudChatContactItemAvatarState extends TencentCloudChatState<Tence
                   imageList: [widget.friend.userProfile?.faceUrl],
                   width: getSquareSize(40),
                   height: getSquareSize(40),
-                  borderRadius: getSquareSize(34),
+                  // Person → circle (radius = size / 2).
+                  borderRadius: getSquareSize(20),
                 ),
               ),
               if (TencentCloudChat.instance.dataInstance.basic.userConfig.useUserOnlineStatus ?? true)
