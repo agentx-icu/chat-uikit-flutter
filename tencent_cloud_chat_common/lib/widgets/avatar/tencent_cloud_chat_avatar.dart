@@ -223,10 +223,14 @@ class _TencentCloudChatAvatarState extends TencentCloudChatState<TencentCloudCha
   Widget defaultBuilder(BuildContext context) {
     final avatarHeight = widget.height ?? TencentCloudChatScreenAdapter.getSquareSize(36);
     final avatarWidth = widget.width ?? TencentCloudChatScreenAdapter.getSquareSize(36);
-    // Default to a rounded square (squircle ≈ size * 0.28) when no explicit
-    // radius is supplied; an explicit `borderRadius` (e.g. `size / 2` for a
-    // person's circular avatar) still overrides.
-    final avatarRadius = widget.borderRadius ?? _defaultRadius(min(avatarWidth, avatarHeight));
+    // Shape default: a multi-image collage avatar is always a group -> rounded
+    // square (squircle ≈ size * 0.28). A single image defaults to a circle
+    // (person). An explicit `borderRadius` from the caller still overrides
+    // either way (e.g. list call-sites that square a single-image group avatar).
+    final avatarRadius = widget.borderRadius ??
+        (_filteredImages.length > 1
+            ? _defaultRadius(min(avatarWidth, avatarHeight))
+            : min(avatarWidth, avatarHeight) / 2);
 
     final images = _filteredImages.getRange(0, min(_filteredImages.length, 9)).toList();
 
