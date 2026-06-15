@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:azlistview_all_platforms/azlistview_all_platforms.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
@@ -185,22 +186,36 @@ class TencentCloudChatGroupMemberListAzListState
   List<ISuspensionBeanImpl> list = [];
   int myRole = 0;
 
+  /// Resolve THIS user's role in the member list. toxee identities have two
+  /// surface forms: the logged-in user id is the 76-char Tox ID (public key +
+  /// nospam + checksum) while NGC member rows are keyed by the bare 64-char
+  /// per-group public key. An exact `userID == loginID` match therefore MISSES
+  /// self (so an OWNER falsely reads as MEMBER → the kick / set-admin menu items
+  /// never render). Match on the shared 64-char public-key prefix
+  /// (case-insensitive) so self resolves regardless of which form each side
+  /// carries. Falls back to the exact match for non-Tox callers.
+  int _resolveMyRole(List<V2TimGroupMemberFullInfo> members) {
+    final loginID =
+        TencentCloudChat.instance.dataInstance.basic.currentUser?.userID;
+    if (loginID == null || loginID.isEmpty) return 0;
+    String pk(String id) =>
+        (id.length >= 64 ? id.substring(0, 64) : id).toUpperCase();
+    final loginPk = pk(loginID);
+    for (final m in members) {
+      final uid = m.userID;
+      if (uid == loginID || pk(uid) == loginPk) {
+        return m.role ?? 0;
+      }
+    }
+    return 0; // V2TIM_GROUP_MEMBER_ROLE_MEMBER
+  }
+
   @override
   initState() {
     super.initState();
     tagCount = {};
     list = _getListTag();
-    final loginID =
-        TencentCloudChat.instance.dataInstance.basic.currentUser!.userID;
-    try {
-      myRole = widget.memberInfoList
-              .firstWhere((element) => element.userID == loginID)
-              .role ??
-          0;
-    } catch (e) {
-      // If current user not found in member list, default to member role
-      myRole = 0; // V2TIM_GROUP_MEMBER_ROLE_MEMBER
-    }
+    myRole = _resolveMyRole(widget.memberInfoList);
   }
 
   @override
@@ -217,17 +232,7 @@ class TencentCloudChatGroupMemberListAzListState
         widget.memberInfoList.length == oldWidget.memberInfoList.length) {
       return;
     }
-    final loginID =
-        TencentCloudChat.instance.dataInstance.basic.currentUser!.userID;
-    int role;
-    try {
-      role = widget.memberInfoList
-              .firstWhere((element) => element.userID == loginID)
-              .role ??
-          0;
-    } catch (e) {
-      role = 0;
-    }
+    final role = _resolveMyRole(widget.memberInfoList);
     setState(() {
       tagCount = {};
       list = _getListTag();
@@ -366,12 +371,12 @@ class TencentCloudChatGroupMemberListItemState
   }
 
   bool canSetAdmin() {
-    if (widget.groupInfo.role ==
-        GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_OWNER) {
-      return true;
-    }
-
-    return false;
+    // Use the resolved current-user role (widget.myRole), NOT widget.groupInfo.role:
+    // Tim2Tox group info does not populate V2TimGroupInfo.role, so gating on it
+    // hid the owner's set/dismiss-admin action even for the real owner. myRole is
+    // resolved by pubkey-prefix self-match in the AzList (same source the kick
+    // gate uses).
+    return widget.myRole == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_OWNER;
   }
 
   bool canDeleteMember() {
@@ -405,8 +410,17 @@ class TencentCloudChatGroupMemberListItemState
   }
 
   bool isSelf() {
-    return widget.memberFullInfo.userID ==
-        TencentCloudChat.instance.dataInstance.basic.currentUser!.userID;
+    final loginID =
+        TencentCloudChat.instance.dataInstance.basic.currentUser?.userID;
+    if (loginID == null || loginID.isEmpty) return false;
+    final uid = widget.memberFullInfo.userID;
+    if (uid == loginID) return true;
+    // toxee identities have two surface forms — the logged-in id is the 76-char
+    // Tox ID while member rows carry the bare 64-char public key. Match on the
+    // shared 64-char public-key prefix so self resolves regardless of form.
+    String pk(String id) =>
+        (id.length >= 64 ? id.substring(0, 64) : id).toUpperCase();
+    return pk(uid) == pk(loginID);
   }
 
   Future<void> _copyMemberId() async {
@@ -637,17 +651,36 @@ class TencentCloudChatGroupMemberListItemState
   Widget defaultBuilder(BuildContext context) {
     final lastMessageTimeText = _getLastMessageTimeText();
     final roleText = _getRoleText();
+    final isDesktop = TencentCloudChatPlatformAdapter().isDesktop;
     return TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => Container(
               color: colorTheme.backgroundColor,
-              child: GestureDetector(
+              // Desktop right-click → context menu. Use a raw Listener.onPointerDown
+              // (buttons == secondary) — fires IMMEDIATELY on the pointer-down,
+              // exactly like the chat-message desktop menu
+              // (tencent_cloud_chat_message_item_with_menu.dart). A
+              // GestureDetector.onSecondaryTapDown is a gesture RECOGNIZER whose
+              // callback can be deferred by the arena and does not fire from a
+              // synthetic right-click (PointerDown+Up) injected by the real-UI
+              // harness, so the kick/role menu never surfaced. The Listener is
+              // reliable for both a real right-click and the synthetic one.
+              child: Listener(
+                // OPAQUE so the right-click is caught anywhere on the row, not
+                // only where a child RenderBox happens to sit. The row centre
+                // (the harness's secondary-tap target) is empty space beside the
+                // left-aligned name text, so a deferToChild Listener never fired
+                // and the kick/role menu never surfaced.
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: isDesktop
+                    ? (PointerDownEvent event) {
+                        if (event.kind == PointerDeviceKind.mouse &&
+                            event.buttons == kSecondaryMouseButton) {
+                          _showDesktopContextMenu(event.position);
+                        }
+                      }
+                    : null,
+                child: GestureDetector(
                   onTap: onManageMember,
-                  onSecondaryTapDown:
-                      TencentCloudChatPlatformAdapter().isDesktop
-                          ? (TapDownDetails details) {
-                              _showDesktopContextMenu(details.globalPosition);
-                            }
-                          : null,
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       vertical: getHeight(10),
@@ -771,7 +804,7 @@ class TencentCloudChatGroupMemberListItemState
                       ],
                     ),
                   )),
-            ));
+            )));
   }
 }
 
