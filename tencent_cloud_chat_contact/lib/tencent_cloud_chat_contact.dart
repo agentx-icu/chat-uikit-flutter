@@ -299,6 +299,14 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
     return TencentCloudChatThemeWidget(
       build: (context, colorTheme, textStyle) => Scaffold(
         appBar: AppBar(
+          // Size the mobile contacts toolbar to its stacked title (large
+          // fontsize_34 name + 12dp gap + ~48dp search). The default 56dp
+          // toolbar centres that and lets the title overflow UP under the status
+          // bar (clipped on Android edge-to-edge, where the app reserves the
+          // status bar at the shell SafeArea level). Text-scaled, floored at the
+          // 120dp default, capped for very large accessibility text scales. True
+          // desktop uses the separate `desktopBuilder` and is unaffected.
+          toolbarHeight: (MediaQuery.textScalerOf(context).scale(textStyle.fontsize_34) * 1.4 + 72).clamp(120.0, 240.0).toDouble(),
           backgroundColor: colorTheme.contactBackgroundColor,
           title: const TencentCloudChatContactAppBar(),
           scrolledUnderElevation: 0.0,
