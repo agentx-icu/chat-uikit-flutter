@@ -588,7 +588,19 @@ class _TencentCloudChatMaterialAppState extends State<TencentCloudChatMaterialAp
                     ? (theme.brightness == Brightness.light ? ThemeMode.light : ThemeMode.dark)
                     : null);
             if (widget.themeMode != null) {
-              theme.brightnessWithoutFire = themeMode == ThemeMode.light ? Brightness.light : Brightness.dark;
+              // ThemeMode.system must follow the OS appearance — the old
+              // `== ThemeMode.light ? light : dark` collapsed System to dark,
+              // so the embedded UIKit surfaces rendered the dark theme on a
+              // light device (while the app-level MaterialApp stayed light).
+              // MediaQuery.maybePlatformBrightnessOf makes this rebuild when the
+              // OS appearance changes; the PlatformDispatcher value is a safe
+              // fallback when no MediaQuery ancestor is present.
+              theme.brightnessWithoutFire = switch (themeMode!) {
+                ThemeMode.light => Brightness.light,
+                ThemeMode.dark => Brightness.dark,
+                ThemeMode.system => MediaQuery.maybePlatformBrightnessOf(context) ??
+                    WidgetsBinding.instance.platformDispatcher.platformBrightness,
+              };
             }
 
             return MaterialApp(
