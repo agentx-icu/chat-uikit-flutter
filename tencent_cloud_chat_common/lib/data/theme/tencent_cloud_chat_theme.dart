@@ -79,6 +79,18 @@ class TencentCloudChatTheme {
     _brightness = value;
   }
 
+  /// Optional host (embedding-app) override for the in-UIKit brightness
+  /// toggle (the conversation app-bar button).
+  ///
+  /// When the host owns the source-of-truth theme mode (e.g. toxee's
+  /// `AppTheme`, which also drives the Material `ThemeData`), flipping only the
+  /// UIKit brightness here would desync the host's Material surfaces (scaffold
+  /// background, bottom nav) from the UIKit colors. The host registers this so
+  /// the toggle drives its single source of truth instead, which then syncs the
+  /// UIKit brightness back. When null, the toggle falls back to the local
+  /// [toggleBrightnessMode] so the UIKit stays self-contained on its own.
+  static VoidCallback? onBrightnessToggleRequest;
+
   /// Toggles the brightness mode between light and dark.
   void toggleBrightnessMode({Brightness? brightness}) {
     _brightness = brightness ?? (_brightness == Brightness.light ? Brightness.dark : Brightness.light);

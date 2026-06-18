@@ -7,6 +7,7 @@ import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_navigator.da
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
+import 'package:tencent_cloud_chat_common/data/theme/tencent_cloud_chat_theme.dart';
 
 class TencentCloudChatConversationAppBar extends StatefulWidget {
   final TextEditingController? textEditingController;
@@ -129,7 +130,18 @@ class TencentCloudChatConversationAppBarNameState
                 IconButton(
                   icon: Icon(Icons.brightness_medium, color: colorTheme.appBarIconColor),
                   onPressed: () {
-                    TencentCloudChat.instance.chatController.toggleBrightnessMode();
+                    // Prefer the host's source-of-truth toggle so the Material
+                    // theme (scaffold, bottom nav) and the UIKit colors switch
+                    // together; only flip the UIKit brightness when no host is
+                    // registered (standalone UIKit use).
+                    final hostToggle =
+                        TencentCloudChatTheme.onBrightnessToggleRequest;
+                    if (hostToggle != null) {
+                      hostToggle();
+                    } else {
+                      TencentCloudChat.instance.chatController
+                          .toggleBrightnessMode();
+                    }
                   },
                 ),
                 PopupMenuButton<String>(
@@ -137,8 +149,11 @@ class TencentCloudChatConversationAppBarNameState
                   offset: const Offset(0, 40),
                   color: colorTheme.backgroundColor,
                   padding: EdgeInsets.zero,
+                  // Cap the width but leave room for longer localized labels
+                  // (e.g. English "Create Group") so the menu rows don't
+                  // overflow; the rows size to their content below.
                   constraints: const BoxConstraints(
-                    maxWidth: 120,
+                    maxWidth: 240,
                   ),
                   onSelected: (String result) {
                     switch (result) {
@@ -153,28 +168,24 @@ class TencentCloudChatConversationAppBarNameState
                   itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                     PopupMenuItem<String>(
                       value: 'startC2CChat',
-                      child: Container(
-                        alignment: Alignment.center,
-                        child: Row(
-                          children: [
-                            const Icon(Icons.chat_outlined),
-                            const SizedBox(width: 8),
-                            Text(tL10n.startConversation),
-                          ],
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.chat_outlined),
+                          const SizedBox(width: 8),
+                          Flexible(child: Text(tL10n.startConversation)),
+                        ],
                       ),
                     ),
                     PopupMenuItem<String>(
                       value: 'startGroupChat',
-                      child: Container(
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          children: [
-                            const Icon(Icons.group_add_outlined),
-                            const SizedBox(width: 8),
-                            Text(tL10n.createGroupChat),
-                          ],
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.group_add_outlined),
+                          const SizedBox(width: 8),
+                          Flexible(child: Text(tL10n.createGroupChat)),
+                        ],
                       ),
                     ),
                   ],

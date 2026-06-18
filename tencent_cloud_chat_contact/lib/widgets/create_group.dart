@@ -327,6 +327,10 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
         build: (context, colorTheme, textStyle) => Scaffold(
               backgroundColor: colorTheme.backgroundColor,
               appBar: AppBar(
+                // Widen the leading slot so the "Cancel" text button fits on
+                // one line (the 56px default wraps it to "Can/cel", and is also
+                // tight for longer locales like JA "キャンセル").
+                leadingWidth: getWidth(100),
                 backgroundColor: colorTheme.backgroundColor,
                 leading: TextButton(
                   onPressed: () => popDialogIfCurrent(context),

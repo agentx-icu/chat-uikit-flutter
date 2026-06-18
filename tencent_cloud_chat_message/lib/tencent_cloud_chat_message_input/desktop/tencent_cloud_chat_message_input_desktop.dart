@@ -807,16 +807,15 @@ class _TencentCloudChatMessageInputDesktopState
                                 null)
                               Expanded(
                                 child: Container(
-                                  // Rounded composer field: subtle fill + a
-                                  // hairline border so it reads as an inset box
-                                  // against the flat input area (the reference
-                                  // design). Radius 8.
+                                  // Flat composer surface (Feishu reference):
+                                  // the text area blends into the input panel
+                                  // with no outline box and no focus ring (the
+                                  // field's border states are disabled below so
+                                  // it never inherits the app-wide blue
+                                  // focused-border ring).
                                   decoration: BoxDecoration(
                                     color: colorTheme.inputAreaBackground,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: colorTheme.inputFieldBorderColor,
-                                    ),
                                   ),
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 2),
@@ -840,16 +839,27 @@ class _TencentCloudChatMessageInputDesktopState
                                         style: const TextStyle(fontSize: 14),
                                         decoration: InputDecoration(
                                           hoverColor: Colors.transparent,
+                                          // Disable every border state so the
+                                          // composer never picks up the
+                                          // app-wide blue focused-border ring
+                                          // (form fields keep it; the chat
+                                          // composer is flat in the reference).
                                           border: InputBorder.none,
+                                          enabledBorder: InputBorder.none,
+                                          focusedBorder: InputBorder.none,
+                                          disabledBorder: InputBorder.none,
+                                          errorBorder: InputBorder.none,
+                                          focusedErrorBorder: InputBorder.none,
                                           hintStyle: TextStyle(
                                             color:
                                                 colorTheme.secondaryTextColor,
                                           ),
-                                          // Fill comes from the rounded wrapper.
+                                          // Fill comes from the flat wrapper.
                                           fillColor: Colors.transparent,
                                           filled: true,
                                           isDense: true,
                                         ),
+                                        cursorColor: colorTheme.primaryColor,
                                         controller: _textEditingController,
                                         specialTextSpanBuilder:
                                             TencentCloudChatSpecialTextSpanBuilder(

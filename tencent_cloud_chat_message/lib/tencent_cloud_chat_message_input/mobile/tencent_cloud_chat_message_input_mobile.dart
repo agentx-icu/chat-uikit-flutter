@@ -467,7 +467,16 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
       ),
       decoration: InputDecoration(
         hintText: tL10n.sendAMessage,
+        // Disable every border state so the composer never inherits the
+        // app-wide blue focused-border ring (form fields keep it). The pill
+        // outline comes from the wrapper Container; the reference composer
+        // shows no extra ring when focused.
         border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        disabledBorder: InputBorder.none,
+        errorBorder: InputBorder.none,
+        focusedErrorBorder: InputBorder.none,
         contentPadding: EdgeInsets.zero,
         isDense: true,
       ),
