@@ -145,7 +145,7 @@ class TencentCloudChatConversationAppBarNameState
                   },
                 ),
                 PopupMenuButton<String>(
-                  icon: Icon(Icons.create_outlined, color: colorTheme.appBarIconColor),
+                  icon: Icon(Icons.add, color: colorTheme.appBarIconColor),
                   offset: const Offset(0, 40),
                   color: colorTheme.backgroundColor,
                   padding: EdgeInsets.zero,

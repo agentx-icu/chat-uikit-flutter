@@ -141,8 +141,8 @@ class _TencentCloudChatConversationDesktopModeState
     return TencentCloudChatThemeWidget(
       build: (context, colorTheme, textStyle) => Row(
         children: [
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: getWidth(280)),
+          SizedBox(
+            width: getWidth(330),
             child: Column(
               children: [
                 Row(

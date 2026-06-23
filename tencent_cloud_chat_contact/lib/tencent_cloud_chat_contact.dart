@@ -183,19 +183,6 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
   Widget desktopBuilder(BuildContext context) {
     List<TTabItem> getTabItem() {
       List<TTabItem> tabItemList = [];
-      tabItemList.add(
-        TTabItem(
-            id: "new_contacts",
-            icon: Icons.add_box_outlined,
-            name: tL10n.newContacts,
-            onTap: () {
-              setState(() {
-                _selectedTabId = "new_contacts";
-                _desktopModule = TencentCloudChatContactApplication(applicationList: applicationList);
-              });
-            },
-            unreadCount: _applicationUnreadCount),
-      );
       // toxee: the Tox bridge has no group-application concept —
       // getGroupApplicationList() returns an empty list and
       // acceptGroupApplication()/refuseGroupApplication() are no-ops
@@ -261,19 +248,6 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
   Widget defaultBuilder(BuildContext context) {
     List<TTabItem> getTabItem() {
       List<TTabItem> tabItemList = [];
-      tabItemList.add(
-        TTabItem(
-            id: "new_contacts",
-            icon: Icons.add_box_outlined,
-            name: tL10n.newContacts,
-            onTap: () => {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => TencentCloudChatContactApplication(applicationList: applicationList)))
-                },
-            unreadCount: _applicationUnreadCount),
-      );
       // toxee: omitted — see the desktopBuilder note above. The Tox bridge has
       // no group-application concept, so "Group notifications" only ever opened
       // a permanently-empty, non-functional list.

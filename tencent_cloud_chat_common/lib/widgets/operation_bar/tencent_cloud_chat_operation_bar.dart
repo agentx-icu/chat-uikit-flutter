@@ -93,7 +93,7 @@ class _TencentCloudChatOperationBarState<T>
                         children: [
                           Text(widget.value.toString()),
                           IconButton(
-                            icon: const Icon(Icons.edit),
+                            icon: const Icon(Icons.add),
                             onPressed: () =>
                                 widget.onChange?.call(widget.value),
                           ),

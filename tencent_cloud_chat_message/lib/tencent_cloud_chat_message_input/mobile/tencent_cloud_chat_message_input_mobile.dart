@@ -17,7 +17,6 @@ import 'package:tencent_cloud_chat_message/common/text_compiler/tencent_cloud_ch
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_controller.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/message_reply/tencent_cloud_chat_message_input_reply_container.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/mobile/tencent_cloud_chat_message_attachment_options.dart';
-import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/mobile/tencent_cloud_chat_message_camera.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/mobile/tencent_cloud_chat_message_input_recording.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/select_mode/tencent_cloud_chat_message_input_select_mode_container.dart';
 
@@ -202,6 +201,11 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
     }
   }
 
+  void _focusTextInputAndShowKeyboard() {
+    _textEditingFocusNode.requestFocus();
+    unawaited(SystemChannels.textInput.invokeMethod<void>('TextInput.show'));
+  }
+
   Widget _buildInputAreaIcon({
     required IconData icon,
     required GestureTapDownCallback onTapDown,
@@ -224,44 +228,6 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
                 ),
               ),
             ));
-  }
-
-  /// toxee 5.4 — Explicit "paste from clipboard" affordance.
-  ///
-  /// The OS keyboard already exposes plain-text paste on long-press of the
-  /// input field, so we don't *need* a dedicated button. We add one anyway as
-  /// a discoverability win for users who don't realise text paste is a
-  /// keyboard feature (esp. on Android where the paste bubble can be slow to
-  /// appear). It only handles plain text — images need a new dependency
-  /// (`super_clipboard` or platform channels) which is out of scope for this
-  /// pass.
-  // TODO(toxee): support pasting images from the clipboard on mobile. Needs
-  // `super_clipboard` or platform-channel work — tracked under polish-pass 5.4.
-  Future<void> _pasteTextFromClipboard() async {
-    try {
-      final data = await Clipboard.getData(Clipboard.kTextPlain);
-      final pasted = data?.text;
-      if (pasted == null || pasted.isEmpty) return;
-      final selection = _textEditingController.selection;
-      final current = _textEditingController.text;
-      final insertAt = selection.isValid ? selection.start : current.length;
-      final updated =
-          current.substring(0, insertAt) + pasted + current.substring(insertAt);
-      _textEditingController.text = updated;
-      _textEditingController.selection =
-          TextSelection.collapsed(offset: insertAt + pasted.length);
-      _inputText = updated;
-      // Trigger byte-count re-evaluation through the existing listener path.
-      final nextByteCount = utf8.encode(updated).length;
-      if (nextByteCount != _byteCount) {
-        safeSetState(() {
-          _byteCount = nextByteCount;
-        });
-      }
-      _textEditingFocusNode.requestFocus();
-    } catch (e) {
-      debugPrint('Clipboard paste failed: $e');
-    }
   }
 
   void _onStartRecording(PointerDownEvent event) async {
@@ -452,7 +418,7 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
     return ExtendedTextField(
       onTap: () {
         (widget.inputMethods.controller as TencentCloudChatMessageController).scrollToBottom();
-        _textEditingFocusNode.requestFocus();
+        _focusTextInputAndShowKeyboard();
         safeSetState(() {
           _showStickerPanel = false;
           _showKeyboard = true;
@@ -477,6 +443,8 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
         disabledBorder: InputBorder.none,
         errorBorder: InputBorder.none,
         focusedErrorBorder: InputBorder.none,
+        filled: false,
+        fillColor: Colors.transparent,
         contentPadding: EdgeInsets.zero,
         isDense: true,
       ),
@@ -517,31 +485,15 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
                       );
                     },
                   ),
-                  _buildInputAreaIcon(
-                    icon: Icons.camera_alt_outlined,
-                    onTapDown: (_) {
-                      if (_showStickerPanel) {
-                        safeSetState(() {
-                          _showStickerPanel = false;
-                        });
-                      }
-
-                      TencentCloudChatMessageCamera.showCameraOptions(
-                        context: context,
-                        onSendImage: widget.inputMethods.sendImageMessage,
-                        onSendVideo: widget.inputMethods.sendVideoMessage,
-                      );
-                    } 
-                  ),
                   SizedBox(
-                    width: getSquareSize(8),
+                    width: getSquareSize(6),
                   ),
                   Expanded(
                       child: Container(
-                    padding: EdgeInsets.symmetric(vertical: getWidth(10), horizontal: getHeight(16)),
+                    padding: EdgeInsets.symmetric(vertical: getWidth(9), horizontal: getHeight(14)),
                     decoration: BoxDecoration(
-                      color: colorTheme.backgroundColor,
-                      border: Border.all(color: colorTheme.inputFieldBorderColor),
+                      color: Colors.transparent,
+                      border: Border.all(color: colorTheme.inputFieldBorderColor.withOpacity(0.65)),
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: Row(
@@ -551,23 +503,6 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
                         Expanded(
                           child: _buildInputTextField(),
                         ),
-                        // toxee 5.4: explicit clipboard-paste affordance —
-                        // pastes plain text from the system clipboard into the
-                        // input. Image paste is intentionally not handled here
-                        // (see `_pasteTextFromClipboard` TODO).
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: _pasteTextFromClipboard,
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: getSquareSize(4)),
-                            child: Icon(
-                              Icons.content_paste_rounded,
-                              size: textStyle.inputAreaIcon,
-                              color: colorTheme.inputAreaIconColor,
-                            ),
-                          ),
-                        ),
                         if (widget.inputData.hasStickerPlugin)
                           GestureDetector(
                             key: const ValueKey('emoji_panel_button'),
@@ -575,14 +510,14 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
                               if (!_showStickerPanel) {
                                 _textEditingFocusNode.unfocus();
                               } else {
-                                _textEditingFocusNode.requestFocus();
+                                _focusTextInputAndShowKeyboard();
                               }
                               safeSetState(() {
                                 _showStickerPanel = !_showStickerPanel;
                               });
                             },
                             child: Icon(
-                              _showStickerPanel ? Icons.keyboard_alt_outlined : Icons.emoji_emotions,
+                              _showStickerPanel ? Icons.keyboard_alt_outlined : Icons.emoji_emotions_outlined,
                               size: textStyle.inputAreaIcon,
                               color: colorTheme.inputAreaIconColor,
                             ),
@@ -593,8 +528,8 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
                   Container(
                     margin: EdgeInsets.only(
                       bottom: getSquareSize(_showSendButton ? 6 : 4),
-                      left: getSquareSize(_showSendButton ? 6 : 8),
-                      right: getSquareSize(_showSendButton ? 8 : 2),
+                      left: getSquareSize(6),
+                      right: getSquareSize(_showSendButton ? 4 : 0),
                     ),
                     child: _animationController != null
                         ? AnimatedBuilder(
