@@ -784,6 +784,8 @@ class _TencentCloudChatMessageInputContainerState
 
   @override
   Widget defaultBuilder(BuildContext context) {
+    // Rebuild attachment options on every render so labels follow locale changes.
+    _buildAttachmentOptionsList();
     final bool isGroupAdmin = _resolveIsGroupAdmin();
 
     String showName = _dataProvider.conversation?.showName ?? "";

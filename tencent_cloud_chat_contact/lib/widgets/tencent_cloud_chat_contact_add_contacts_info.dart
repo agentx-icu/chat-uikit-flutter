@@ -437,7 +437,9 @@ class TencentCloudChatContactAddContactsInfoRemarksAndGroupState
     extends TencentCloudChatState<TencentCloudChatContactAddContactsInfoRemarksAndGroup> {
   final TextEditingController _nickNameController = TextEditingController();
 
-  List<String> friendGroup = [tL10n.none];
+  final List<String> _friendGroupNames = [];
+  // Internal value: "" = none selected. Real group names are used as-is.
+  // Display label for "none" is computed from tL10n at build time.
   String dropdownValue = "";
 
   @override
@@ -447,11 +449,8 @@ class TencentCloudChatContactAddContactsInfoRemarksAndGroupState
     List<V2TimFriendGroup> list = TencentCloudChat.instance.dataInstance.contact.friendGroup;
     for (final element in list) {
       if (element.name != null && element.name != "") {
-        friendGroup.add(element.name ?? "");
+        _friendGroupNames.add(element.name ?? "");
       }
-    }
-    if (friendGroup.isNotEmpty) {
-      dropdownValue = friendGroup.first;
     }
   }
 
@@ -524,18 +523,23 @@ class TencentCloudChatContactAddContactsInfoRemarksAndGroupState
                           isExpanded: true,
                           underline: Container(),
                           onChanged: (String? value) {
-                            // This is called when the user selects an item.
                             safeSetState(() {
                               dropdownValue = value!;
                               widget.onFriendGroupChanged(value);
                             });
                           },
-                          items: friendGroup.map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Container(alignment: Alignment.centerRight, child: Text(value)),
-                            );
-                          }).toList(),
+                          items: [
+                            DropdownMenuItem<String>(
+                              value: "",
+                              child: Container(alignment: Alignment.centerRight, child: Text(tL10n.none)),
+                            ),
+                            ..._friendGroupNames.map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Container(alignment: Alignment.centerRight, child: Text(value)),
+                              );
+                            }),
+                          ],
                         ))
                   ],
                 ),

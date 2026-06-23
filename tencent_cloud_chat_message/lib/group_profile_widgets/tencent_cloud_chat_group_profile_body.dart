@@ -405,8 +405,8 @@ class TencentCloudChatGroupProfileContentState
                     textDirection: TextDirection.ltr,
                     child: SelectableText(
                       chatId != null && chatId!.isNotEmpty
-                          ? "Group ID: $chatId"
-                          : "Group ID: $displayGroupID",
+                          ? "${tL10n.groupID}: $chatId"
+                          : "${tL10n.groupID}: $displayGroupID",
                       style: TextStyle(
                         fontSize: textStyle.fontsize_12,
                         color: chatId != null && chatId!.isNotEmpty
@@ -852,14 +852,16 @@ class TencentCloudChatGroupProfileGroupManagement extends StatefulWidget {
 
 class TencentCloudChatGroupProfileGroupManagementState
     extends TencentCloudChatState<TencentCloudChatGroupProfileGroupManagement> {
-  String joinGroupOpt = "";
-  String inviteToGroupOpt = "";
+  // Track the effective opt int so display text is always computed fresh from
+  // the current tL10n (fixes stale locale after language switch).
+  int? _joinOpt;
+  int? _inviteOpt;
 
   @override
   initState() {
     super.initState();
-    joinGroupOpt = getGroupAddOpt(widget.groupInfo.groupAddOpt);
-    inviteToGroupOpt = getApproveOpt(widget.groupInfo.approveOpt);
+    _joinOpt = widget.groupInfo.groupAddOpt;
+    _inviteOpt = widget.groupInfo.approveOpt;
   }
 
   bool checkIsAdminOrOwner() {
@@ -939,7 +941,7 @@ class TencentCloudChatGroupProfileGroupManagementState
             groupAddOpt: opt);
     if (res.code == 0) {
       safeSetState(() {
-        joinGroupOpt = getGroupAddOpt(opt);
+        _joinOpt = opt;
       });
     }
   }
@@ -952,7 +954,7 @@ class TencentCloudChatGroupProfileGroupManagementState
             approveOpt: opt);
     if (res.code == 0) {
       safeSetState(() {
-        inviteToGroupOpt = getApproveOpt(opt);
+        _inviteOpt = opt;
       });
     }
   }
@@ -1145,7 +1147,7 @@ class TencentCloudChatGroupProfileGroupManagementState
                       style: TextStyle(
                           color: colorTheme.groupProfileTabTextColor,
                           fontSize: textStyle.fontsize_16))),
-              Text(joinGroupOpt,
+              Text(getGroupAddOpt(_joinOpt),
                   style: TextStyle(
                       color: colorTheme.groupProfileTextColor,
                       fontSize: textStyle.fontsize_16)),
@@ -1179,7 +1181,7 @@ class TencentCloudChatGroupProfileGroupManagementState
                       style: TextStyle(
                           color: colorTheme.groupProfileTabTextColor,
                           fontSize: textStyle.fontsize_16))),
-              Text(inviteToGroupOpt,
+              Text(getApproveOpt(_inviteOpt),
                   style: TextStyle(
                       color: colorTheme.groupProfileTextColor,
                       fontSize: textStyle.fontsize_16)),

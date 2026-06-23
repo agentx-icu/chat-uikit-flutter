@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tencent_cloud_chat_intl/localizations/tencent_cloud_chat_localizations.dart';
 
-TencentCloudChatLocalizations tL10n = TencentCloudChatIntl().localization!;
+TencentCloudChatLocalizations get tL10n => TencentCloudChatIntl().localization!;
 
 class TencentCloudChatIntl extends ChangeNotifier {
   static TencentCloudChatIntl? _instance;
@@ -40,6 +40,7 @@ class TencentCloudChatIntl extends ChangeNotifier {
 
   void setLocale(Locale newLocale) {
     _currentLocale = newLocale;
+    localization = lookupTencentCloudChatLocalizations(newLocale);
     notifyListeners();
   }
 

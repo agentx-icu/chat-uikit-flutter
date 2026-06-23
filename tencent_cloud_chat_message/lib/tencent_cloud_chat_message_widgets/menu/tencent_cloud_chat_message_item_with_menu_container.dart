@@ -619,6 +619,8 @@ class _TencentCloudChatMessageItemWithMenuContainerState
 
   @override
   Widget defaultBuilder(BuildContext context) {
+    // Refresh menu options on every render so labels follow locale changes.
+    _generateMenuOptions();
     return TencentCloudChatMessageDataProviderInherited
         .of(context)
         .messageBuilders

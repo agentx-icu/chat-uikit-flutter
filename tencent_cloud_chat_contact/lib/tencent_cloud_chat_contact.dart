@@ -73,7 +73,9 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
   int _applicationUnreadCount = 0;
 
   Widget? _desktopModule;
-  String? _title;
+  // Track which sub-tab is selected by ID; compute the title label from tL10n
+  // at build time so it follows locale changes.
+  String? _selectedTabId;
 
   contactDataHandler(TencentCloudChatContactData data) {
     if (data.currentUpdatedFields == TencentCloudChatContactDataKeys.contactList) {
@@ -188,7 +190,7 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
             name: tL10n.newContacts,
             onTap: () {
               setState(() {
-                _title = tL10n.newContacts;
+                _selectedTabId = "new_contacts";
                 _desktopModule = TencentCloudChatContactApplication(applicationList: applicationList);
               });
             },
@@ -208,7 +210,7 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
           name: tL10n.blockList,
           onTap: () {
             setState(() {
-              _title = tL10n.blockList;
+              _selectedTabId = "blocked_users";
               _desktopModule = TencentCloudChatContactBlockList(blackList: _blockList);
             });
           },
@@ -222,7 +224,11 @@ class TencentCloudChatContactState extends TencentCloudChatState<TencentCloudCha
         child: Column(
           children: [
             TencentCloudChatContactAppBar(
-              title: _title,
+              title: _selectedTabId == "new_contacts"
+                  ? tL10n.newContacts
+                  : _selectedTabId == "blocked_users"
+                      ? tL10n.blockList
+                      : null,
             ),
             Expanded(
               child: Row(
