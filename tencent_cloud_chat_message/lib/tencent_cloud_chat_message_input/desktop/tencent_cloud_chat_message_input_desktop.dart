@@ -43,6 +43,16 @@ const int _kToxByteCounterThreshold = 1097;
 /// focus (which would background the Simulator and get the sim peer RBS-killed).
 void Function(String text)? debugRealUiDesktopComposerSendText;
 
+/// Test-only seam: the currently-mounted desktop message composer registers its
+/// real Enter-to-send action here (debug builds only) so the headless real-UI
+/// harness can drive a genuine composer send WITHOUT a synthetic
+/// RawKeyDownEvent (Windows has no OS-level key injection, and synthetic
+/// `enterText` cannot reach the FocusNode.onKey Enter path). Invoking it runs
+/// the EXACT same code as pressing Enter — real field text, mention state, byte
+/// validation, `inputMethods.sendTextMessage`, and field clear. Null whenever no
+/// desktop composer is mounted; never set in release builds.
+void Function()? debugRealUiDesktopComposerSend;
+
 class TencentCloudChatMessageInputDesktop extends StatefulWidget {
   final MessageInputBuilderData inputData;
   final MessageInputBuilderMethods inputMethods;
@@ -80,6 +90,10 @@ class _TencentCloudChatMessageInputDesktopState
     super.initState();
     _cancelEditingMemberMentionStatus();
     _textEditingFocusNode.onKey = _handleKeyEvent;
+    if (kDebugMode) {
+      // Expose this composer's real Enter-send to the headless real-UI harness.
+      debugRealUiDesktopComposerSend = _desktopSendTearoff;
+    }
     _textEditingFocusNode.requestFocus();
     _scrollController = ScrollController();
     _textEditingController.addListener(() {
@@ -144,6 +158,9 @@ class _TencentCloudChatMessageInputDesktopState
 
   @override
   void dispose() {
+    if (identical(debugRealUiDesktopComposerSend, _desktopSendTearoff)) {
+      debugRealUiDesktopComposerSend = null;
+    }
     super.dispose();
     if (kDebugMode) {
       debugRealUiDesktopComposerSendText = null;
@@ -151,6 +168,30 @@ class _TencentCloudChatMessageInputDesktopState
     _textEditingController.dispose();
     _textEditingFocusNode.dispose();
     removeUIKitListener();
+  }
+
+  // Stable tearoff so dispose can verify ownership before clearing the global
+  // hook (a later composer may have overwritten it).
+  late final void Function() _desktopSendTearoff = _submitDesktopSend;
+
+  /// The exact Enter-to-send action of the desktop composer, factored out so the
+  /// headless real-UI harness can invoke it via [debugRealUiDesktopComposerSend]
+  /// without an OS/synthetic key event. Identical behaviour to pressing Enter.
+  void _submitDesktopSend() {
+    if (utf8.encode(_textEditingController.text).length > _kToxMaxMessageBytes) {
+      return;
+    }
+    widget.inputMethods.sendTextMessage(
+      text: _textEditingController.text,
+      mentionedUsers: _mentionedUsers.map((e) => e.userID).toList(),
+    );
+    _inputText = "";
+    _mentionedUsers.clear();
+    _textEditingController.clear();
+    safeSetState(() {
+      _byteCount = 0;
+    });
+    _cancelEditingMemberMentionStatus();
   }
 
   @override
@@ -697,25 +738,7 @@ class _TencentCloudChatMessageInputDesktopState
       } else if (isPressEnter) {
         if (!_isComposingText) {
           if (!_isEditingAtSearchWords || showMemberList.isEmpty) {
-            if (utf8.encode(_textEditingController.text).length >
-                _kToxMaxMessageBytes) {
-              return KeyEventResult.handled;
-            }
-            widget.inputMethods.sendTextMessage(
-              text: _textEditingController.text,
-              mentionedUsers: _mentionedUsers
-                  .map(
-                    (e) => e.userID,
-                  )
-                  .toList(),
-            );
-            _inputText = "";
-            _mentionedUsers.clear();
-            _textEditingController.clear();
-            safeSetState(() {
-              _byteCount = 0;
-            });
-            _cancelEditingMemberMentionStatus();
+            _submitDesktopSend();
           } else {
             final V2TimGroupMemberFullInfo? memberInfo =
                 showMemberList[activeIndex];
