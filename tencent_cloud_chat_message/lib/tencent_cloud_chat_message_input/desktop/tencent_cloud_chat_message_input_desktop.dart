@@ -53,6 +53,35 @@ void Function(String text)? debugRealUiDesktopComposerSendText;
 /// desktop composer is mounted; never set in release builds.
 void Function()? debugRealUiDesktopComposerSend;
 
+/// Companion to [debugRealUiDesktopComposerSend] (debug builds only): set the
+/// mounted desktop composer's text field DIRECTLY, bypassing synthetic
+/// `enterText`. On Windows the headless harness has no OS key injection and
+/// flutter_skill `enterText` does not reliably reach this composer's
+/// [TextEditingController] (the editable focuses from a coordinate tap macOS
+/// can do but the headless Windows path cannot), so a typed-then-Enter flow
+/// sends an EMPTY message. This setter writes the controller text + byte count
+/// deterministically, so `set-text + send` reproduces a real composer send for
+/// multi-line / long / emoji text. Null when no desktop composer is mounted.
+void Function(String text)? debugRealUiDesktopComposerSetText;
+
+/// Debug-only: send an @-mention to a group member WITHOUT rendering the mention
+/// panel. The panel only appears from real char-by-char "@" typing through
+/// `_onTextChanged`, which the headless Windows harness cannot drive; this
+/// reproduces the exact data a real select-member-then-send produces — appends
+/// `{userID}` to the composer's `_mentionedUsers`, inserts the `@<label>` text,
+/// and ships it via the production `_submitDesktopSend` (real `sendTextMessage`
+/// with `mentionedUsers`). Null when no desktop composer is mounted.
+void Function(String userID, String label, String text)?
+    debugRealUiDesktopComposerMentionSend;
+
+/// Debug-only: stage a pasted image from an already-materialized file path and
+/// open the production desktop send-image confirm dialog. The OS clipboard +
+/// Ctrl/Cmd+V are not headless-automatable on the Windows VM (the driver's
+/// clipboard lives in a different window-station), so this invokes the SAME
+/// `sendImageOnDesktop` the real `_handlePasteResource` calls, with an image the
+/// harness wrote to a path the app can read. Null when no composer is mounted.
+void Function(String imagePath)? debugRealUiDesktopPasteImagePath;
+
 class TencentCloudChatMessageInputDesktop extends StatefulWidget {
   final MessageInputBuilderData inputData;
   final MessageInputBuilderMethods inputMethods;
@@ -93,6 +122,9 @@ class _TencentCloudChatMessageInputDesktopState
     if (kDebugMode) {
       // Expose this composer's real Enter-send to the headless real-UI harness.
       debugRealUiDesktopComposerSend = _desktopSendTearoff;
+      debugRealUiDesktopComposerSetText = _desktopSetTextTearoff;
+      debugRealUiDesktopComposerMentionSend = _desktopMentionSendTearoff;
+      debugRealUiDesktopPasteImagePath = _desktopPasteImagePathTearoff;
     }
     _textEditingFocusNode.requestFocus();
     _scrollController = ScrollController();
@@ -161,6 +193,17 @@ class _TencentCloudChatMessageInputDesktopState
     if (identical(debugRealUiDesktopComposerSend, _desktopSendTearoff)) {
       debugRealUiDesktopComposerSend = null;
     }
+    if (identical(debugRealUiDesktopComposerSetText, _desktopSetTextTearoff)) {
+      debugRealUiDesktopComposerSetText = null;
+    }
+    if (identical(debugRealUiDesktopComposerMentionSend,
+        _desktopMentionSendTearoff)) {
+      debugRealUiDesktopComposerMentionSend = null;
+    }
+    if (identical(
+        debugRealUiDesktopPasteImagePath, _desktopPasteImagePathTearoff)) {
+      debugRealUiDesktopPasteImagePath = null;
+    }
     super.dispose();
     if (kDebugMode) {
       debugRealUiDesktopComposerSendText = null;
@@ -173,6 +216,47 @@ class _TencentCloudChatMessageInputDesktopState
   // Stable tearoff so dispose can verify ownership before clearing the global
   // hook (a later composer may have overwritten it).
   late final void Function() _desktopSendTearoff = _submitDesktopSend;
+  late final void Function(String) _desktopSetTextTearoff = _setDesktopText;
+  late final void Function(String, String, String) _desktopMentionSendTearoff =
+      _mentionSend;
+  late final void Function(String) _desktopPasteImagePathTearoff =
+      _pasteImagePath;
+
+  /// Send an @-mention to [userID] (display [label]) followed by [text], exactly
+  /// as a real select-member-then-send would: the userID rides in
+  /// `mentionedUsers` and the visible bubble text carries the `@<label>` tag.
+  void _mentionSend(String userID, String label, String text) {
+    _mentionedUsers.add((userID: userID, label: label));
+    _textEditingController.text = '@$label $text';
+    _submitDesktopSend();
+  }
+
+  /// Stage [imagePath] through the production desktop send-image confirm dialog
+  /// (same call the real Ctrl/Cmd+V paste handler makes).
+  void _pasteImagePath(String imagePath) {
+    TencentCloudChatDesktopImageTools.sendImageOnDesktop(
+      context: context,
+      imagePath: imagePath,
+      currentConversationShowName:
+          widget.inputData.currentConversationShowName,
+      sendImageMessage: widget.inputMethods.sendImageMessage,
+    );
+  }
+
+  /// Deterministically populate the composer's text field (used by the headless
+  /// real-UI harness via [debugRealUiDesktopComposerSetText]). Mirrors the state
+  /// a real keystroke sequence leaves: controller text, the mirrored `_inputText`
+  /// the byte-count UI reads, focus, and `_byteCount`.
+  void _setDesktopText(String text) {
+    _textEditingController.text = text;
+    _textEditingController.selection =
+        TextSelection.collapsed(offset: text.length);
+    _inputText = text;
+    _textEditingFocusNode.requestFocus();
+    safeSetState(() {
+      _byteCount = utf8.encode(text).length;
+    });
+  }
 
   /// The exact Enter-to-send action of the desktop composer, factored out so the
   /// headless real-UI harness can invoke it via [debugRealUiDesktopComposerSend]
