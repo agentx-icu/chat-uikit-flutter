@@ -152,7 +152,13 @@ class TencentCloudChatContactApplicationInfoAvatarState
     extends TencentCloudChatState<TencentCloudChatContactApplicationInfoAvatar> {
   @override
   Widget defaultBuilder(BuildContext context) {
-    if (widget.application.faceUrl!.isEmpty) {
+    // Tox friend applications carry no avatar URL, so faceUrl is null here.
+    // The upstream `faceUrl!` null-asserts and throws ("Null check operator used
+    // on a null value") during build, which replaces this avatar with an
+    // ErrorWidget whose unbounded intrinsic size then overflows the parent
+    // Row/Column by ~99k px. Treat null as empty so the default-avatar branch
+    // renders. (Shared UIKit code → fixes desktop + mobile alike.)
+    if ((widget.application.faceUrl ?? '').isEmpty) {
       return Padding(
           padding: EdgeInsets.symmetric(horizontal: getWidth(13)),
           child: TencentCloudChatCommonBuilders.getCommonAvatarBuilder(

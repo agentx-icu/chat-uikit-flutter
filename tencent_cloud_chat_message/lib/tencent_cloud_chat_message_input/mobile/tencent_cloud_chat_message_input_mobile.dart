@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:extended_text_field/extended_text_field.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -24,6 +25,27 @@ import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/sele
 // the warning threshold (~80%) gives the user breathing room before the cap.
 const int _kToxMaxMessageBytes = 1372;
 const int _kToxByteCounterThreshold = 1097;
+
+/// L3 real-UI test seam (debug builds only). The mobile composer is an
+/// `ExtendedTextField` whose `ExtendedEditableText` does NOT pick up
+/// flutter_skill's synthetic `enterText` (setEditingState), so the controller
+/// listener (`_onTextChanged`) never fires and the send button never appears —
+/// making a real-UI message send undriveable on a phone. The mounted input
+/// registers this setter so an automation seam (toxee `l3_composer_set_text`)
+/// can populate the field through the controller directly, which DOES fire
+/// `_onTextChanged` → reveals `chat_send_button` for a REAL tap. Null in release
+/// and whenever no mobile input is mounted.
+void Function(String text)? debugRealUiMobileComposerSetText;
+
+/// L3 real-UI test seam (debug builds only): set the composer text AND send it
+/// through the SAME `inputMethods.sendTextMessage` path the `chat_send_button`
+/// onTap invokes, then clear the composer. On a compact phone the synthetic tap
+/// on the send button does not reliably fire its `InkWell.onTap` (the message
+/// then never leaves the composer), so this seam performs the real send call
+/// directly — the send LOGIC stays the production path; only the final tap
+/// gesture is synthesized. Used by toxee `l3_composer_send`. Null in release and
+/// whenever no mobile input is mounted.
+void Function(String text)? debugRealUiMobileComposerSendText;
 
 class TencentCloudChatMessageInputMobile extends StatefulWidget {
   final MessageInputBuilderData inputData;
@@ -166,6 +188,36 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
       _animationController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
       _messageAttachmentOptions.init(vsync: this, context: context);
       _textEditingController.addListener(_onTextChanged);
+      if (kDebugMode) {
+        // Register the L3 real-UI composer-set-text seam (see top-of-file note).
+        debugRealUiMobileComposerSetText = (text) {
+          if (!mounted) return;
+          // Mutating the controller text fires `_onTextChanged`, which flips
+          // `_showSendButton` and rebuilds — so `chat_send_button` becomes
+          // tappable. The actual send stays the real button tap by the driver.
+          _textEditingController.text = text;
+        };
+        // Register the L3 real-UI composer-SEND seam: set the text then invoke
+        // the exact same production send path as the chat_send_button onTap
+        // (see the InkWell in the build method below). Bypasses the synthetic
+        // button tap, which does not reliably fire on a compact phone.
+        debugRealUiMobileComposerSendText = (text) {
+          if (!mounted) return;
+          _textEditingController.text = text;
+          widget.inputMethods.sendTextMessage(
+            text: text,
+            mentionedUsers: _mentionedUsers.map((e) => e.userID).toList(),
+          );
+          _inputText = "";
+          _mentionedUsers.clear();
+          _textEditingController.clear();
+          if (mounted) {
+            safeSetState(() {
+              _byteCount = 0;
+            });
+          }
+        };
+      }
       _textEditingFocusNode.addListener(() {
         if (_textEditingFocusNode.hasFocus) {
           safeSetState(() {
@@ -188,6 +240,10 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
       _animationController?.dispose();
       _messageAttachmentOptions.dispose();
       _animationController = null;
+      if (kDebugMode) {
+        debugRealUiMobileComposerSetText = null;
+        debugRealUiMobileComposerSendText = null;
+      }
       _textEditingController.removeListener(_onTextChanged);
       _textEditingController.clear();
       _textEditingController.dispose();
@@ -539,6 +595,10 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
                                 angle: _animationController!.value * pi,
                                 child: _showSendButton
                                     ? InkWell(
+                                        // Stable key so real-UI automation can tap
+                                        // the mobile send button (matches
+                                        // toxee UiKeys.chatSendButton = 'chat_send_button').
+                                        key: const ValueKey('chat_send_button'),
                                         onTap: _byteCount > _kToxMaxMessageBytes
                                             ? null
                                             : () {

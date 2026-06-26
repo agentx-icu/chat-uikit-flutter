@@ -6,7 +6,7 @@ import 'package:tencent_cloud_chat_common/utils/sdk_const.dart';
 import 'package:universal_html/html.dart' as html;
 
 import 'package:extended_text_field/extended_text_field.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -35,6 +35,13 @@ import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/sele
 // the warning threshold (~80%) gives the user breathing room before the cap.
 const int _kToxMaxMessageBytes = 1372;
 const int _kToxByteCounterThreshold = 1097;
+
+/// Real-UI automation seam (debug only): set the composer text and invoke the
+/// exact production send path (mirrors the Enter-key handler). Lets the L3
+/// `l3_composer_send` tool drive the DESKTOP composer purely over the VM service,
+/// so a macOS peer paired with an iOS Simulator never needs osascript keyboard
+/// focus (which would background the Simulator and get the sim peer RBS-killed).
+void Function(String text)? debugRealUiDesktopComposerSendText;
 
 class TencentCloudChatMessageInputDesktop extends StatefulWidget {
   final MessageInputBuilderData inputData;
@@ -83,6 +90,25 @@ class _TencentCloudChatMessageInputDesktopState
     }
     addUIKitListener();
     _initPasteOnWeb();
+    if (kDebugMode) {
+      // Real-UI L3 composer-SEND seam: set the text then invoke the exact
+      // production send path (same as the Enter-key handler below). Lets a macOS
+      // peer send via the VM service without osascript keyboard focus.
+      debugRealUiDesktopComposerSendText = (text) {
+        if (!mounted) return;
+        _textEditingController.text = text;
+        widget.inputMethods.sendTextMessage(
+          text: text,
+          mentionedUsers: _mentionedUsers.map((e) => e.userID).toList(),
+        );
+        _inputText = "";
+        _mentionedUsers.clear();
+        _textEditingController.clear();
+        safeSetState(() {
+          _byteCount = 0;
+        });
+      };
+    }
   }
 
   void uikitListener(Map<String, dynamic> data) {
@@ -119,6 +145,9 @@ class _TencentCloudChatMessageInputDesktopState
   @override
   void dispose() {
     super.dispose();
+    if (kDebugMode) {
+      debugRealUiDesktopComposerSendText = null;
+    }
     _textEditingController.dispose();
     _textEditingFocusNode.dispose();
     removeUIKitListener();
