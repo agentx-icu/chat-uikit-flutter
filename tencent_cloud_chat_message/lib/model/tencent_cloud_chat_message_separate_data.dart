@@ -723,6 +723,9 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
 
     // OPTIMIZED: messageListPointer is already in newest-first order (internal storage format),
     // so we don't need to reverse it. We'll work directly with newest-first order.
+    // toxee: locally-recalled tombstones are now re-applied at the GLOBAL store
+    // chokepoint (`messageData.getMessageList`, called by the line above), so the
+    // LOCAL_REVOKED tip is deterministic here without per-view bookkeeping.
     List<V2TimMessage> messageList = [...messageListPointer];
 
     final timeDividerConfig = _config.timeDividerConfig(userID: _userID, groupID: _groupID, topicID: _topicID);
@@ -1263,41 +1266,56 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
         .getMessageManager()
         .revokeMessage(msgID: message.msgID ?? "", webMessageInstatnce: message.messageFromWeb);
 
-    // Skip entirely on a failed revoke or an untracked message (codex P2: never
-    // re-publish the list when there is nothing to flip).
-    if (res.code != 0 || target == null) {
+    // Skip only on a failed revoke. (Previously this ALSO returned early when
+    // `target == null` — i.e. whenever the pre-revoke `getMessageList(key)`
+    // snapshot did not contain the row, which happens on key/normalization drift
+    // or a list mid-reload. In that case the delete still succeeded but the
+    // LOCAL_REVOKED tip never rendered: observed FLAKY as tombstone=false
+    // aGone=true. We must record + flip from the `message` ARGUMENT regardless.)
+    if (res.code != 0) {
       return;
     }
 
-    target.status = MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED;
-    target.revokerInfo = TencentCloudChat.instance.dataInstance.basic.currentUser;
+    // toxee: record the recalled keys on the GLOBAL message-data singleton from
+    // the MESSAGE ARGUMENT (caller-provided, always present) — NOT the captured
+    // `target` (often null, see above). The store-read chokepoint
+    // (`messageData.getMessageList`) then forces any matching row to
+    // LOCAL_REVOKED for EVERY message-view instance and reload race, so the
+    // tombstone is deterministic regardless of key/instance drift.
+    final globalMessageData = TencentCloudChat.instance.dataInstance.messageData;
+    final currentUser = TencentCloudChat.instance.dataInstance.basic.currentUser;
+    final String? revokedMsgID = TencentCloudChatUtils.checkString(message.msgID);
+    final String? revokedId = TencentCloudChatUtils.checkString(message.id);
+    if (revokedMsgID != null) globalMessageData.locallyRevokedKeys.add(revokedMsgID);
+    if (revokedId != null) globalMessageData.locallyRevokedKeys.add(revokedId);
 
-    // toxee: re-publish the captured list (now carrying the flipped tombstone)
-    // and drive the per-message `messageNeedUpdate` signal. CRITICAL: the
-    // published list and the `messageNeedUpdate` object must be the SAME
-    // identity as `target` — the rendered item matches `messageNeedUpdate` by
-    // identity, so flipping a freshly re-fetched copy and signalling the
-    // captured object (or vice-versa) silently fails to re-render. We therefore
-    // publish the captured list rather than a post-revoke re-fetch.
-    //
-    // KNOWN MINOR LIMITATION (codex P2, self-healing): if a brand-new message
-    // arrived during the (short) revoke await, re-publishing the captured
-    // pre-revoke list briefly drops it from the rendered list until the next
-    // conversation event/reload re-adds it. Acceptable for a quick
-    // user-initiated recall; a precise single-row in-place update is a
-    // follow-up.
-    //
-    // Upstream set disableNotify:true because the Tencent SDK's own
-    // onRecvMessageRevoked callback drove the notify; tim2tox fires the legacy
-    // onRecvMessageRevoked into the fork's no-op handler, so without an explicit
-    // notify here the recalled bubble lingers as its original text.
-    TencentCloudChat.instance.dataInstance.messageData.updateMessageList(
-        messageList: currentHistoryMsgList,
-        userID: _userID,
-        groupID: _groupID,
-        topicID: _topicID,
-        disableNotify: false);
-    TencentCloudChat.instance.dataInstance.messageData.messageNeedUpdate = target;
+    // Flip the recalled message instance itself to the tombstone so the
+    // `messageNeedUpdate` signal below carries the LOCAL_REVOKED status (the
+    // list-view handler writes `messageNeedUpdate` back into the rendered list;
+    // an original-status object there would re-resurrect the bubble).
+    message.status = MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED;
+    message.revokerInfo ??= currentUser;
+
+    // Fast path: if the captured store row is a distinct instance, flip it too
+    // and re-publish so the open list updates immediately. The global
+    // getMessageList override is the deterministic backstop for any reload.
+    if (target != null) {
+      if (!identical(target, message)) {
+        target.status = MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED;
+        target.revokerInfo ??= currentUser;
+      }
+      globalMessageData.updateMessageList(
+          messageList: currentHistoryMsgList,
+          userID: _userID,
+          groupID: _groupID,
+          topicID: _topicID,
+          disableNotify: false);
+    }
+    // Drive a per-row update keyed by the recalled message so any mounted view
+    // re-reads its (now revoked) state. Upstream used disableNotify:true because
+    // the Tencent SDK's own onRecvMessageRevoked drove the notify; tim2tox fires
+    // the legacy callback into the fork's no-op handler, so we notify explicitly.
+    globalMessageData.messageNeedUpdate = target ?? message;
   }
 
   Future setLocalCustomData(String msgID, String localCustomData) async {

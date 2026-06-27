@@ -642,6 +642,19 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
 
   Map<String, List<V2TimMessage>> _messageListMap = {};
 
+  /// toxee: msgIDs / message ids that were recalled locally (sender side).
+  /// Tox has no native revoke; `recallMessage` emulates it by deleting the
+  /// sender's persisted copy and flipping the in-memory row to LOCAL_REVOKED.
+  /// That flip lived only on a captured row instance and was applied per
+  /// message-view; an async history reload (latency-dependent, worse under
+  /// TCP-only) re-populated the store with an ORIGINAL-status instance, leaving
+  /// the original bubble rendered instead of the "<nick> Recalled a Message"
+  /// tip (observed FLAKY). This GLOBAL set on the shared message-data singleton
+  /// is the single source of truth: every read of `getMessageList` forces any
+  /// matching row to LOCAL_REVOKED, so the tombstone is deterministic across
+  /// all message-view instances and reload races. Grows only on recall.
+  final Set<String> locallyRevokedKeys = <String>{};
+
   Map<String, MessageListStatus> _messageListStatusMap = {};
 
   /// === Set to track messages currently being processed to prevent recursion ===
@@ -697,6 +710,29 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
     required String key,
   }) {
     final messageList = _messageListMap[key] ?? [];
+    // toxee: deterministically re-apply locally-recalled tombstones at the
+    // single store-read chokepoint. Any row whose msgID/id was recalled is
+    // forced to LOCAL_REVOKED here, so a later original-status reload cannot
+    // resurrect the original bubble (fixes the flaky lingering-original on
+    // recall). No-op when nothing was recalled (the common case).
+    if (locallyRevokedKeys.isNotEmpty && messageList.isNotEmpty) {
+      final currentUser =
+          TencentCloudChat.instance.dataInstance.basic.currentUser;
+      for (final element in messageList) {
+        if (element.status == MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED) {
+          continue;
+        }
+        final msgID = element.msgID;
+        final id = element.id;
+        final bool revoked =
+            (msgID != null && msgID.isNotEmpty && locallyRevokedKeys.contains(msgID)) ||
+                (id != null && id.isNotEmpty && locallyRevokedKeys.contains(id));
+        if (revoked) {
+          element.status = MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED;
+          element.revokerInfo ??= currentUser;
+        }
+      }
+    }
     return messageList.toList();
   }
 
