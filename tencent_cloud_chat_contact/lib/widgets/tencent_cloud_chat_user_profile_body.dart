@@ -478,23 +478,28 @@ class TencentCloudChatUserProfileChatButtonState
                             }
                           : null),
                 ),
-                const SizedBox(width: 18),
-                Expanded(
-                    child: _buildClickableItem(
-                        // Per-tile automation anchor (sibling of the Send tile
-                        // key above) so video can be key-tapped directly too.
-                        tileKey: const ValueKey('friend_profile_video_call_tile'),
-                        icon: Icons.videocam_outlined,
-                        label: tL10n.videoCall,
-                        onTap: callActionsEnabled
-                            ? () {
-                                if (widget.startVideoCall != null) {
-                                  widget.startVideoCall!();
-                                } else {
-                                  _startVideoCall();
+                // Video tile is additionally gated on useVideoCall: platforms
+                // without a camera capture backend (Windows/Linux) keep voice
+                // calling but must not offer video.
+                if (TencentCloudChat.instance.dataInstance.basic.useVideoCall) ...[
+                  const SizedBox(width: 18),
+                  Expanded(
+                      child: _buildClickableItem(
+                          // Per-tile automation anchor (sibling of the Send tile
+                          // key above) so video can be key-tapped directly too.
+                          tileKey: const ValueKey('friend_profile_video_call_tile'),
+                          icon: Icons.videocam_outlined,
+                          label: tL10n.videoCall,
+                          onTap: callActionsEnabled
+                              ? () {
+                                  if (widget.startVideoCall != null) {
+                                    widget.startVideoCall!();
+                                  } else {
+                                    _startVideoCall();
+                                  }
                                 }
-                              }
-                            : null)),
+                              : null)),
+                ],
               ],
             )));
   }

@@ -47,6 +47,21 @@ class TencentCloudChatBasicData<T> extends TencentCloudChatDataAB<T> with Widget
     _useCallKit = value;
   }
 
+  /// ==== useVideoCall ====
+  /// Video-specific gate on top of [useCallKit]. Platforms without a camera
+  /// capture backend (e.g. Windows/Linux in toxee) keep voice calling but
+  /// must not offer video-call entry points that would place a call with no
+  /// outgoing frames. Defaults to true so existing integrations that only
+  /// set [useCallKit] are unaffected.
+  bool _useVideoCall = true;
+
+  // ignore: unnecessary_getters_setters
+  bool get useVideoCall => _useVideoCall;
+
+  set useVideoCall(bool value) {
+    _useVideoCall = value;
+  }
+
   double? get keyboardHeight {
     return TencentCloudChat.instance.cache.getCurrentDeviceKeyBordHeight();
   }
@@ -204,6 +219,7 @@ class TencentCloudChatBasicData<T> extends TencentCloudChatDataAB<T> with Widget
     var event = TencentCloudChatBasicData<T>(key);
     event.appLifecycleState = appLifecycleState;
     event._useCallKit = _useCallKit;
+    event._useVideoCall = _useVideoCall;
     event._hasInitialized = _hasInitialized;
     event._hasLoggedIn = _hasLoggedIn;
     event._sdkappid = _sdkappid;

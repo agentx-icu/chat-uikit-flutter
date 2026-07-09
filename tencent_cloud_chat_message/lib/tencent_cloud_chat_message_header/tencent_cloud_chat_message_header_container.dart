@@ -287,6 +287,8 @@ class _TencentCloudChatMessageHeaderContainerState
                     startVoiceCall: _startVoiceCall,
                     startVideoCall: _startVideoCall,
                     useCallKit: effectiveUseCallKit,
+                    useVideoCall: TencentCloudChat
+                        .instance.dataInstance.basic.useVideoCall,
                     callActionsEnabled: callActionsEnabled,
                   ),
                   messageHeaderMessagesSelectMode:

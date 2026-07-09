@@ -5,6 +5,11 @@ class TencentCloudChatMessageHeaderActions extends StatelessWidget {
   final VoidCallback? startVoiceCall;
   final VoidCallback? startVideoCall;
   final bool useCallKit;
+
+  /// Video-specific gate on top of [useCallKit]: platforms without a camera
+  /// capture backend (Windows/Linux) keep voice calling but must not offer a
+  /// video button that would place a call with no outgoing frames.
+  final bool useVideoCall;
   final bool callActionsEnabled;
 
   const TencentCloudChatMessageHeaderActions(
@@ -12,6 +17,7 @@ class TencentCloudChatMessageHeaderActions extends StatelessWidget {
       this.startVoiceCall,
       this.startVideoCall,
       required this.useCallKit,
+      this.useVideoCall = true,
       this.callActionsEnabled = true});
 
   @override
@@ -36,7 +42,7 @@ class TencentCloudChatMessageHeaderActions extends StatelessWidget {
                       size: textStyle.inputAreaIcon,
                     ),
                   ),
-                if (startVideoCall != null && useCallKit)
+                if (startVideoCall != null && useCallKit && useVideoCall)
                   IconButton(
                     // Automation anchor (toxee UiKeys.chatCallVideoButton).
                     key: const ValueKey('chat_call_video_button'),
