@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tencent_cloud_chat_common/components/component_options/tencent_cloud_chat_message_options.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
 import 'package:tencent_cloud_chat_common/components/tencent_cloud_chat_components_utils.dart';
@@ -252,9 +253,39 @@ class TencentCloudChatUserProfileContentState
                             ))
                     ],
                   ),
-                  Text(
-                    "ID: ${widget.userFullInfo.userID}",
-                    style: TextStyle(fontSize: textStyle.fontsize_12),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          "ID: ${widget.userFullInfo.userID}",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: textStyle.fontsize_14),
+                        ),
+                      ),
+                      IconButton(
+                        key: const ValueKey('user_profile_copy_id_button'),
+                        icon: const Icon(Icons.copy, size: 16),
+                        tooltip: 'Copy',
+                        padding: const EdgeInsets.only(left: 4),
+                        constraints: const BoxConstraints(),
+                        visualDensity: VisualDensity.compact,
+                        color: colorTheme.contactBackButtonColor,
+                        onPressed: () async {
+                          await Clipboard.setData(
+                            ClipboardData(
+                              text: widget.userFullInfo.userID ?? '',
+                            ),
+                          );
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                            const SnackBar(content: Text('Tox ID copied')),
+                          );
+                        },
+                      ),
+                    ],
                   )
                 ],
               ),

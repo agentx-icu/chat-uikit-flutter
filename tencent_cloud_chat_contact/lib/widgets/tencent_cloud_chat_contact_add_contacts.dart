@@ -22,21 +22,39 @@ class TencentCloudChatContactAddContactsState
     extends TencentCloudChatState<TencentCloudChatContactAddContacts> {
   @override
   Widget defaultBuilder(BuildContext context) {
+    // Wide (tablet/desktop) → a compact centered dialog panel; phones → the
+    // full-height bottom sheet. The old fixed 800pt height left a large empty
+    // dark area on tall tablets (iPad), which read as an "extra background".
+    final media = MediaQuery.of(context);
+    final wide = media.size.width >= 720;
+    // Wide (tablet/desktop) → a comfortably-sized centered dialog (a 420x300
+    // card read as too small on an iPad); phones → the full-height bottom sheet.
+    final panelHeight =
+        wide ? 520.0 : (media.size.height * 0.92).clamp(360.0, 800.0);
     return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) => Container(
-              padding: EdgeInsets.only(
-                  top: MediaQueryData.fromWindow(window).padding.top),
-              height: getHeight(800),
-              decoration: BoxDecoration(
-                  color: colorTheme.contactAddContactBackgroundColor,
-                  borderRadius:
-                      BorderRadius.all(Radius.circular(getWidth(10)))),
-              child: const Scaffold(
-                backgroundColor: Colors.transparent,
-                appBar: TencentCloudChatContactAddContactsAppBar(),
-                body: TencentCloudChatContactAddContactBody(),
-              ),
-            ));
+        build: (context, colorTheme, textStyle) {
+          final panel = Container(
+            width: wide ? 480.0 : null,
+            padding: EdgeInsets.only(
+                top: wide
+                    ? 0
+                    : MediaQueryData.fromWindow(window).padding.top),
+            height: panelHeight,
+            decoration: BoxDecoration(
+                // Use the (always-set) scaffold background rather than
+                // contactAddContactBackgroundColor — the latter is unset in the
+                // dark theme model and rendered transparent, so the sheet blended
+                // into the page behind it (looked "broken" on iOS dark mode).
+                color: colorTheme.backgroundColor,
+                borderRadius: BorderRadius.all(Radius.circular(getWidth(10)))),
+            child: const Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: TencentCloudChatContactAddContactsAppBar(),
+              body: TencentCloudChatContactAddContactBody(),
+            ),
+          );
+          return wide ? Center(child: panel) : panel;
+        });
   }
 }
 

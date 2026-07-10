@@ -17,19 +17,33 @@ class TencentCloudChatContactAddGroup extends StatefulWidget {
 class TencentCloudChatContactAddGroupState extends TencentCloudChatState<TencentCloudChatContactAddGroup> {
   @override
   Widget defaultBuilder(BuildContext context) {
+    // Wide (tablet/desktop) → compact centered dialog panel; phones → the
+    // full-height bottom sheet. Mirrors TencentCloudChatContactAddContacts so
+    // the fixed 800pt height no longer leaves a large empty dark area on iPad.
+    final media = MediaQuery.of(context);
+    final wide = media.size.width >= 720;
+    // Comfortably-sized centered dialog on wide screens (see AddContacts).
+    final panelHeight =
+        wide ? 520.0 : (media.size.height * 0.92).clamp(360.0, 800.0);
     return TencentCloudChatThemeWidget(
-      build: (context, colorTheme, textStyle) => Container(
-        padding: EdgeInsets.only(top: MediaQueryData.fromWindow(window).padding.top),
-        // color: Colors.blue.withOpacity(0.9),
-        height: getHeight(800),
-        decoration: BoxDecoration(
-            color: colorTheme.contactAddContactBackgroundColor,
-            borderRadius: BorderRadius.all(Radius.circular(getWidth(10)))),
-        child: const Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: TencentCloudChatContactAddGroupAppBar(),
-            body: TencentCloudChatContactAddGroupBody()),
-      ),
+      build: (context, colorTheme, textStyle) {
+        final panel = Container(
+          width: wide ? 480.0 : null,
+          padding: EdgeInsets.only(
+              top: wide ? 0 : MediaQueryData.fromWindow(window).padding.top),
+          height: panelHeight,
+          decoration: BoxDecoration(
+              // Always-set scaffold background (see AddContacts) — the dark
+              // contactAddContactBackgroundColor is transparent/unset.
+              color: colorTheme.backgroundColor,
+              borderRadius: BorderRadius.all(Radius.circular(getWidth(10)))),
+          child: const Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: TencentCloudChatContactAddGroupAppBar(),
+              body: TencentCloudChatContactAddGroupBody()),
+        );
+        return wide ? Center(child: panel) : panel;
+      },
     );
   }
 }

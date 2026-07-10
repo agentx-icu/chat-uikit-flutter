@@ -61,6 +61,21 @@ class _StartC2CChatState extends TencentCloudChatState<StartC2CChat> {
   Widget _buildMemberList(colorTheme, textStyle) {
     final sortedFriendList = _getSortedFriendList();
 
+    // Empty-state: with no contacts the AzListView renders nothing, leaving a
+    // blank page under the app bar (reported as "New Chat page is blank" on
+    // accounts with no friends). Show a centered hint instead.
+    if (sortedFriendList.isEmpty) {
+      return Center(
+        child: Text(
+          tL10n.noContact,
+          style: TextStyle(
+            fontSize: textStyle.fontsize_14,
+            color: colorTheme.contactNoListColor,
+          ),
+        ),
+      );
+    }
+
     return AzListView(
       data: sortedFriendList,
       itemCount: sortedFriendList.length,

@@ -128,6 +128,20 @@ class _StartGroupChatState extends TencentCloudChatState<StartGroupChat> {
   Widget _buildMemberList(colorTheme, textStyle) {
     final sortedFriendList = _getSortedFriendList();
 
+    // Empty-state: with no contacts the AzListView renders nothing, leaving the
+    // "Create Group Chat" member-picker blank under the app bar. Show a hint.
+    if (sortedFriendList.isEmpty) {
+      return Center(
+        child: Text(
+          tL10n.noContact,
+          style: TextStyle(
+            fontSize: textStyle.fontsize_14,
+            color: colorTheme.contactNoListColor,
+          ),
+        ),
+      );
+    }
+
     return AzListView(
       data: sortedFriendList,
       itemCount: sortedFriendList.length,

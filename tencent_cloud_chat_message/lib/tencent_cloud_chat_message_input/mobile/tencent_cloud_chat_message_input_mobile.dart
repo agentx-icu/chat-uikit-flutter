@@ -592,7 +592,12 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
                             animation: _animationController!,
                             builder: (BuildContext context, Widget? child) {
                               return Transform.rotate(
-                                angle: _animationController!.value * pi,
+                                // Full turn (2π), not a half turn (π): at rest
+                                // (value == 1) a half turn left the send icon
+                                // (Icons.arrow_upward_rounded) rotated 180° so it
+                                // pointed DOWN. A full turn animates the swap and
+                                // lands the arrow upright.
+                                angle: _animationController!.value * 2 * pi,
                                 child: _showSendButton
                                     ? InkWell(
                                         // Stable key so real-UI automation can tap

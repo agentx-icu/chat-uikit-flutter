@@ -175,11 +175,14 @@ class TencentCloudChatContactItemAvatar extends StatefulWidget {
 }
 
 class TencentCloudChatContactItemAvatarState extends TencentCloudChatState<TencentCloudChatContactItemAvatar> {
-  TencentCloudChatThemeColors colorTheme = TencentCloudChat.instance.dataInstance.theme.colorTheme;
-
   @override
   Widget defaultBuilder(BuildContext context) {
-    return Padding(
+    // Read `colorTheme` through a TencentCloudChatThemeWidget so the online-
+    // status dot refreshes on a theme switch. A class-level field cached once
+    // in the State (the previous approach) never updated because the list gives
+    // these items no `key:`, so Flutter reuses the same State across rebuilds.
+    return TencentCloudChatThemeWidget(
+        build: (context, colorTheme, textStyle) => Padding(
         padding: EdgeInsets.symmetric(
           horizontal: getWidth(13),
         ),
@@ -221,7 +224,7 @@ class TencentCloudChatContactItemAvatarState extends TencentCloudChatState<Tence
                 ),
             ]
           ),
-        ));
+        )));
   }
 }
 

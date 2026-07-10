@@ -6,7 +6,7 @@ import 'package:tencent_cloud_chat_common/utils/sdk_const.dart';
 import 'package:universal_html/html.dart' as html;
 
 import 'package:extended_text_field/extended_text_field.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -27,7 +27,6 @@ import 'package:tencent_cloud_chat_message/common/for_desktop/file_tools.dart';
 import 'package:tencent_cloud_chat_message/common/for_desktop/image_tools.dart';
 import 'package:tencent_cloud_chat_message/common/text_compiler/tencent_cloud_chat_message_text_compiler.dart';
 import 'package:tencent_cloud_chat_message/model/tencent_cloud_chat_message_separate_data_notifier.dart';
-import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/desktop/tencent_cloud_chat_message_input_recording_desktop.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/message_reply/tencent_cloud_chat_message_input_reply_container.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/select_mode/tencent_cloud_chat_message_input_select_mode_container.dart';
 
@@ -615,42 +614,6 @@ class _TencentCloudChatMessageInputDesktopState
     return _generateBarIcons(theme);
   }
 
-  /// toxee 5.3 — Whether the current platform supports desktop voice
-  /// recording via `package:record`. Linux is gated off because it depends
-  /// on PulseAudio / PipeWire which we can't reliably probe at runtime.
-  bool get _desktopVoiceSupported {
-    if (kIsWeb) return false;
-    return Platform.isMacOS || Platform.isWindows;
-  }
-
-  Widget _buildDesktopMicButton(TencentCloudChatThemeColors theme) {
-    return Tooltip(
-      preferBelow: false,
-      message: tL10n.audio,
-      child: InkWell(
-        onTap: () async {
-          final result = await showDesktopVoiceRecorder(context);
-          if (result != null) {
-            widget.inputMethods.sendVoiceMessage(
-              voicePath: result.path,
-              duration: result.duration,
-            );
-          }
-        },
-        child: Container(
-          margin: const EdgeInsets.only(right: 10),
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(2)),
-          padding: const EdgeInsets.all(4),
-          child: Icon(
-            Icons.mic,
-            color: theme.inputAreaIconColor.withOpacity(0.6),
-            size: 20,
-          ),
-        ),
-      ),
-    );
-  }
-
   String _getShowName(V2TimGroupMemberFullInfo? item) {
     return TencentCloudChatUtils.checkStringWithoutSpace(item?.nameCard) ??
         TencentCloudChatUtils.checkStringWithoutSpace(item?.nickName) ??
@@ -907,10 +870,12 @@ class _TencentCloudChatMessageInputDesktopState
                               vertical: 4, horizontal: 12),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
+                            // toxee: the desktop voice-recording (Audio) button
+                            // was removed — desktop keeps only the unified file
+                            // attach + other control-bar icons. Mobile keeps its
+                            // own voice recorder.
                             children: [
                               ..._generateControlBar(colorTheme),
-                              if (_desktopVoiceSupported)
-                                _buildDesktopMicButton(colorTheme),
                             ],
                           ),
                         ),

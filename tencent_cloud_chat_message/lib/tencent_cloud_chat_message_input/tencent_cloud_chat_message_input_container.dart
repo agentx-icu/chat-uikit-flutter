@@ -124,28 +124,21 @@ class _TencentCloudChatMessageInputContainerState
       groupID: _dataProvider.groupID,
     );
     if (!TencentCloudChatPlatformAdapter().isMobile) {
+      // toxee: on desktop the separate File / Image / Video attach buttons are
+      // merged into a single "file" button. `_sendFileFromExplorer` opens the
+      // OS file picker with no type filter (FileType.any), so it already sends
+      // images, videos and every other file type — the dedicated image/video
+      // pickers were redundant on desktop and cluttered the toolbar. Mobile
+      // keeps its own attachment sheet (the `else` branch below) unchanged.
+      // Gated on `enableSendFile` specifically: the merged button sends an
+      // arbitrary file, so it must honour the file-send capability rather than
+      // appearing whenever image/video sending alone is enabled.
       final defaultOptions = [
         if (attachmentConfig.enableSendFile)
           TencentCloudChatMessageGeneralOptionItem(iconAsset: (
             path: "lib/assets/send_file.svg",
             package: "tencent_cloud_chat_message"
           ), label: tL10n.file, onTap: _sendFileFromExplorer),
-        if (attachmentConfig.enableSendImage)
-          TencentCloudChatMessageGeneralOptionItem(iconAsset: (
-            path: "lib/assets/send_image.svg",
-            package: "tencent_cloud_chat_message"
-          ), label: tL10n.image, onTap: _sendImage),
-        if (attachmentConfig.enableSendVideo)
-          TencentCloudChatMessageGeneralOptionItem(
-              iconAsset: (
-                path: "lib/assets/send_video.svg",
-                package: "tencent_cloud_chat_message"
-              ),
-              label: tL10n.video,
-              onTap: ({Offset? offset}) => _sendMediaFromExplorer(
-                    offset: offset,
-                    fileType: FileType.video,
-                  )),
         if (attachmentConfig.enableSearch && _searchWidget != null)
           TencentCloudChatMessageGeneralOptionItem(
             iconAsset: (
@@ -471,6 +464,10 @@ class _TencentCloudChatMessageInputContainerState
     }
   }
 
+  // Retained (desktop image/video attach merged into the unified file button,
+  // see `_buildAttachmentOptionsList`); still referenced by web paths / kept
+  // for easy re-enable.
+  // ignore: unused_element
   void _sendImage({Offset? offset}) async {
     if (TencentCloudChatPlatformAdapter().isWeb) {
       _sendMediaFromExplorer(offset: offset, fileType: FileType.image);

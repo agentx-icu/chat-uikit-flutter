@@ -73,6 +73,17 @@ class TencentCloudChatContactAppBarName extends StatefulWidget {
 
   const TencentCloudChatContactAppBarName({super.key, this.title});
 
+  /// Host-injected trailing "new entry" affordance. When set, it REPLACES the
+  /// built-in `maps_ugc` MenuAnchor whose "Add Contact" / "Add Group" items open
+  /// the search-by-userID panel (Tencent-IM oriented; the picker is empty on
+  /// Tox). toxee injects its own `NewEntryButton` (Add Contact by Tox ID /
+  /// Create Group / Join IRC) here so this default name widget — the FALLBACK
+  /// used whenever the `contactAppBarNameBuilder` override is momentarily unset
+  /// (early startup / a destructive `setBuilders`) — matches the Chats-tab "+"
+  /// instead of surfacing the native panel. Mirrors
+  /// [TencentCloudChatConversationAppBarName.trailingBuilder].
+  static Widget Function(BuildContext context)? trailingBuilder;
+
   @override
   State<StatefulWidget> createState() =>
       TencentCloudChatContactAppBarNameState();
@@ -82,26 +93,42 @@ class TencentCloudChatContactAppBarNameState
     extends TencentCloudChatState<TencentCloudChatContactAppBarName> {
   AddContact? selectedMenu;
 
-  addContacts() {
-    showModalBottomSheet<void>(
-        barrierColor: Colors.white.withValues(alpha: 0),
-        backgroundColor: Colors.transparent,
+  // Present an add-panel (contact / group). On wide viewports (tablet /
+  // desktop — the iPad "desktop layout" tier) show it as a centered dialog so
+  // it doesn't render as a near-fullscreen bottom sheet with a large empty
+  // dark background; on phones keep the familiar bottom sheet. The panel widget
+  // itself (AddContacts/AddGroup) sizes to a bounded height on wide screens.
+  void _presentAddPanel(Widget child) {
+    final wide = MediaQuery.of(context).size.width >= 720;
+    if (wide) {
+      showDialog<void>(
         context: context,
-        isScrollControlled: true,
-        builder: (context) {
-          return const TencentCloudChatContactAddContacts();
-        });
+        builder: (context) => Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.all(24),
+          child: child,
+        ),
+      );
+    } else {
+      showModalBottomSheet<void>(
+          // A visible scrim so the sheet reads as a distinct surface over the
+          // contacts page (the old fully-transparent barrier made the sheet look
+          // like it was floating on / blending into the page on iOS dark mode).
+          barrierColor: Colors.black.withValues(alpha: 0.4),
+          backgroundColor: Colors.transparent,
+          context: context,
+          isScrollControlled: true,
+          builder: (context) => child);
+    }
+  }
+
+  addContacts() {
+    _presentAddPanel(const TencentCloudChatContactAddContacts());
   }
 
   addGroup() {
-    showModalBottomSheet<void>(
-        barrierColor: Colors.white.withValues(alpha: 0),
-        backgroundColor: Colors.transparent,
-        context: context,
-        isScrollControlled: true,
-        builder: (context) {
-          return const TencentCloudChatContactAddGroup();
-        });
+    _presentAddPanel(const TencentCloudChatContactAddGroup());
   }
 
   @override
@@ -115,7 +142,10 @@ class TencentCloudChatContactAppBarNameState
                       color: colorTheme.contactItemFriendNameColor,
                       fontSize: textStyle.fontsize_34,
                       fontWeight: FontWeight.w600))),
-          MenuAnchor(
+          if (TencentCloudChatContactAppBarName.trailingBuilder != null)
+            TencentCloudChatContactAppBarName.trailingBuilder!(context)
+          else
+            MenuAnchor(
             builder: (BuildContext context, MenuController controller,
                 Widget? child) {
               return IconButton(
@@ -165,7 +195,10 @@ class TencentCloudChatContactAppBarNameState
                 fontSize: textStyle.fontsize_24 + 4,
                 fontWeight: FontWeight.w600),
           )),
-          MenuAnchor(
+          if (TencentCloudChatContactAppBarName.trailingBuilder != null)
+            TencentCloudChatContactAppBarName.trailingBuilder!(context)
+          else
+            MenuAnchor(
             builder: (BuildContext context, MenuController controller,
                 Widget? child) {
               return IconButton(

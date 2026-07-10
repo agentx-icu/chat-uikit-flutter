@@ -100,6 +100,17 @@ class TencentCloudChatConversationAppBarState extends TencentCloudChatState<Tenc
 class TencentCloudChatConversationAppBarName extends StatefulWidget {
   const TencentCloudChatConversationAppBarName({super.key});
 
+  /// Host-injected trailing "new entry" affordance for the conversation app
+  /// bar. When set, it REPLACES the built-in "New Chat / Create Group Chat"
+  /// `PopupMenuButton`. The built-in menu routes to `StartC2CChat` /
+  /// `StartGroupChat` (pick-an-existing-contact pages, Tencent-IM oriented),
+  /// which render a blank/near-empty picker on Tox where there is no server
+  /// contact directory. toxee injects its own Tox-aware `NewEntryButton`
+  /// (Add Contact by Tox ID / Create Group / Join IRC) so the Chats-tab "+"
+  /// matches the Contacts-tab "+" exactly, menu included. Mirrors the
+  /// host-hook pattern of [TencentCloudChatTheme.onBrightnessToggleRequest].
+  static Widget Function(BuildContext context)? trailingBuilder;
+
   @override
   State<StatefulWidget> createState() => TencentCloudChatConversationAppBarNameState();
 }
@@ -144,7 +155,12 @@ class TencentCloudChatConversationAppBarNameState
                     }
                   },
                 ),
-                PopupMenuButton<String>(
+                if (TencentCloudChatConversationAppBarName.trailingBuilder !=
+                    null)
+                  TencentCloudChatConversationAppBarName.trailingBuilder!(
+                      context)
+                else
+                  PopupMenuButton<String>(
                   icon: Icon(Icons.add, color: colorTheme.appBarIconColor),
                   offset: const Offset(0, 40),
                   color: colorTheme.backgroundColor,
@@ -173,7 +189,16 @@ class TencentCloudChatConversationAppBarNameState
                         children: [
                           const Icon(Icons.chat_outlined),
                           const SizedBox(width: 8),
-                          Flexible(child: Text(tL10n.startConversation)),
+                          // ellipsis + softWrap:false so the label clamps to the
+                          // menu's maxWidth (240) instead of the Row overflowing
+                          // to the text's full intrinsic width on narrow phones.
+                          Flexible(
+                            child: Text(
+                              tL10n.startConversation,
+                              softWrap: false,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -184,7 +209,13 @@ class TencentCloudChatConversationAppBarNameState
                         children: [
                           const Icon(Icons.group_add_outlined),
                           const SizedBox(width: 8),
-                          Flexible(child: Text(tL10n.createGroupChat)),
+                          Flexible(
+                            child: Text(
+                              tL10n.createGroupChat,
+                              softWrap: false,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     ),
