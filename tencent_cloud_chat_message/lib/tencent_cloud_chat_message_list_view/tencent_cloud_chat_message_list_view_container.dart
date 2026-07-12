@@ -144,7 +144,19 @@ class _TencentCloudChatMessageListViewContainerState extends TencentCloudChatSta
           if (listsAreDifferent) {
             // Only scroll to bottom when the newest message changed (new message or send),
             // not when we only appended older messages (load previous).
-            final bool shouldScrollToBottom;
+            // headAppendedNewMessages marks the "new message(s) arrived at the
+            // head" case: there the scroll must be CONDITIONAL (only when the
+            // user is already at/near the bottom) — force-jumping while the
+            // user has scrolled up to read history loses their place. Sending
+            // your own message still always scrolls via the unconditional
+            // scrollToBottom in sendMessage (separate data model).
+            bool shouldScrollToBottom;
+            bool headAppendedNewMessages = false;
+            // When headAppendedNewMessages: the newest inbound message's key and
+            // how many new inbound messages arrived — used to latch the "new
+            // messages" chip if the user is scrolled up.
+            String? newHeadMessageKey;
+            int newHeadMessageCount = 0;
             if (previousList.isEmpty) {
               shouldScrollToBottom = true; // Initial load
             } else if (nextList.isEmpty) {
@@ -173,6 +185,31 @@ class _TencentCloudChatMessageListViewContainerState extends TencentCloudChatSta
                     if (foundIndex > 0) {
                       // Case B: New messages were added at the head (e.g. received new msg)
                       onlyAppendedOlder = false;
+                      // Only treat this as a CONDITIONAL (keep-position-if-scrolled-up)
+                      // scroll when EVERY newly-prepended head message is INBOUND. A
+                      // self-send inserts an optimistic outgoing bubble at the head too;
+                      // the user always wants to see their own just-sent message, so a
+                      // self-send must scroll UNCONDITIONALLY (the unconditional scroll in
+                      // sendMessage runs only AFTER the async send completes, so on a slow
+                      // send the optimistic bubble would otherwise stay offscreen while
+                      // scrolled up). nextRealMsgs[0..foundIndex-1] are the new head msgs.
+                      var allInbound = true;
+                      for (var i = 0; i < foundIndex; i++) {
+                        if (nextRealMsgs[i].isSelf == true) {
+                          allInbound = false;
+                          break;
+                        }
+                      }
+                      headAppendedNewMessages = allInbound;
+                      if (allInbound) {
+                        // nextRealMsgs is newest-first, so [0] is the newest new
+                        // inbound; foundIndex is how many new heads arrived.
+                        newHeadMessageKey =
+                            TencentCloudChatUtils.checkString(
+                                nextRealMsgs[0].msgID) ??
+                            nextRealMsgs[0].id;
+                        newHeadMessageCount = foundIndex;
+                      }
                     } else if (foundIndex == -1) {
                       // Case C: Previous newest message was trimmed from head.
                       // Check if this is pagination + head trimming: the previous list's
@@ -230,6 +267,45 @@ class _TencentCloudChatMessageListViewContainerState extends TencentCloudChatSta
                 shouldScrollToBottom = true;
               }
             }
+            // ROBUST inbound-at-head override (independent of the Case A/B/C
+            // pagination classification above, which MISSES a new inbound when
+            // it coincides with maxMessageCount head-trimming — Case C — leaving
+            // shouldScrollToBottom false and never surfacing the chip). Compare
+            // the newest REAL message directly: if it CHANGED and is INBOUND,
+            // route through the conditional scroll (follow when near the bottom,
+            // keep-position + "new messages" chip when scrolled up). A self-send
+            // is excluded here and still scrolls unconditionally via sendMessage.
+            {
+              final prevReal =
+                  previousList.where((m) => m.elemType != 101).toList();
+              final nextReal =
+                  nextList.where((m) => m.elemType != 101).toList();
+              if (prevReal.isNotEmpty &&
+                  nextReal.isNotEmpty &&
+                  nextReal[0].isSelf != true) {
+                final prevNewestId =
+                    TencentCloudChatUtils.checkString(prevReal[0].msgID) ??
+                        prevReal[0].id;
+                final nextNewestId =
+                    TencentCloudChatUtils.checkString(nextReal[0].msgID) ??
+                        nextReal[0].id;
+                // Only a GENUINELY NEW inbound at the head — NOT a load-older
+                // pagination that trimmed the head at maxMessageCount and merely
+                // EXPOSED an already-present older inbound as the new newest
+                // (codex: that would falsely show the chip while the user only
+                // paginated history). A truly new message's id is absent from the
+                // previous list.
+                final nextNewestIsNew = !prevReal.any((m) =>
+                    (TencentCloudChatUtils.checkString(m.msgID) ?? m.id) ==
+                    nextNewestId);
+                if (prevNewestId != nextNewestId && nextNewestIsNew) {
+                  shouldScrollToBottom = true;
+                  headAppendedNewMessages = true;
+                  newHeadMessageKey = nextNewestId;
+                  if (newHeadMessageCount <= 0) newHeadMessageCount = 1;
+                }
+              }
+            }
             safeSetState(() {
               // Create a new list instance to ensure Flutter detects the change
               // This is important for FlutterListView to detect new items
@@ -238,13 +314,27 @@ class _TencentCloudChatMessageListViewContainerState extends TencentCloudChatSta
               _haveMorePreviousData = dataProvider.haveMorePreviousData;
             });
             if (shouldScrollToBottom) {
+              final scrollConditionally = headAppendedNewMessages;
               SchedulerBinding.instance.addPostFrameCallback((_) {
                 try {
-                  dataProvider.messageController.scrollToBottom(
-                    userID: dataProvider.userID,
-                    groupID: dataProvider.groupID,
-                    topicID: dataProvider.topicID,
-                  );
+                  if (scrollConditionally) {
+                    // Inbound at the head: keep the user's reading position
+                    // when they are scrolled up; only follow to the bottom
+                    // when they are already there.
+                    dataProvider.messageController.scrollToBottomIfNearBottom(
+                      userID: dataProvider.userID,
+                      groupID: dataProvider.groupID,
+                      topicID: dataProvider.topicID,
+                      newMessageKey: newHeadMessageKey,
+                      newMessageCount: newHeadMessageCount,
+                    );
+                  } else {
+                    dataProvider.messageController.scrollToBottom(
+                      userID: dataProvider.userID,
+                      groupID: dataProvider.groupID,
+                      topicID: dataProvider.topicID,
+                    );
+                  }
                 } catch (e, stackTrace) {
                   // Silently handle scroll errors
                 }

@@ -85,6 +85,12 @@ class _TencentCloudChatMessageListViewState extends TencentCloudChatState<Tencen
         case EventName.scrollToBottom:
           _messageListController.scrollToBottom();
           break;
+        case EventName.scrollToBottomIfNearBottom:
+          _messageListController.scrollToBottomIfNearBottom(
+            newMessageKey: controller?.pendingNewMessageKey,
+            newMessageCount: controller?.pendingNewMessageCount,
+          );
+          break;
         case EventName.scrollToSpecificMessage:
           final int index = _findMsgIndex(controller?.eventValue);
           if (index > -1) {

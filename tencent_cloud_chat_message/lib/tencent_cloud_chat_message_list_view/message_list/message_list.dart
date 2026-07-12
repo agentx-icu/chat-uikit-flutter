@@ -207,6 +207,26 @@ class MessageListState extends State<MessageList> {
     _handleNewMessageComing(firstKey, newMsgCount);
   }
 
+  /// Latch the "new messages" chip for an INBOUND message that arrived while the
+  /// user is scrolled up (from the container's head-append detection). Unlike
+  /// [notifyNewMessageComing], this does NOT search for the message index by key
+  /// (the render-layer key and the list's `onMsgKey` can differ between layers,
+  /// so the search would leave `firstNewMessageIndex` null and
+  /// `_determineShowNewMsgCount` would immediately reset the count to 0). The
+  /// newest message is index 0 in this newest-first list, so anchor there
+  /// directly. The chip auto-clears when the user scrolls back to the bottom
+  /// (`_determineShowNewMsgCount`: itemPositions[0].index <= firstNewMessageIndex).
+  void latchNewMessagesChip(int newMsgCount) {
+    if (!widget.showReceivedMsgButton) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || widget.msgCount == 0) return;
+      firstNewMessageIndex = 0;
+      firstNewMessageKey = widget.onMsgKey(0);
+      newMessageCount.value = newMsgCount > 0 ? newMsgCount : 1;
+      _determineShowNewMsgCount();
+    });
+  }
+
   _handleLastMessageButton(bool forceToInitToTrue) {
     if (widget.showUnreadMsgButton && lastReadMessageKey != null) {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
@@ -298,7 +318,13 @@ class MessageListState extends State<MessageList> {
 
   _determineShowNewMsgCount() {
     if (widget.showReceivedMsgButton && itemPositions.isNotEmpty) {
-      if (firstNewMessageIndex == null || itemPositions[0].index <= firstNewMessageIndex!) {
+      // Clear on: no anchor (null), a NEGATIVE anchor (the tracked message was
+      // trimmed out of the loaded window — codex: otherwise the chip sticks
+      // forever because `index <= -1` can never be true), or the user having
+      // scrolled back down to at/above the anchor.
+      if (firstNewMessageIndex == null ||
+          firstNewMessageIndex! < 0 ||
+          itemPositions[0].index <= firstNewMessageIndex!) {
         if (newMessageCount.value != 0) {
           newMessageCount.value = 0;
         }

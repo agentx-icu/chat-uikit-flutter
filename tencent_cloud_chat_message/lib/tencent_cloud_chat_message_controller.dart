@@ -7,6 +7,7 @@ import 'package:tencent_cloud_chat_message/model/tencent_cloud_chat_message_data
 
 enum EventName {
   scrollToBottom,
+  scrollToBottomIfNearBottom,
   scrollToSpecificMessage,
   mentionGroupMembers,
   setMessageTextWithMentions,
@@ -91,6 +92,32 @@ class TencentCloudChatMessageController extends TencentCloudChatComponentBaseCon
     );
   }
 
+  /// Scrolls the message list to the bottom ONLY when the user is already
+  /// at/near the bottom. Used for inbound messages appended at the head of the
+  /// list: when the user has scrolled up to read history, the list must keep
+  /// their reading position instead of force-jumping to the newest message —
+  /// and instead surface the "new messages" chip. [newMessageKey] is the newest
+  /// inbound message's key (drives the chip's new-count when scrolled up);
+  /// [newMessageCount] is how many new inbound messages arrived this batch.
+  /// The `userID` and `groupID` parameters identify the target conversation.
+  void scrollToBottomIfNearBottom({
+    String? userID,
+    String? groupID,
+    String? topicID,
+    String? newMessageKey,
+    int? newMessageCount,
+  }) {
+    pendingNewMessageKey = newMessageKey;
+    pendingNewMessageCount = newMessageCount;
+    _triggerEvent(
+      event: EventName.scrollToBottomIfNearBottom,
+      value: null,
+      user: userID,
+      topic: topicID,
+      group: groupID,
+    );
+  }
+
   /// Scrolls the message list to a specific message in the specified conversation.
   /// The `userID` and `groupID` parameters identify the target conversation.
   /// The `msgID` parameter identifies the target message.
@@ -149,6 +176,11 @@ class TencentCloudChatMessageController extends TencentCloudChatComponentBaseCon
 
   EventName? eventName;
   String? eventValue;
+  // Carried alongside a scrollToBottomIfNearBottom event: when the user is
+  // scrolled up, the list latches the "new messages" chip with this inbound key
+  // + count instead of scrolling.
+  String? pendingNewMessageKey;
+  int? pendingNewMessageCount;
   List<V2TimGroupMemberFullInfo>? groupMembersFullInfo;
   String? userID;
   String? groupID;
