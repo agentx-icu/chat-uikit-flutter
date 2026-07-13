@@ -788,12 +788,19 @@ class _TencentCloudChatMessageInputMobileState extends TencentCloudChatState<Ten
                   height: panelHeight,
                   constraints: _showStickerPanel ? BoxConstraints(minHeight: panelHeight) : null,
                   child: _showStickerPanel
-                      ? Center(
-                          child: FutureBuilder<bool>(
-                            future: getStickerPanelWidget(),
-                            builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-                              return stickerWidget;
-                            },
+                      // toxee: keyed so automation can prove the MOBILE sticker
+                      // panel actually opened (the desktop panel has its own
+                      // 'desktop_sticker_panel' overlay key; this is the inline
+                      // mobile counterpart, present only while shown).
+                      ? KeyedSubtree(
+                          key: const ValueKey('mobile_sticker_panel'),
+                          child: Center(
+                            child: FutureBuilder<bool>(
+                              future: getStickerPanelWidget(),
+                              builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                                return stickerWidget;
+                              },
+                            ),
                           ),
                         )
                       : Container(),
