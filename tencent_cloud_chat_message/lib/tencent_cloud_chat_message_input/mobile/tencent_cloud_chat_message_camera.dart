@@ -5,6 +5,20 @@ import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_permission_handlers.dart';
 import 'package:tencent_cloud_chat_common/widgets/modal/bottom_modal.dart';
 
+void dispatchCameraPickerResult({
+  required String? path,
+  required bool isVideo,
+  required Function({required String imagePath}) onSendImage,
+  required Function({required String videoPath}) onSendVideo,
+}) {
+  if (path == null || path.isEmpty) return;
+  if (isVideo) {
+    onSendVideo(videoPath: path);
+  } else {
+    onSendImage(imagePath: path);
+  }
+}
+
 class TencentCloudChatMessageCamera {
   static Future<void> _cameraPicker({
     required BuildContext context,
@@ -14,14 +28,25 @@ class TencentCloudChatMessageCamera {
     required Function({required String videoPath}) onSendVideo,
   }) async {
     if (TencentCloudChatPlatformAdapter().isMobile &&
-        await TencentCloudChatPermissionHandler.checkPermission("camera", context)) {
+        await TencentCloudChatPermissionHandler.checkPermission(
+            "camera", context)) {
       final ImagePicker picker = ImagePicker();
       if (isVideo) {
         final file = await picker.pickVideo(source: source);
-        onSendVideo(videoPath: file?.path ?? "");
+        dispatchCameraPickerResult(
+          path: file?.path,
+          isVideo: true,
+          onSendImage: onSendImage,
+          onSendVideo: onSendVideo,
+        );
       } else {
         final file = await picker.pickImage(source: source);
-        onSendImage(imagePath: file?.path ?? "");
+        dispatchCameraPickerResult(
+          path: file?.path,
+          isVideo: false,
+          onSendImage: onSendImage,
+          onSendVideo: onSendVideo,
+        );
       }
     }
   }
