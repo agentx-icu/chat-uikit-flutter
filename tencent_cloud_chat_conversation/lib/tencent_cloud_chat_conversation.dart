@@ -38,43 +38,52 @@ class TencentCloudChatConversation extends TencentCloudChatComponent<
   });
 
   @override
-  TencentCloudChatConversationState createState() => TencentCloudChatConversationState();
+  TencentCloudChatConversationState createState() =>
+      TencentCloudChatConversationState();
 }
 
-class TencentCloudChatConversationState extends TencentCloudChatState<TencentCloudChatConversation> {
-  final Stream<TencentCloudChatConversationData<dynamic>>? _conversationDataStream = TencentCloudChat
-      .instance.eventBusInstance
-      .on<TencentCloudChatConversationData<dynamic>>("TencentCloudChatConversationData");
-  StreamSubscription<TencentCloudChatConversationData<dynamic>>? _conversationDataSubscription;
+class TencentCloudChatConversationState
+    extends TencentCloudChatState<TencentCloudChatConversation> {
+  final Stream<TencentCloudChatConversationData<dynamic>>?
+      _conversationDataStream = TencentCloudChat.instance.eventBusInstance
+          .on<TencentCloudChatConversationData<dynamic>>(
+              "TencentCloudChatConversationData");
+  StreamSubscription<TencentCloudChatConversationData<dynamic>>?
+      _conversationDataSubscription;
 
   late bool _useDesktopMode;
   late TextEditingController _textEditingController;
   TencentCloudChatWidgetBuilder? _globalSearchWidget;
   String _searchText = "";
 
-  bool includeSearch =
-      TencentCloudChat.instance.dataInstance.basic.usedComponents.contains(TencentCloudChatComponentsEnum.search);
+  bool includeSearch = TencentCloudChat
+      .instance.dataInstance.basic.usedComponents
+      .contains(TencentCloudChatComponentsEnum.search);
 
   final Stream<TencentCloudChatBasicData<dynamic>>? _basicDataStream =
-      TencentCloudChat.instance.eventBusInstance.on<TencentCloudChatBasicData<dynamic>>("TencentCloudChatBasicData");
+      TencentCloudChat.instance.eventBusInstance
+          .on<TencentCloudChatBasicData<dynamic>>("TencentCloudChatBasicData");
 
-  StreamSubscription<TencentCloudChatBasicData<dynamic>>? _basicDataSubscription;
+  StreamSubscription<TencentCloudChatBasicData<dynamic>>?
+      _basicDataSubscription;
 
   @override
   void initState() {
     super.initState();
     _addConversationDataListener();
     _updateGlobalData();
-    _useDesktopMode = TencentCloudChat.instance.dataInstance.conversation.conversationConfig.useDesktopMode;
+    _useDesktopMode = TencentCloudChat
+        .instance.dataInstance.conversation.conversationConfig.useDesktopMode;
 
     TencentCloudChat.instance.logInstance.console(
         componentName: 'TencentCloudChatConversation',
-        logs: "add _conversationDataStream start ${_conversationDataStream != null}");
+        logs:
+            "add _conversationDataStream start ${_conversationDataStream != null}");
 
     _textEditingController = TextEditingController();
     _addBasicEventListener();
-    _globalSearchWidget =
-        TencentCloudChat.instance.dataInstance.basic.componentsMap[TencentCloudChatComponentsEnum.search];
+    _globalSearchWidget = TencentCloudChat.instance.dataInstance.basic
+        .componentsMap[TencentCloudChatComponentsEnum.search];
     if (_globalSearchWidget != null) {
       _textEditingController.addListener(_searchTextListenerHandler);
     }
@@ -82,13 +91,15 @@ class TencentCloudChatConversationState extends TencentCloudChatState<TencentClo
 
   void _addBasicEventListener() {
     _basicDataSubscription = _basicDataStream?.listen((event) {
-      if (event.currentUpdatedFields == TencentCloudChatBasicDataKeys.addUsedComponent) {
+      if (event.currentUpdatedFields ==
+          TencentCloudChatBasicDataKeys.addUsedComponent) {
         safeSetState(() {
-          includeSearch = TencentCloudChat.instance.dataInstance.basic.usedComponents
+          includeSearch = TencentCloudChat
+              .instance.dataInstance.basic.usedComponents
               .contains(TencentCloudChatComponentsEnum.search);
         });
-        final searchWidget =
-            TencentCloudChat.instance.dataInstance.basic.componentsMap[TencentCloudChatComponentsEnum.search];
+        final searchWidget = TencentCloudChat.instance.dataInstance.basic
+            .componentsMap[TencentCloudChatComponentsEnum.search];
         if (searchWidget != _globalSearchWidget) {
           safeSetState(() {
             _globalSearchWidget = searchWidget;
@@ -127,7 +138,8 @@ class TencentCloudChatConversationState extends TencentCloudChatState<TencentClo
   }
 
   _addConversationDataListener() {
-    _conversationDataSubscription = _conversationDataStream?.listen(_conversationDataHandler);
+    _conversationDataSubscription =
+        _conversationDataStream?.listen(_conversationDataHandler);
   }
 
   _conversationDataHandler(TencentCloudChatConversationData data) {
@@ -138,26 +150,38 @@ class TencentCloudChatConversationState extends TencentCloudChatState<TencentClo
       });
     }
 
-    if (data.currentUpdatedFields == TencentCloudChatConversationDataKeys.conversationBuilder) {
+    if (data.currentUpdatedFields ==
+        TencentCloudChatConversationDataKeys.conversationBuilder) {
       setState(() {});
     }
   }
 
   void _updateGlobalData([TencentCloudChatConversation? oldWidget]) {
-    if (widget.config != null || (oldWidget != null && oldWidget.config != widget.config && widget.config != null)) {
-      TencentCloudChat.instance.dataInstance.conversation.conversationConfig = widget.config!;
+    if (widget.config != null ||
+        (oldWidget != null &&
+            oldWidget.config != widget.config &&
+            widget.config != null)) {
+      TencentCloudChat.instance.dataInstance.conversation.conversationConfig =
+          widget.config!;
     }
 
     if (widget.eventHandlers != null ||
-        (oldWidget != null && oldWidget.eventHandlers != widget.eventHandlers && widget.eventHandlers != null)) {
-      TencentCloudChat.instance.dataInstance.conversation.conversationEventHandlers = widget.eventHandlers;
+        (oldWidget != null &&
+            oldWidget.eventHandlers != widget.eventHandlers &&
+            widget.eventHandlers != null)) {
+      TencentCloudChat.instance.dataInstance.conversation
+          .conversationEventHandlers = widget.eventHandlers;
     }
 
     if (widget.builders != null ||
-        (oldWidget != null && oldWidget.builders != widget.builders && widget.builders != null)) {
-      TencentCloudChat.instance.dataInstance.conversation.conversationBuilder = widget.builders;
+        (oldWidget != null &&
+            oldWidget.builders != widget.builders &&
+            widget.builders != null)) {
+      TencentCloudChat.instance.dataInstance.conversation.conversationBuilder =
+          widget.builders;
     } else {
-      TencentCloudChat.instance.dataInstance.conversation.conversationBuilder = TencentCloudChatConversationBuilders();
+      TencentCloudChat.instance.dataInstance.conversation.conversationBuilder =
+          TencentCloudChatConversationBuilders();
     }
   }
 
@@ -168,8 +192,14 @@ class TencentCloudChatConversationState extends TencentCloudChatState<TencentClo
 
   @override
   Widget mobileBuilder(BuildContext context) {
-    final header =
-        TencentCloudChat.instance.dataInstance.conversation.conversationBuilder?.getConversationHeaderBuilder(
+    final config =
+        TencentCloudChat.instance.dataInstance.conversation.conversationConfig;
+    if (_useDesktopMode && config.forceDesktopLayout) {
+      return _buildDesktopMode();
+    }
+    final header = TencentCloudChat
+        .instance.dataInstance.conversation.conversationBuilder
+        ?.getConversationHeaderBuilder(
       textEditingController: _textEditingController,
       focusNode: null,
     );
@@ -216,7 +246,8 @@ class TencentCloudChatConversationState extends TencentCloudChatState<TencentClo
                   height: 1,
                   color: colorTheme.dividerColor,
                 ),
-              (TencentCloudChatUtils.checkString(_searchText) != null && _globalSearchWidget != null)
+              (TencentCloudChatUtils.checkString(_searchText) != null &&
+                      _globalSearchWidget != null)
                   ? Expanded(
                       child: _globalSearchWidget!(
                         options: {
@@ -241,14 +272,18 @@ class TencentCloudChatConversationState extends TencentCloudChatState<TencentClo
   @override
   Widget desktopBuilder(BuildContext context) {
     if (_useDesktopMode) {
-      return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) => const Material(
-          color: Colors.transparent,
-          child: TencentCloudChatConversationDesktopMode(),
-        ),
-      );
+      return _buildDesktopMode();
     }
     return mobileBuilder(context);
+  }
+
+  Widget _buildDesktopMode() {
+    return TencentCloudChatThemeWidget(
+      build: (context, colorTheme, textStyle) => const Material(
+        color: Colors.transparent,
+        child: TencentCloudChatConversationDesktopMode(),
+      ),
+    );
   }
 }
 
@@ -261,26 +296,29 @@ class TencentCloudChatConversationManager {
   /// Call the `setBuilders` method and pass any UI builders to be modified,
   /// which will replace the previous configuration and apply changes immediately.
   static TencentCloudChatConversationBuilders get builder {
-    TencentCloudChat.instance.dataInstance.conversation.conversationBuilder ??= TencentCloudChatConversationBuilders();
-    return TencentCloudChat.instance.dataInstance.conversation.conversationBuilder
-        as TencentCloudChatConversationBuilders;
+    TencentCloudChat.instance.dataInstance.conversation.conversationBuilder ??=
+        TencentCloudChatConversationBuilders();
+    return TencentCloudChat.instance.dataInstance.conversation
+        .conversationBuilder as TencentCloudChatConversationBuilders;
   }
 
   /// Retrieves the controller for controlling `TencentCloudChatConversation` components,
   /// applying to all instances.
   /// Utilize the provided control methods.
   static TencentCloudChatConversationController get controller {
-    TencentCloudChat.instance.dataInstance.conversation.conversationController ??=
+    TencentCloudChat
+            .instance.dataInstance.conversation.conversationController ??=
         TencentCloudChatConversationController.instance;
-    return TencentCloudChat.instance.dataInstance.conversation.conversationController
-        as TencentCloudChatConversationController;
+    return TencentCloudChat.instance.dataInstance.conversation
+        .conversationController as TencentCloudChatConversationController;
   }
 
   /// Enables dynamic updating of configurations for all instances.
   /// Call the `setConfigs` method and pass any configurations to be modified,
   /// which will replace the previous configuration and apply changes immediately.
   static TencentCloudChatConversationConfig get config {
-    return TencentCloudChat.instance.dataInstance.conversation.conversationConfig;
+    return TencentCloudChat
+        .instance.dataInstance.conversation.conversationConfig;
   }
 
   /// Attaches listeners to Component-level events.
@@ -288,32 +326,42 @@ class TencentCloudChatConversationManager {
   /// Call `setEventHandlers` from both `uiEventHandlers` and `lifeCycleEventHandlers` to update specific event handlers.
   /// Note: This will cause the corresponding event's previously attached handlers to be invalidated, i.e., overridden.
   static TencentCloudChatConversationEventHandlers get eventHandlers {
-    TencentCloudChat.instance.dataInstance.conversation.conversationEventHandlers ??=
+    TencentCloudChat
+            .instance.dataInstance.conversation.conversationEventHandlers ??=
         TencentCloudChatConversationEventHandlers();
-    return TencentCloudChat.instance.dataInstance.conversation.conversationEventHandlers!;
+    return TencentCloudChat
+        .instance.dataInstance.conversation.conversationEventHandlers!;
   }
 
   /// Manually declares the usage of the `TencentCloudChatConversation` component.
   /// During the `initUIKit` call, add `TencentCloudChatConversationManager.register` in `usedComponentsRegister` within `components`
   /// if you plan to use this component.
-  static ({TencentCloudChatComponentsEnum componentEnum, TencentCloudChatWidgetBuilder widgetBuilder}) register() {
+  static ({
+    TencentCloudChatComponentsEnum componentEnum,
+    TencentCloudChatWidgetBuilder widgetBuilder
+  }) register() {
     TencentCloudChatRouter().registerRouter(
       routeName: TencentCloudChatRouteNames.conversation,
       builder: (context) => TencentCloudChatConversation(
-        options: TencentCloudChatRouter().getArgumentFromMap<TencentCloudChatConversationOptions>(context, 'data'),
+        options: TencentCloudChatRouter()
+            .getArgumentFromMap<TencentCloudChatConversationOptions>(
+                context, 'data'),
       ),
     );
 
-    TencentCloudChat.instance.dataInstance.conversation.conversationBuilder ??= TencentCloudChatConversationBuilders();
+    TencentCloudChat.instance.dataInstance.conversation.conversationBuilder ??=
+        TencentCloudChatConversationBuilders();
 
-    TencentCloudChat.instance.dataInstance.conversation.conversationController ??=
+    TencentCloudChat
+            .instance.dataInstance.conversation.conversationController ??=
         TencentCloudChatConversationController.instance;
 
     TencentCloudChatConversationController.instance.init();
 
     return (
       componentEnum: TencentCloudChatComponentsEnum.conversation,
-      widgetBuilder: ({required Map<String, dynamic> options}) => const TencentCloudChatConversation(),
+      widgetBuilder: ({required Map<String, dynamic> options}) =>
+          const TencentCloudChatConversation(),
     );
   }
 }
@@ -321,7 +369,10 @@ class TencentCloudChatConversationManager {
 class TencentCloudChatConversationInstance {
   /// Use `TencentCloudChatConversationManager.register` instead.
   /// This method will be removed in a future version.
-  static ({TencentCloudChatComponentsEnum componentEnum, TencentCloudChatWidgetBuilder widgetBuilder}) register() {
+  static ({
+    TencentCloudChatComponentsEnum componentEnum,
+    TencentCloudChatWidgetBuilder widgetBuilder
+  }) register() {
     return TencentCloudChatConversationManager.register();
   }
 }
