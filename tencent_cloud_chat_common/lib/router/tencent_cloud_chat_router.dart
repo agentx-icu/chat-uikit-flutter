@@ -70,7 +70,10 @@ class TencentCloudChatRouter {
           context,
           MaterialPageRoute(
             builder: routes[routeName]!,
-            settings: RouteSettings(arguments: {
+            // Carry the route name so apps can identify UIKit routes on the
+            // navigator stack (e.g. "is the top route the user profile?")
+            // instead of tracking navigation state with side-channel flags.
+            settings: RouteSettings(name: routeName, arguments: {
               'options': options,
             }),
           ),

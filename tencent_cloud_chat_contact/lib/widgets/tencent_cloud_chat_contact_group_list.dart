@@ -262,8 +262,11 @@ class TencentCloudChatContactGroupItemState
       DeviceScreenType.desktop;
 
   navigateToChat() async {
+    // Row tap in the contacts group list — report through onTapContactItem
+    // (NOT onNavigateToChat, which is reserved for profile "Send Message"
+    // tiles).
     final tryUseOnNavigateToChat = await TencentCloudChat.instance.dataInstance
-            .contact.contactEventHandlers?.uiEventHandlers.onNavigateToChat
+            .contact.contactEventHandlers?.uiEventHandlers.onTapContactItem
             ?.call(userID: null, groupID: widget.group.groupID) ??
         false;
     if (!tryUseOnNavigateToChat) {
