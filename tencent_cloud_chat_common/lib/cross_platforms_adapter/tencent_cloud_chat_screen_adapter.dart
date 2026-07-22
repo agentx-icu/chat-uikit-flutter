@@ -71,12 +71,12 @@ class TencentCloudChatScreenAdapter {
   ///
   /// This method should be called in your app's root widget or the initializing process of this UIKit.
   static void init(BuildContext context) {
-    if (hasInitialized) {
-      return;
-    }
     try {
-      // Get the current device type
-      deviceScreenType = _getDeviceType(context);
+      final nextDeviceScreenType = _getDeviceType(context);
+      if (hasInitialized && deviceScreenType == nextDeviceScreenType) {
+        return;
+      }
+      deviceScreenType = nextDeviceScreenType;
 
       // Get the screen width
       double screenWidth = MediaQuery.of(context).size.width;
@@ -84,7 +84,8 @@ class TencentCloudChatScreenAdapter {
       // Set the designSize based on the device type and screen width
       Size designSize;
       if (deviceScreenType == DeviceScreenType.desktop) {
-        designSize = screenWidth > 960 ? const Size(1024, 768) : const Size(960, 640);
+        designSize =
+            screenWidth > 960 ? const Size(1024, 768) : const Size(960, 640);
       } else {
         designSize = const Size(390, 844);
       }
@@ -174,7 +175,7 @@ class TencentCloudChatScreenAdapter {
 
   /// Helper method to get the current device type
   static DeviceScreenType _getDeviceType(BuildContext context) {
-    if(kIsWeb){
+    if (kIsWeb) {
       final userAgent = html.window.navigator.userAgent.toLowerCase();
       if (userAgent.contains('mobile') ||
           userAgent.contains('android') ||
@@ -192,9 +193,12 @@ class TencentCloudChatScreenAdapter {
       final screenWidth = size.width / win.devicePixelRatio;
       final screenHeight = size.height / win.devicePixelRatio;
 
-      final diagonalInInches = sqrt(pow(screenWidth, 2) + pow(screenHeight, 2)) / 96.0;
+      final diagonalInInches =
+          sqrt(pow(screenWidth, 2) + pow(screenHeight, 2)) / 96.0;
 
-      return diagonalInInches < 11 ? DeviceScreenType.mobile : DeviceScreenType.desktop;
+      return diagonalInInches < 11
+          ? DeviceScreenType.mobile
+          : DeviceScreenType.desktop;
     } else {
       double deviceWidth = MediaQuery.of(context).size.width;
       double deviceHeight = MediaQuery.of(context).size.height;
