@@ -40,12 +40,15 @@ class TencentCloudChatConversationItem extends StatefulWidget {
 
 class TencentCloudChatConversationItemState
     extends TencentCloudChatState<TencentCloudChatConversationItem> {
-  final bool useDesktopMode = (TencentCloudChat.instance.dataInstance
-          .conversation.conversationConfig.useDesktopMode) &&
-      (TencentCloudChatScreenAdapter.deviceScreenType ==
-              DeviceScreenType.desktop ||
-          TencentCloudChat.instance.dataInstance.conversation.conversationConfig
-              .forceDesktopLayout);
+  bool get useDesktopMode {
+    final config =
+        TencentCloudChat.instance.dataInstance.conversation.conversationConfig;
+    return config.useDesktopMode &&
+        (TencentCloudChatScreenAdapter.deviceScreenType ==
+                DeviceScreenType.desktop ||
+            config.forceDesktopLayout);
+  }
+
   TencentCloudChatConversationPresenter conversationPresenter =
       TencentCloudChatConversationPresenter();
 
@@ -469,8 +472,7 @@ class TencentCloudChatConversationItemAvatarState
     // size), person → circle (size / 2).
     final bool isGroup =
         widget.conversation.type == ConversationType.V2TIM_GROUP;
-    final double avatarRadius =
-        isGroup ? avatarSize * 0.28 : avatarSize / 2;
+    final double avatarRadius = isGroup ? avatarSize * 0.28 : avatarSize / 2;
     return TencentCloudChatThemeWidget(
       build: (ctx, colors, fonts) => Padding(
         padding: EdgeInsets.symmetric(

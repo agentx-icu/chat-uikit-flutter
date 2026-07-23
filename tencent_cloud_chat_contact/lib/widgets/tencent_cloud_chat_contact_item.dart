@@ -28,7 +28,9 @@ class TencentCloudChatContactItemState extends TencentCloudChatState<TencentClou
   final isDesktop = TencentCloudChatScreenAdapter.deviceScreenType == DeviceScreenType.desktop;
 
   navigateToChat() async {
-    final tryUseOnNavigateToChat = await TencentCloudChat.instance.dataInstance.contact.contactEventHandlers?.uiEventHandlers.onNavigateToChat?.call(userID: widget.friend.userID, groupID: null) ?? false;
+    // Row tap in the contact list — report through onTapContactItem (NOT
+    // onNavigateToChat, which is reserved for profile "Send a message" tiles).
+    final tryUseOnNavigateToChat = await TencentCloudChat.instance.dataInstance.contact.contactEventHandlers?.uiEventHandlers.onTapContactItem?.call(userID: widget.friend.userID, groupID: null) ?? false;
     if(!tryUseOnNavigateToChat){
       if (TencentCloudChat.instance.dataInstance.basic.usedComponents.contains(TencentCloudChatComponentsEnum.message)) {
         if(!isDesktop){
