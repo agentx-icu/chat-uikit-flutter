@@ -799,9 +799,6 @@ class TencentCloudChatUtils {
         lineOne = '[${tL10n.call}]';
       }
     }
-    if (lineOne == "[${tL10n.custom}]") {
-      debugPrint(message.customElem!.toJson().toString());
-    }
     return (lineOne, lineTwo);
   }
 
