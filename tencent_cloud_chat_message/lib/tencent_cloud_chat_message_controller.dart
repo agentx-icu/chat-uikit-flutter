@@ -168,10 +168,34 @@ class TencentCloudChatMessageController extends TencentCloudChatComponentBaseCon
     );
   }
 
-  void setDraft(String conversationID, String draft) {
-    TencentCloudChat.instance.chatSDKInstance.manager
-        .getConversationManager()
-        .setConversationDraft(conversationID: conversationID, draftText: draft);
+  Future<void> setDraft(String conversationID, String draft) async {
+    try {
+      final result = await TencentCloudChat.instance.chatSDKInstance.manager
+          .getConversationManager()
+          .setConversationDraft(
+            conversationID: conversationID,
+            draftText: draft,
+          );
+      if (result.code != 0) {
+        _reportDraftPreviewFailure(result.code, result.desc);
+      }
+    } on UnimplementedError catch (error) {
+      _reportDraftPreviewFailure(-1, error.toString());
+    } catch (error) {
+      _reportDraftPreviewFailure(-1, error.toString());
+    }
+  }
+
+  void _reportDraftPreviewFailure(int code, String description) {
+    try {
+      TencentCloudChat.instance.callbacks.onSDKFailed(
+        'setConversationDraft',
+        code,
+        description,
+      );
+    } catch (_) {
+      // Conversation preview is optional and must not affect durable drafts.
+    }
   }
 
   EventName? eventName;
