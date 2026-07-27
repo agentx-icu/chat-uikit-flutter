@@ -16,6 +16,7 @@ import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.d
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_permission_handlers.dart';
 import 'package:tencent_cloud_chat_message/common/text_compiler/tencent_cloud_chat_message_text_compiler.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_controller.dart';
+import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/tencent_cloud_chat_message_draft_coordinator.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/message_reply/tencent_cloud_chat_message_input_reply_container.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/mobile/tencent_cloud_chat_message_attachment_options.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/mobile/tencent_cloud_chat_message_input_recording.dart';
@@ -58,12 +59,14 @@ class TencentCloudChatMessageInputMobile extends StatefulWidget {
   /// device. A widget test on a desktop host (where the adapter reports
   /// non-mobile) can inject `() => true` to drive the real record handler.
   final bool Function()? debugIsMobile;
+  final bool debugDraftPersistenceOnly;
 
   const TencentCloudChatMessageInputMobile({
     super.key,
     required this.inputData,
     required this.inputMethods,
     this.debugIsMobile,
+    this.debugDraftPersistenceOnly = false,
   });
 
   @override
@@ -99,20 +102,29 @@ class _TencentCloudChatMessageInputMobileState
   String _inputText = "";
   int _byteCount = 0;
   String listenerUUID = "";
+  late final TencentCloudChatMessageDraftCoordinator _draftCoordinator;
+  bool _suppressDraftSave = false;
 
   @override
   void initState() {
     super.initState();
+    _draftCoordinator = TencentCloudChatMessageDraftCoordinator(
+      updateConversationPreview: _setConversationDraft,
+    );
     WidgetsBinding.instance.addObserver(this);
     if (listenerUUID.isNotEmpty) {
       removeUIKitListener();
     }
 
-    listenerUUID = addUIKitListener();
+    if (!widget.debugDraftPersistenceOnly) {
+      listenerUUID = addUIKitListener();
+    }
     _textEditingController.text = widget.inputData.specifiedMessageText ?? "";
     _inputText = widget.inputData.specifiedMessageText ?? "";
     // must add input event after _textEditingController.text
     _addTextInputEvent();
+    _setDraftContext();
+    unawaited(_loadDraft());
   }
 
   void uikitListener(Map<String, dynamic> data) {
@@ -165,8 +177,17 @@ class _TencentCloudChatMessageInputMobileState
   void didUpdateWidget(covariant TencentCloudChatMessageInputMobile oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.inputData.specifiedMessageText !=
+    final draftContextChanged = _setDraftContext();
+    if (draftContextChanged) {
+      _mentionedUsers.clear();
+      _replaceComposerText(widget.inputData.specifiedMessageText ?? "");
+      unawaited(_loadDraft());
+    }
+
+    if (!draftContextChanged &&
+        widget.inputData.specifiedMessageText !=
         oldWidget.inputData.specifiedMessageText) {
+      _draftCoordinator.invalidateLoad();
       _textEditingController.text = widget.inputData.specifiedMessageText ?? "";
       _mentionedUsers.clear();
       _mentionedUsers
@@ -386,6 +407,10 @@ class _TencentCloudChatMessageInputMobileState
   void _onTextChanged() async {
     final newText = _textEditingController.text;
 
+    if (!_suppressDraftSave) {
+      _draftCoordinator.markEdited();
+    }
+
     /// Send Button Animation
     if (newText.isNotEmpty != _showSendButton) {
       safeSetState(() {
@@ -399,7 +424,7 @@ class _TencentCloudChatMessageInputMobileState
     }
 
     if (_inputText == newText) {
-      if (_inputText.isEmpty) {
+      if (_inputText.isEmpty && !_suppressDraftSave) {
         /// Update draft
         _updateDraft(_inputText);
       }
@@ -488,27 +513,13 @@ class _TencentCloudChatMessageInputMobileState
     }
 
     /// Update draft
-    _updateDraft(_inputText);
+    if (!_suppressDraftSave) {
+      _updateDraft(_inputText);
+    }
   }
 
   void _updateDraft(String draftText) {
-    if ((widget.inputData.userID == null || widget.inputData.userID!.isEmpty) &&
-        (widget.inputData.groupID == null ||
-            widget.inputData.groupID!.isEmpty)) {
-      return;
-    }
-
-    String conversationID = "";
-    if (widget.inputData.userID != null &&
-        widget.inputData.userID!.isNotEmpty) {
-      conversationID = "c2c_${widget.inputData.userID}";
-    } else if (widget.inputData.groupID != null &&
-        widget.inputData.groupID!.isNotEmpty) {
-      conversationID = "group_${widget.inputData.groupID}";
-    }
-
-    (widget.inputMethods.controller as TencentCloudChatMessageController)
-        .setDraft(conversationID, _inputText);
+    _draftCoordinator.saveDraft(draftText);
   }
 
   bool _submitTextMessage() {
@@ -516,18 +527,64 @@ class _TencentCloudChatMessageInputMobileState
     if (text.isEmpty || utf8.encode(text).length > _kToxMaxMessageBytes) {
       return false;
     }
-
-    widget.inputMethods.sendTextMessage(
+    final mentionedUsers = _mentionedUsers.map((e) => e.userID).toList();
+    return _draftCoordinator.sendAndClear(
       text: text,
-      mentionedUsers: _mentionedUsers.map((e) => e.userID).toList(),
+      sendMessage: () => widget.inputMethods.sendTextMessage(
+        text: text,
+        mentionedUsers: mentionedUsers,
+      ),
+      currentText: () => _textEditingController.text,
+      isActive: () => mounted,
+      clearComposer: () {
+        _mentionedUsers.clear();
+        _replaceComposerText("");
+      },
+      onError: (error) {
+        debugPrint('Failed to send text message: $error');
+      },
     );
-    _inputText = "";
-    _mentionedUsers.clear();
-    _textEditingController.clear();
+  }
+
+  bool _setDraftContext() {
+    return _draftCoordinator.updateContext(
+      topicID: widget.inputData.topicID,
+      userID: widget.inputData.userID,
+      groupID: widget.inputData.groupID,
+    );
+  }
+
+  Future<void> _loadDraft() {
+    final initialText = _textEditingController.text;
+    return _draftCoordinator.loadDraft(
+      initialText: initialText,
+      currentText: () => _textEditingController.text,
+      isActive: () => mounted,
+      applyText: _replaceComposerText,
+    );
+  }
+
+  void _replaceComposerText(String text) {
+    _suppressDraftSave = true;
+    try {
+      _inputText = text;
+      _textEditingController.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    } finally {
+      _suppressDraftSave = false;
+    }
     safeSetState(() {
-      _byteCount = 0;
+      _byteCount = utf8.encode(text).length;
     });
-    return true;
+  }
+
+  void _setConversationDraft(String conversationID, String draft) {
+    final controller = widget.inputMethods.controller;
+    if (controller is TencentCloudChatMessageController) {
+      unawaited(controller.setDraft(conversationID, draft));
+    }
   }
 
   void _insertComposerNewline() {
@@ -817,6 +874,12 @@ class _TencentCloudChatMessageInputMobileState
 
   @override
   Widget defaultBuilder(BuildContext context) {
+    if (widget.debugDraftPersistenceOnly) {
+      return Text(
+        _textEditingController.text,
+        key: const ValueKey('draft_persistence_text'),
+      );
+    }
     _bottomPadding ??= MediaQuery.of(context).padding.bottom;
     var panelHeight = _getBottomContainerHeight();
     // toxee 5.1: pad the input container above the OS soft keyboard. We use

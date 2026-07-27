@@ -672,11 +672,12 @@ class _TencentCloudChatMessageInputContainerState
     }
   }
 
-  void _sendTextMessage({
+  Future<bool> _sendTextMessage({
     required String text,
     List<String>? mentionedUsers,
-  }) {
-    _dataProvider.sendTextMessage(text, mentionedUsers ?? []);
+  }) async {
+    return await _dataProvider.sendTextMessage(text, mentionedUsers ?? []) ==
+        true;
   }
 
   void _sendImageMessage(

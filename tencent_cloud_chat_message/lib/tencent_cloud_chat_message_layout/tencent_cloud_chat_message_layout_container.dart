@@ -74,11 +74,12 @@ class _TencentCloudChatMessageLayoutContainerState extends TencentCloudChatState
     dataProvider.addListener(_dataProviderHandler);
   }
 
-  void _sendTextMessage({
+  Future<bool> _sendTextMessage({
     required String text,
     List<String>? mentionedUsers,
-  }) {
-    dataProvider.sendTextMessage(text, mentionedUsers ?? []);
+  }) async {
+    return await dataProvider.sendTextMessage(text, mentionedUsers ?? []) ==
+        true;
   }
 
   void _sendImageMessage({String? imagePath, String? imageName, dynamic inputElement}) {

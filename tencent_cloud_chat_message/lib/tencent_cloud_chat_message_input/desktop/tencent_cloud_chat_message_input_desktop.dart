@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:tencent_cloud_chat_common/utils/sdk_const.dart';
@@ -10,7 +10,6 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:tencent_cloud_chat_common/components/component_config/tencent_cloud_chat_message_config.dart';
@@ -25,8 +24,11 @@ import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.d
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_message/common/for_desktop/file_tools.dart';
 import 'package:tencent_cloud_chat_message/common/for_desktop/image_tools.dart';
+import 'package:tencent_cloud_chat_message/common/for_desktop/scratch_file_store.dart';
 import 'package:tencent_cloud_chat_message/common/text_compiler/tencent_cloud_chat_message_text_compiler.dart';
 import 'package:tencent_cloud_chat_message/model/tencent_cloud_chat_message_separate_data_notifier.dart';
+import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_controller.dart';
+import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/tencent_cloud_chat_message_draft_coordinator.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/message_reply/tencent_cloud_chat_message_input_reply_container.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/select_mode/tencent_cloud_chat_message_input_select_mode_container.dart';
 
@@ -85,12 +87,14 @@ class TencentCloudChatMessageInputDesktop extends StatefulWidget {
   final MessageInputBuilderData inputData;
   final MessageInputBuilderMethods inputMethods;
   final String? statusText;
+  final bool debugDraftPersistenceOnly;
 
   const TencentCloudChatMessageInputDesktop({
     super.key,
     required this.inputData,
     required this.inputMethods,
     this.statusText,
+    this.debugDraftPersistenceOnly = false,
   });
 
   @override
@@ -112,10 +116,14 @@ class _TencentCloudChatMessageInputDesktopState
   int _maxLines = 6;
   int _byteCount = 0;
   String listenerUUID = "";
+  late final TencentCloudChatMessageDraftCoordinator _draftCoordinator;
 
   @override
   void initState() {
     super.initState();
+    _draftCoordinator = TencentCloudChatMessageDraftCoordinator(
+      updateConversationPreview: _setConversationDraft,
+    );
     _cancelEditingMemberMentionStatus();
     _textEditingFocusNode.onKey = _handleKeyEvent;
     if (kDebugMode) {
@@ -133,7 +141,9 @@ class _TencentCloudChatMessageInputDesktopState
     if (listenerUUID.isNotEmpty) {
       removeUIKitListener();
     }
-    addUIKitListener();
+    if (!widget.debugDraftPersistenceOnly) {
+      addUIKitListener();
+    }
     _initPasteOnWeb();
     if (kDebugMode) {
       // Real-UI L3 composer-SEND seam: set the text then invoke the exact
@@ -141,19 +151,12 @@ class _TencentCloudChatMessageInputDesktopState
       // peer send via the VM service without osascript keyboard focus.
       debugRealUiDesktopComposerSendText = (text) {
         if (!mounted) return;
-        _textEditingController.text = text;
-        widget.inputMethods.sendTextMessage(
-          text: text,
-          mentionedUsers: _mentionedUsers.map((e) => e.userID).toList(),
-        );
-        _inputText = "";
-        _mentionedUsers.clear();
-        _textEditingController.clear();
-        safeSetState(() {
-          _byteCount = 0;
-        });
+        _setDesktopText(text);
+        _submitDesktopSend();
       };
     }
+    _setDraftContext();
+    unawaited(_loadDraft());
   }
 
   void uikitListener(Map<String, dynamic> data) {
@@ -226,7 +229,7 @@ class _TencentCloudChatMessageInputDesktopState
   /// `mentionedUsers` and the visible bubble text carries the `@<label>` tag.
   void _mentionSend(String userID, String label, String text) {
     _mentionedUsers.add((userID: userID, label: label));
-    _textEditingController.text = '@$label $text';
+    _setDesktopText('@$label $text');
     _submitDesktopSend();
   }
 
@@ -251,6 +254,8 @@ class _TencentCloudChatMessageInputDesktopState
     _textEditingController.selection =
         TextSelection.collapsed(offset: text.length);
     _inputText = text;
+    _draftCoordinator.markEdited();
+    _updateDraft(text);
     _textEditingFocusNode.requestFocus();
     safeSetState(() {
       _byteCount = utf8.encode(text).length;
@@ -261,28 +266,44 @@ class _TencentCloudChatMessageInputDesktopState
   /// headless real-UI harness can invoke it via [debugRealUiDesktopComposerSend]
   /// without an OS/synthetic key event. Identical behaviour to pressing Enter.
   void _submitDesktopSend() {
-    if (utf8.encode(_textEditingController.text).length > _kToxMaxMessageBytes) {
+    final text = _textEditingController.text;
+    if (text.isEmpty || utf8.encode(text).length > _kToxMaxMessageBytes) {
       return;
     }
-    widget.inputMethods.sendTextMessage(
-      text: _textEditingController.text,
-      mentionedUsers: _mentionedUsers.map((e) => e.userID).toList(),
+    final mentionedUsers = _mentionedUsers.map((e) => e.userID).toList();
+    _draftCoordinator.sendAndClear(
+      text: text,
+      sendMessage: () => widget.inputMethods.sendTextMessage(
+        text: text,
+        mentionedUsers: mentionedUsers,
+      ),
+      currentText: () => _textEditingController.text,
+      isActive: () => mounted,
+      clearComposer: () {
+        _mentionedUsers.clear();
+        _replaceComposerText("");
+        _cancelEditingMemberMentionStatus();
+      },
+      onError: (error) {
+        debugPrint('Failed to send text message: $error');
+      },
     );
-    _inputText = "";
-    _mentionedUsers.clear();
-    _textEditingController.clear();
-    safeSetState(() {
-      _byteCount = 0;
-    });
-    _cancelEditingMemberMentionStatus();
   }
 
   @override
   void didUpdateWidget(TencentCloudChatMessageInputDesktop oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.inputData.specifiedMessageText !=
+    final draftContextChanged = _setDraftContext();
+    if (draftContextChanged) {
+      _mentionedUsers.clear();
+      _replaceComposerText(widget.inputData.specifiedMessageText ?? "");
+      unawaited(_loadDraft());
+    }
+    if (!draftContextChanged &&
+        widget.inputData.specifiedMessageText !=
         oldWidget.inputData.specifiedMessageText) {
-      _textEditingController.text = widget.inputData.specifiedMessageText ?? "";
+      _draftCoordinator.invalidateLoad();
+      _replaceComposerText(widget.inputData.specifiedMessageText ?? "");
       _mentionedUsers.clear();
       _mentionedUsers
           .addAll((widget.inputData.membersNeedToMention ?? []).map(((e) {
@@ -376,6 +397,7 @@ class _TencentCloudChatMessageInputDesktopState
   void _onTextChanged(String newText) async {
     widget.inputMethods.closeSticker();
     final newText = _textEditingController.text;
+    _draftCoordinator.markEdited();
 
     /// Dealing with mentioning member in group
     if (TencentCloudChatUtils.checkString(widget.inputData.groupID) != null) {
@@ -507,6 +529,47 @@ class _TencentCloudChatMessageInputDesktopState
       safeSetState(() {
         _byteCount = nextByteCount;
       });
+    }
+    _updateDraft(_inputText);
+  }
+
+  bool _setDraftContext() {
+    return _draftCoordinator.updateContext(
+      topicID: widget.inputData.topicID,
+      userID: widget.inputData.userID,
+      groupID: widget.inputData.groupID,
+    );
+  }
+
+  Future<void> _loadDraft() {
+    final initialText = _textEditingController.text;
+    return _draftCoordinator.loadDraft(
+      initialText: initialText,
+      currentText: () => _textEditingController.text,
+      isActive: () => mounted,
+      applyText: _replaceComposerText,
+    );
+  }
+
+  void _replaceComposerText(String text) {
+    _textEditingController.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+    _inputText = text;
+    safeSetState(() {
+      _byteCount = utf8.encode(text).length;
+    });
+  }
+
+  void _updateDraft(String draftText) {
+    _draftCoordinator.saveDraft(draftText);
+  }
+
+  void _setConversationDraft(String conversationID, String draft) {
+    final controller = widget.inputMethods.controller;
+    if (controller is TencentCloudChatMessageController) {
+      unawaited(controller.setDraft(conversationID, draft));
     }
   }
 
@@ -700,35 +763,17 @@ class _TencentCloudChatMessageInputDesktopState
   _handlePasteResource() async {
     final imageBytes = await Pasteboard.image;
     if (imageBytes != null && imageBytes.isNotEmpty) {
-      String directory;
-      if (TencentCloudChatPlatformAdapter().isWindows) {
-        final String documentsDirectoryPath =
-            "${Platform.environment['USERPROFILE']}";
-        PackageInfo packageInfo = await PackageInfo.fromPlatform();
-        String pkgName = packageInfo.packageName;
-        directory = Pertypath().join(documentsDirectoryPath, "Documents",
-            ".TencentCloudChat", pkgName, "screenshots");
-      } else {
-        // toxee(P2): keep pasted-image scratch files in a dedicated
-        // sub-directory so we don't pollute the appSupport root, and
-        // can later wipe just the paste cache.
-        final dic = await getApplicationSupportDirectory();
-        directory = Pertypath().join(dic.path, 'paste_images');
-      }
       var uuid = DateTime.now().microsecondsSinceEpoch;
       final fileName = 'paste_image_$uuid.png';
-      final scDirectory = Directory(directory);
-      final filePath =
-          '${scDirectory.path}${TencentCloudChatPlatformAdapter().isWindows ? "\\" : "/"}$fileName';
-      final file = File(filePath);
-      if (!await scDirectory.exists()) {
-        await scDirectory.create(recursive: true);
-      }
-      await file.writeAsBytes(imageBytes.toList());
+      final filePath = await resolveChatScratchFileProvider().writeScratchBytes(
+        category: 'clipboard_images',
+        suggestedFileName: fileName,
+        bytes: imageBytes,
+      );
 
       TencentCloudChatDesktopImageTools.sendImageOnDesktop(
         context: context,
-        imagePath: file.path,
+        imagePath: filePath,
         currentConversationShowName:
             widget.inputData.currentConversationShowName,
         sendImageMessage: widget.inputMethods.sendImageMessage,
@@ -822,6 +867,12 @@ class _TencentCloudChatMessageInputDesktopState
 
   @override
   Widget defaultBuilder(BuildContext context) {
+    if (widget.debugDraftPersistenceOnly) {
+      return Text(
+        _textEditingController.text,
+        key: const ValueKey('draft_persistence_text'),
+      );
+    }
     final TencentCloudChatMessageConfig config =
         TencentCloudChatMessageDataProviderInherited.of(context).config;
     final maxLines = config.desktopMessageInputLines(
