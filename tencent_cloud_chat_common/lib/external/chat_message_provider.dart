@@ -59,6 +59,22 @@ abstract class ChatScratchFileProvider {
   Future<void> deleteScratchFile(String path);
 }
 
+abstract interface class ChatDraftProvider {
+  Future<String?> loadDraft({
+    required String conversationID,
+    required String accountToxId,
+  });
+
+  Future<void> saveDraft({
+    required String conversationID,
+    required String accountToxId,
+    String? draft,
+  });
+}
+
+abstract interface class ChatDraftProviderOwnsConversationState
+    implements ChatDraftProvider {}
+
 class ChatMessageProviderRegistry {
   static ChatMessageProvider? provider;
 }

@@ -135,4 +135,26 @@ class TencentCloudChatCacheGlobal {
     String originData = _box!.get(hiveKey, defaultValue: "280");
     return double.parse(originData);
   }
+
+  String? getChatDraft(String key) {
+    if (_box == null || !_inited || !_box!.isOpen) {
+      return null;
+    }
+    final value = _box!.get(key);
+    return value is String ? value : null;
+  }
+
+  Future<void> cacheChatDraft(String key, String draft) async {
+    if (_box == null || !_inited || !_box!.isOpen) {
+      return;
+    }
+    await _box!.put(key, draft);
+  }
+
+  Future<void> removeChatDraft(String key) async {
+    if (_box == null || !_inited || !_box!.isOpen) {
+      return;
+    }
+    await _box!.delete(key);
+  }
 }
