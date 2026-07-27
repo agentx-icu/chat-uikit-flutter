@@ -945,45 +945,51 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
     }
   }
 
-  _sendMessage({V2TimMsgCreateInfoResult? messageInfoResult, bool? isResend}) async {
-    if (messageInfoResult != null) {
-      final tempRepliedMessage = _quotedMessage;
-
-      if (_quotedMessage != null) {
-        _quotedMessage = null;
-        notifyListeners();
-      }
-
-      final res = await _messageController?.sendMessage(
-        createdMessage: messageInfoResult,
-        userID: _userID,
-        groupID: _groupID,
-        topicID: _topicID,
-        repliedMessage: tempRepliedMessage,
-        groupInfo: groupInfo,
-        isResend: isResend,
-      );
-
-      messageController.scrollToBottom(
-        userID: _userID,
-        groupID: _groupID,
-        topicID: _topicID,
-      );
-
-      if (res == null || res.code != 0) {
-        TencentCloudChat.instance.callbacks.onSDKFailed(
-          "sendMessage",
-          res?.code ?? -1,
-          ErrorMessageConverter.getErrorMessage(res?.code ?? -1, res!.desc),
-        );
-      }
+  Future<bool> _sendMessage({
+    V2TimMsgCreateInfoResult? messageInfoResult,
+    bool? isResend,
+  }) async {
+    if (messageInfoResult == null) {
+      return false;
     }
+    final tempRepliedMessage = _quotedMessage;
+
+    if (_quotedMessage != null) {
+      _quotedMessage = null;
+      notifyListeners();
+    }
+
+    final res = await _messageController?.sendMessage(
+      createdMessage: messageInfoResult,
+      userID: _userID,
+      groupID: _groupID,
+      topicID: _topicID,
+      repliedMessage: tempRepliedMessage,
+      groupInfo: groupInfo,
+      isResend: isResend,
+    );
+
+    messageController.scrollToBottom(
+      userID: _userID,
+      groupID: _groupID,
+      topicID: _topicID,
+    );
+
+    if (res == null || res.code != 0) {
+      TencentCloudChat.instance.callbacks.onSDKFailed(
+        "sendMessage",
+        res?.code ?? -1,
+        ErrorMessageConverter.getErrorMessage(res?.code ?? -1, res?.desc ?? ""),
+      );
+      return false;
+    }
+    return true;
   }
 
   // Text Message
-  sendTextMessage(String text, List<String> mentionedUsers) async {
+  Future<bool> sendTextMessage(String text, List<String> mentionedUsers) async {
     if (text.isEmpty) {
-      return null;
+      return false;
     }
     final textMessageInfo = await TencentCloudChat.instance.chatSDKInstance.messageSDK.createTextMessage(
       text: text,
