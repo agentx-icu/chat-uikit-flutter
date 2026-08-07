@@ -146,15 +146,22 @@ class TencentCloudChatContactData<T> extends TencentCloudChatDataAB<T> {
   }
 
   void deleteGroupInfoFromJoinedGroupList(String groupID, {bool fireQuitEvent = true}) {
+    final int previousLength = _groupList.length;
     _groupList.removeWhere((element) => element.groupID == groupID);
+    final bool removedGroup = previousLength != _groupList.length;
 
     // fireQuitEvent=false lets a list RECONCILE (delete-then-rebuild) drop an
-    // entry WITHOUT signaling a real group quit/dismiss. The quitGroup event is
-    // consumed by listeners that remove the group from Prefs and clean its
-    // conversation, so a reconcile that re-adds the group immediately must not
-    // fire it (otherwise it has to manually counteract those side-effects).
-    // Real quit/dismiss/leave paths keep the default (true).
-    if (!fireQuitEvent) return;
+    // entry WITHOUT signaling a real group quit. Dismiss is also a local removal:
+    // it already has its own onGroupDismissed notification, so it must not replay
+    // quitGroup. Still notify group-list observers when an entry was removed so
+    // the joined-list UI refreshes without using quit semantics.
+    // Real quit/leave paths keep the default (true).
+    if (!fireQuitEvent) {
+      if (removedGroup) {
+        notifyListener(TencentCloudChatContactDataKeys.groupList as T);
+      }
+      return;
+    }
 
     var groupProfileEvent = TencentCloudChatGroupProfileData(TencentCloudChatGroupProfileDataKeys.quitGroup);
     groupProfileEvent.updateGroupID = groupID;
@@ -320,7 +327,7 @@ class TencentCloudChatContactData<T> extends TencentCloudChatDataAB<T> {
 
   void setApplicationUnreadCount(List<V2TimFriendApplication>? applicationList) {
     List<V2TimFriendApplication> filteredList = [];
-    if (applicationList != null && applicationList.length > 0) {
+    if (applicationList != null && applicationList.isNotEmpty) {
       filteredList = applicationList.where((e) => e.type == 1).toList();
     }
     _applicationUnreadCount = filteredList.length;

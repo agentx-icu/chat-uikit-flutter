@@ -15,8 +15,11 @@ class TencentCloudChatGroupSDKGenerator {
 
 class TencentCloudChatGroupSDK {
   static const String _tag = "TencentCloudChatGroupSDK";
+  static const int _dismissNotifyDedupMs = 5000;
 
   TencentCloudChatGroupSDK._();
+
+  final Map<String, int> _recentDismissNotifyMs = <String, int>{};
 
   late V2TimGroupListener groupListener = V2TimGroupListener(
     onAllGroupMembersMuted: (groupID, isMute) {},
@@ -34,8 +37,9 @@ class TencentCloudChatGroupSDK {
       handleJoinGroup(groupID, null);
     },
     onGroupDismissed: (groupID, opUser) {
+      if (_isDuplicateDismiss(groupID)) return;
       notifyGroupDismissed(groupID);
-      handleQuitFromGroup(groupID);
+      handleDismissedGroup(groupID);
     },
     onGroupInfoChanged: (groupID, changeInfos) {
       TencentCloudChat.instance.dataInstance.contact.updateGroupInfo(groupID, changeInfos);
@@ -107,6 +111,27 @@ class TencentCloudChatGroupSDK {
 
   void handleQuitFromGroup(String groupID) {
     TencentCloudChat.instance.dataInstance.contact.deleteGroupInfoFromJoinedGroupList(groupID);
+  }
+
+  void handleDismissedGroup(String groupID) {
+    TencentCloudChat.instance.dataInstance.contact.deleteGroupInfoFromJoinedGroupList(groupID, fireQuitEvent: false);
+    final conversationID = 'group_$groupID';
+    final hasConversation = TencentCloudChat.instance.dataInstance.conversation.conversationList
+        .any((conversation) => conversation.conversationID == conversationID);
+    if (!hasConversation) {
+      return;
+    }
+
+    TencentCloudChat.instance.dataInstance.conversation.removeConversation([conversationID]);
+  }
+
+  bool _isDuplicateDismiss(String groupID) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    _recentDismissNotifyMs.removeWhere(
+        (_, timestamp) => now - timestamp > _dismissNotifyDedupMs);
+    final previous = _recentDismissNotifyMs[groupID];
+    _recentDismissNotifyMs[groupID] = now;
+    return previous != null && now - previous < _dismissNotifyDedupMs;
   }
 
   void handleMemberEnter(String groupID, List<V2TimGroupMemberInfo> memberList) async {
@@ -288,11 +313,7 @@ class TencentCloudChatGroupSDK {
   Future<V2TimCallback> dismissGroup({required String groupID}) async {
     V2TimCallback res = await TencentImSDKPlugin.v2TIMManager.dismissGroup(groupID: groupID);
     if (res.code == 0) {
-      TencentCloudChat.instance.dataInstance.contact.deleteGroupInfoFromJoinedGroupList(groupID);
-
-      var groupProfileEvent = TencentCloudChatGroupProfileData(TencentCloudChatGroupProfileDataKeys.quitGroup);
-      groupProfileEvent.updateGroupID = groupID;
-      TencentCloudChat.instance.eventBusInstance.fire(groupProfileEvent, TencentCloudChatEventBus.eventNameGroup);
+      handleDismissedGroup(groupID);
     }
     return res;
   }
