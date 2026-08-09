@@ -53,60 +53,78 @@ class TencentCloudChatGroupProfileBodyState
   @override
   Widget defaultBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) => Center(
-              child: ListView(
-                children: [
-                  SizedBox(
-                    height: getHeight(40),
-                  ),
-                  TencentCloudChat
-                      .instance.dataInstance.groupProfile.groupProfileBuilder
-                      ?.getGroupProfileAvatarBuilder(
-                          groupInfo: widget.groupInfo,
-                          groupMember: widget.groupMemberList),
-                  TencentCloudChat
-                      .instance.dataInstance.groupProfile.groupProfileBuilder
-                      ?.getGroupProfileContentBuilder(
-                          groupInfo: widget.groupInfo),
-                  TencentCloudChat
-                      .instance.dataInstance.groupProfile.groupProfileBuilder
-                      ?.getGroupProfileChatButtonBuilder(
-                          groupInfo: widget.groupInfo,
-                          startVideoCall: widget.startVideoCall,
-                          startVoiceCall: widget.startVoiceCall),
-                  TencentCloudChat
-                      .instance.dataInstance.groupProfile.groupProfileBuilder
-                      ?.getGroupProfileStateButtonBuilder(
-                          groupInfo: widget.groupInfo),
-                  TencentCloudChat
-                      .instance.dataInstance.groupProfile.groupProfileBuilder
-                      ?.getGroupProfileMuteMemberBuilder(
-                          groupInfo: widget.groupInfo,
-                          groupMember: widget.groupMemberList),
-                  TencentCloudChat
-                      .instance.dataInstance.groupProfile.groupProfileBuilder
-                      ?.getGroupProfileSetNameCardBuilder(
-                    groupInfo: widget.groupInfo,
-                    groupMember: widget.groupMemberList,
-                  ),
-                  TencentCloudChat
-                      .instance.dataInstance.groupProfile.groupProfileBuilder
-                      ?.getGroupProfileMemberBuilder(
-                    groupInfo: widget.groupInfo,
-                    groupMember: widget.groupMemberList,
-                    contactList: contactList,
-                  ),
-                  SizedBox(
-                    height: getHeight(16),
-                  ),
-                  TencentCloudChat
-                      .instance.dataInstance.groupProfile.groupProfileBuilder
-                      ?.getGroupProfileDeleteButtonBuilder(
-                          groupInfo: widget.groupInfo,
-                          groupMemberList: widget.groupMemberList)
-                ],
+      build: (context, colorTheme, textStyle) {
+        final viewportHeight = MediaQuery.sizeOf(context).height;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final height = constraints.hasBoundedHeight
+                ? constraints.maxHeight
+                : viewportHeight;
+            return SizedBox(
+              height: height,
+              child: Center(
+                child: ListView(
+                  key: const ValueKey('group_profile_scroll_view'),
+                  children: [
+                    KeyedSubtree(
+                      key: const ValueKey('group_profile_scroll_anchor'),
+                      child: SizedBox(
+                        height: getHeight(40),
+                      ),
+                    ),
+                    TencentCloudChat
+                        .instance.dataInstance.groupProfile.groupProfileBuilder
+                        ?.getGroupProfileAvatarBuilder(
+                            groupInfo: widget.groupInfo,
+                            groupMember: widget.groupMemberList),
+                    TencentCloudChat
+                        .instance.dataInstance.groupProfile.groupProfileBuilder
+                        ?.getGroupProfileContentBuilder(
+                            groupInfo: widget.groupInfo),
+                    TencentCloudChat
+                        .instance.dataInstance.groupProfile.groupProfileBuilder
+                        ?.getGroupProfileChatButtonBuilder(
+                            groupInfo: widget.groupInfo,
+                            startVideoCall: widget.startVideoCall,
+                            startVoiceCall: widget.startVoiceCall),
+                    TencentCloudChat
+                        .instance.dataInstance.groupProfile.groupProfileBuilder
+                        ?.getGroupProfileStateButtonBuilder(
+                            groupInfo: widget.groupInfo),
+                    TencentCloudChat
+                        .instance.dataInstance.groupProfile.groupProfileBuilder
+                        ?.getGroupProfileMuteMemberBuilder(
+                            groupInfo: widget.groupInfo,
+                            groupMember: widget.groupMemberList),
+                    TencentCloudChat
+                        .instance.dataInstance.groupProfile.groupProfileBuilder
+                        ?.getGroupProfileSetNameCardBuilder(
+                      groupInfo: widget.groupInfo,
+                      groupMember: widget.groupMemberList,
+                    ),
+                    TencentCloudChat
+                        .instance.dataInstance.groupProfile.groupProfileBuilder
+                        ?.getGroupProfileMemberBuilder(
+                      groupInfo: widget.groupInfo,
+                      groupMember: widget.groupMemberList,
+                      contactList: contactList,
+                    ),
+                    SizedBox(
+                      height: getHeight(16),
+                    ),
+                    TencentCloudChat
+                        .instance.dataInstance.groupProfile.groupProfileBuilder
+                        ?.getGroupProfileDeleteButtonBuilder(
+                            groupInfo: widget.groupInfo,
+                            groupMemberList: widget.groupMemberList)
+                  ],
+                ),
               ),
-            ));
+            );
+          },
+        );
+      },
+    );
   }
 }
 
