@@ -104,14 +104,14 @@ class TencentCloudChatMessageSDK {
     TencentCloudChat.instance.logInstance.console(
       componentName: 'GetHistoryMessageList',
       logs:
-          "getHistoryMessageListResult -- conv: ${groupID ?? userID} - needCount:$count - ResultLength:${res.data?.messageList.length} - period: $timePeriod - begin: $timeBegin - lastMsgID:$lastMsgID - lastMsgSeq:$lastMsgSeq",
+          "getHistoryMessageListResult -- needCount:$count - ResultLength:${response?.messageList.length ?? 0} - success:${res.code == 0 && response != null} - isFinished:${response?.isFinished}",
     );
 
     if (res.code != 0 || response == null) {
       var componentName = runtimeType.toString().replaceAll("TencentCloudChat", "");
       TencentCloudChat.instance.logInstance.console(
         componentName: componentName,
-        logs: "getHistoryMessageList - ${res.desc}",
+        logs: "getHistoryMessageList failed - code:${res.code} - hasResponse:${response != null}",
         logLevel: TencentCloudChatLogLevel.error,
       );
     }

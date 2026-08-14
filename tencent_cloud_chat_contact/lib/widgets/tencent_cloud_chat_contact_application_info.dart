@@ -40,6 +40,8 @@ class TencentCloudChatContactApplicationInfoState
               leadingWidth: getWidth(100),
               leading: TencentCloudChatThemeWidget(
                   build: (context, colorTheme, textStyle) => GestureDetector(
+                        key: const ValueKey(
+                            'contact_detail_back'),
                         onTap: () => popDialogIfCurrent(context, widget.applicationResult),
                         child: Row(children: [
                           Padding(padding: EdgeInsets.only(left: getWidth(10))),

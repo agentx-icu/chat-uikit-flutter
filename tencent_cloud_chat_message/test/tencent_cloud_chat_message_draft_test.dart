@@ -56,6 +56,53 @@ void main() {
         ));
       });
 
+      testWidgets('unsent draft survives switching away and back',
+          (tester) async {
+        // The unit analogue of the real-UI `draft_restore_on_conv_switch`
+        // gate: type without sending, switch conversation, switch back. The
+        // per-conversation composer STATE is disposed on switch, so the text
+        // can only come back through the durable ChatDraftProvider — which is
+        // exactly the contract being pinned.
+        await _pumpComposer(
+          tester,
+          platform: platform,
+          userID: 'friend',
+          sendHarness: sendHarness,
+        );
+        _setComposerText(platform, 'unsent draft');
+        await tester.pump();
+        await _pumpUntilSaveCount(tester, provider, 1);
+        expect(provider.saves.last.draft, 'unsent draft');
+
+        await _pumpComposer(
+          tester,
+          platform: platform,
+          userID: 'other',
+          sendHarness: sendHarness,
+        );
+        await tester.pump();
+        expect(
+          _composerText(tester),
+          isEmpty,
+          reason: 'the conversation switched to has no draft of its own',
+        );
+
+        await _pumpComposer(
+          tester,
+          platform: platform,
+          userID: 'friend',
+          sendHarness: sendHarness,
+        );
+        await _pumpUntilComposerText(tester, 'unsent draft');
+
+        expect(
+          _composerText(tester),
+          'unsent draft',
+          reason: 'switching back must reload the persisted draft into the '
+              'composer, not come back empty',
+        );
+      });
+
       testWidgets('late load cannot overwrite a conversation or account switch',
           (tester) async {
         final oldLoad = Completer<String?>();
@@ -300,6 +347,19 @@ Future<void> _pumpUntilSaveCount(
     await tester.pump();
   }
   expect(provider.saves.length, greaterThanOrEqualTo(count));
+}
+
+/// Pump until the composer shows [expected], so an async `loadDraft` round-trip
+/// is awaited by its OBSERVABLE result rather than a fixed delay.
+Future<void> _pumpUntilComposerText(
+  WidgetTester tester,
+  String expected,
+) async {
+  for (var attempt = 0;
+      attempt < 10 && _composerText(tester) != expected;
+      attempt++) {
+    await tester.pump();
+  }
 }
 
 Future<void> _pumpUntilSendCalled(

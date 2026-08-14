@@ -17,6 +17,7 @@ class TencentCloudChatContactLeadingState
   Widget defaultBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => GestureDetector(
+              key: const ValueKey('contact_detail_back'),
               onTap: () => popDialogIfCurrent(context),
               child: Row(children: [
                 Padding(padding: EdgeInsets.only(left: getWidth(10))),

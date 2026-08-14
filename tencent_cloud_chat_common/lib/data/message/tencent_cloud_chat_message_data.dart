@@ -1440,7 +1440,7 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
       if (recentMessages.isNotEmpty) {
         TencentCloudChat.instance.logInstance.console(
           componentName: 'GetHistoryMessageListMessageData',
-          logs: "Merging ${recentMessages.length} recent messages with history, conversationID=$conversationID",
+          logs: "Merging ${recentMessages.length} recent messages with history",
           logLevel: TencentCloudChatLogLevel.info,
         );
         // Add recent messages that don't exist in loaded history
@@ -1480,7 +1480,7 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
         if (skippedAsExisting > 0) {
           TencentCloudChat.instance.logInstance.console(
             componentName: 'GetHistoryMessageListMessageData',
-            logs: "Merging recent: skipped $skippedAsExisting as existsInHistory, conversationID=$conversationID",
+            logs: "Merging recent: skipped $skippedAsExisting as existsInHistory",
             logLevel: TencentCloudChatLogLevel.debug,
           );
         }
@@ -1493,7 +1493,7 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
       if (filteredCount > 0) {
         TencentCloudChat.instance.logInstance.console(
           componentName: 'GetHistoryMessageListMessageData',
-          logs: "Pagination: filtered $filteredCount duplicate(s) before merge, conversationID=$conversationID",
+          logs: "Pagination: filtered $filteredCount duplicate(s) before merge",
           logLevel: TencentCloudChatLogLevel.debug,
         );
       }
@@ -1528,13 +1528,13 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
     TencentCloudChat.instance.logInstance.console(
         componentName: 'GetHistoryMessageListMessageData',
         logs:
-            "updateMessageList -- conv: ${TencentCloudChatUtils.checkString(topicID) ?? groupID ?? userID} - needCount:$count - ResultLength:${loadedMessages.length} - Result:${loadedMessages.map((element) => element.toJson()).toList()}");
+            "updateMessageList -- needCount:$count - ResultLength:${loadedMessages.length} - isFinished:${response.isFinished}");
 
     final TencentCloudChatPluginItem? reactionPlugin = TencentCloudChat.instance.dataInstance.basic.plugins.firstWhereOrNull((e) => e.name == "messageReaction");
     if (reactionPlugin != null) {
       TencentCloudChat.instance.logInstance.console(
         componentName: 'getMessageReactions',
-        logs: "webMessageInstanceList -- ${TencentCloudChatPlatformAdapter().isWeb ? loadedMessages.map((element) => element.messageFromWeb ?? "").toList() : []}",
+        logs: "getMessageReactions -- messageCount:${loadedMessages.length} - includesWebInstances:${TencentCloudChatPlatformAdapter().isWeb}",
       );
       await reactionPlugin.pluginInstance.callMethod(
           methodName: "getMessageReactions",
