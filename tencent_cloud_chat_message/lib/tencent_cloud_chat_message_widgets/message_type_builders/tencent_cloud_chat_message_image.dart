@@ -334,16 +334,98 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
     }
   }
 
+  // --- Local decode retry -------------------------------------------------
+  //
+  // A RECEIVED image is a race: the transfer lands the bytes and the message's
+  // path is republished, but a decode attempted in the same beat can still hit
+  // an absent / half-written file. `Image` resolves its provider ONCE per
+  // provider identity, and `FileImage(File(p))` for the same `p` compares equal
+  // — so a single unlucky failure sticks: the bubble shows the error
+  // placeholder forever (the user has to leave and re-enter the chat), and the
+  // tappable image is replaced by the placeholder's own InkWell, which is why
+  // the full-screen viewer could not be opened from it at all.
+  //
+  // Fix: on a local decode error, EVICT the cached provider for that file and
+  // rebuild with a bumped nonce (so `Image` resolves a fresh provider), a
+  // bounded number of times with backoff. A genuinely unreadable file still
+  // settles into the error placeholder after the last attempt — this only
+  // recovers the transient case, and it never loops.
+  // Budget: 8 attempts with backoff capped at 2 s covers ~13 s after the first
+  // failure. Measured live (iPhone/iPad Simulator, 2026-08-16): a 4-attempt /
+  // ~4.5 s window recovered the bubble in ONE of two runs and ran out in the
+  // other, so the shorter budget turned a real self-heal into a coin flip. A
+  // genuinely unreadable file still settles into the error placeholder, and the
+  // re-decodes are cheap and strictly bounded.
+  static const int _kLocalDecodeRetryLimit = 8;
+  static const int _kLocalDecodeRetryMaxDelayMs = 2000;
+  int _localDecodeRetries = 0;
+  int _localRenderNonce = 0;
+  String? _localDecodeRetryPath;
+  Timer? _localDecodeRetryTimer;
+
+  void _scheduleLocalDecodeRetry(String path) {
+    if (path.isEmpty) return;
+    // A different file resets the budget (a new message, or a temp -> final
+    // path swap); the same file keeps counting down.
+    if (_localDecodeRetryPath != path) {
+      _localDecodeRetryPath = path;
+      _localDecodeRetries = 0;
+    }
+    if (_localDecodeRetries >= _kLocalDecodeRetryLimit) return;
+    if (_localDecodeRetryTimer != null) return;
+    final attempt = _localDecodeRetries;
+    final delayMs = attempt >= 8
+        ? _kLocalDecodeRetryMaxDelayMs
+        : min(300 << attempt, _kLocalDecodeRetryMaxDelayMs);
+    _localDecodeRetryTimer = Timer(Duration(milliseconds: delayMs), () async {
+      _localDecodeRetryTimer = null;
+      _localDecodeRetries = attempt + 1;
+      try {
+        await FileImage(File(path)).evict();
+      } catch (e) {
+        // evict() only touches the cache; a failure here must not kill the retry.
+      }
+      if (!mounted) return;
+      // Re-resolve the SOURCE as well as the decode. A local failure is just as
+      // likely to be a STALE path — the receive-side temp file the transfer
+      // deleted after moving it — as a half-written one, and `_getImageUrl`
+      // re-reads the elem and re-checks `existsSync` for both candidates.
+      _getImageUrl();
+      safeSetState(() {
+        _localRenderNonce++;
+      });
+    });
+  }
+
+  @override
+  void deactivate() {
+    _localDecodeRetryTimer?.cancel();
+    _localDecodeRetryTimer = null;
+    super.deactivate();
+  }
+
   Widget renderLocalImage(String path) {
     console("render local image. path: $path");
     return ClipRRect(
+      // Automation anchor (`ForkUiKeys.messageImageRenderPath`): the key CARRIES
+      // the path being decoded, so a driver that knows the message's expected
+      // file can ask "is the widget even looking at it?" with one probe. Without
+      // it a decode-error red cannot distinguish an undecodable file from a
+      // STALE path (the receive-side temp file, deleted once the transfer moved
+      // it) — two different bugs in two different layers.
+      key: ValueKey('message_image_render_path:$path'),
       borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
       child: Image.file(
+        // Nonce-keyed so a retry after `evict()` actually re-resolves: `Image`
+        // keeps its resolved stream when the provider compares equal, and
+        // FileImage equality is (path, scale) only.
+        key: ValueKey('$path#$_localRenderNonce'),
         fit: BoxFit.cover,
         width: min(widget.data.messageRowWidth * 0.7, 198),
         File(path),
         errorBuilder: (context, error, stackTrace) {
           console("local image render failed. please check the path is right. path: $path");
+          _scheduleLocalDecodeRetry(path);
           return getErrorWidget();
         },
       ),
@@ -357,6 +439,11 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
     double placeholderWidth = min(widget.data.messageRowWidth * 0.7, 198).toDouble();
     double placeholderHeight = placeholderWidth * 1.33;
     return Container(
+      // Automation anchor (`ForkUiKeys.messageImageLoading`): tells a driver
+      // "still decoding" apart from "decode FAILED" — both placeholders have
+      // the same geometry, so a bounds probe cannot distinguish them and a
+      // failing case could only report "the viewer did not open".
+      key: ValueKey('message_image_loading:${_imageStateKeyId}'),
       width: getWidth(placeholderWidth),
       height: getHeight(placeholderHeight),
       decoration: BoxDecoration(
@@ -382,11 +469,25 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
     double placeholderWidth = min(widget.data.messageRowWidth * 0.7, 198).toDouble();
     double placeholderHeight = placeholderWidth * 1.33;
     return InkWell(
+      // Automation anchor (`ForkUiKeys.messageImageError`). Its presence is the
+      // machine-readable statement "this bubble is showing the DECODE-ERROR
+      // placeholder", which is also why the image is untappable: this InkWell
+      // wins the gesture arena over the image's parent GestureDetector, so the
+      // viewer cannot be opened from an errored bubble no matter how the tap is
+      // aimed.
+      key: ValueKey('message_image_error:${_imageStateKeyId}'),
       onTap: () {
         if (onlineRenderResult != null && onlineRenderResult == false) {
           onlineRenderResult = true;
           onlineRenderKey++;
           _getImageUrl();
+        }
+        // A LOCAL decode failure has no url to re-fetch; give the user the same
+        // manual escape hatch the automatic retry uses (evict + re-resolve).
+        final localPath = currentRenderImageInfo?.path ?? '';
+        if (localPath.isNotEmpty) {
+          _localDecodeRetries = 0;
+          _scheduleLocalDecodeRetry(localPath);
         }
       },
       child: Container(
@@ -424,14 +525,20 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
     console("render online image. url: $url");
     if (_isLocalFilePath(url)) {
       return ClipRRect(
+        // See renderLocalImage: the key carries the decoded path.
+        key: ValueKey('message_image_render_path:$url'),
         borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
         child: Image.file(
           File(url),
-          key: ValueKey(onlineRenderKey),
+          key: ValueKey('$onlineRenderKey#$url#$_localRenderNonce'),
           fit: BoxFit.cover,
           width: min(widget.data.messageRowWidth * 0.7, 198),
           errorBuilder: (context, error, stackTrace) {
             console("local image render failed. path: $url");
+            // Same transient-decode recovery as renderLocalImage: this branch
+            // also renders a LOCAL file (a local path that reached the "online"
+            // slot), so it hits the identical race.
+            _scheduleLocalDecodeRetry(url);
             return getErrorWidget();
           },
         ),
@@ -496,15 +603,43 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
     showImage();
   }
 
+  /// Automation anchor for the TAPPABLE image bubble (see
+  /// `lib/ui/testing/ui_keys_fork.dart`, `ForkUiKeys.messageImageBubble`).
+  ///
+  /// WHY IT IS NEEDED. The only handle automation had on an image message was
+  /// the ROW key (`message_list_item:<id>`, attached in
+  /// tencent_cloud_chat_message_row_container.dart). A row spans the whole chat
+  /// pane while the bubble is alignment-offset and capped at
+  /// `min(messageRowWidth * 0.7, 198)`, so opening the viewer meant guessing
+  /// fractions of the row's width — and, worse, the row key sits on a plain
+  /// StatefulWidget that flutter_skill's `interactiveStructured` never reports,
+  /// so a bounds lookup through that API returned NOTHING and the retry ladder
+  /// dispatched zero taps (the deterministic
+  /// `message_viewer_save_and_zoom_surface` red on both iPhone and iPad).
+  /// Keying the GestureDetector itself gives a single unambiguous tap target
+  /// whose presence ALSO proves the decode resolved — the error/loading
+  /// placeholders are different subtrees and carry no such key.
+  ///
+  /// Mirrors the row container's id fallback so the key is stable before the
+  /// server assigns a msgID.
+  String get _imageStateKeyId {
+    final m = widget.data.message;
+    return m.msgID ?? m.id ?? '${m.timestamp}_${m.sender ?? 'unknown'}';
+  }
+
+  String get _imageBubbleKey => 'message_image_bubble:$_imageStateKeyId';
+
   Widget renderImage() {
     if (!TencentCloudChatPlatformAdapter().isWeb && (currentRenderImageInfo?.type == ImageCurrentRenderType.path || currentRenderImageInfo?.type == ImageCurrentRenderType.local)) {
       return GestureDetector(
+        key: ValueKey(_imageBubbleKey),
         onTapDown: onTapDown,
         onTapUp: onTapUp,
         child: renderLocalImage(currentRenderImageInfo?.path ?? ""),
       );
     } else {
       return GestureDetector(
+        key: ValueKey(_imageBubbleKey),
         onTapDown: onTapDown,
         onTapUp: onTapUp,
         child: renderOnlineImage(currentRenderImageInfo?.path ?? ""),

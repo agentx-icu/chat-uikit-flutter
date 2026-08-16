@@ -48,6 +48,21 @@ void Function(String text)? debugRealUiMobileComposerSetText;
 /// whenever no mobile input is mounted.
 void Function(String text)? debugRealUiMobileComposerSendText;
 
+/// L3 real-UI test seam (debug builds only): send WHATEVER the composer already
+/// holds, through the same production `_submitTextMessage()` path, WITHOUT
+/// overwriting the text first. The mobile twin of
+/// `debugRealUiDesktopComposerSend`.
+///
+/// WHY IT IS SEPARATE FROM [debugRealUiMobileComposerSendText]: that seam takes
+/// the text as an argument and assigns it, so a driver can only send text it
+/// already knows. Text the APP itself put in the field is then unsendable — the
+/// @-mention picker (`_submitAtMemberList` rewrites "…@" into "…@<label> ") is
+/// exactly that case, and it is unreadable through any seam, so a case that
+/// asserts the insertion end-to-end must send the field as-is. Before this,
+/// `l3_composer_send` with no `text` fell through to the DESKTOP-only hook and
+/// answered `no_active_composer` on every phone/tablet shell.
+void Function()? debugRealUiMobileComposerSend;
+
 class TencentCloudChatMessageInputMobile extends StatefulWidget {
   final MessageInputBuilderData inputData;
   final MessageInputBuilderMethods inputMethods;
@@ -105,6 +120,32 @@ class _TencentCloudChatMessageInputMobileState
   late final TencentCloudChatMessageDraftCoordinator _draftCoordinator;
   bool _suppressDraftSave = false;
 
+  /// The composer State currently mounted for each conversation.
+  ///
+  /// `_onTextChanged` AWAITS the full-screen @-mention picker route
+  /// (`onChooseGroupMembers()` → `Navigator.push`). On the tablet
+  /// master-detail shell the chat pane is remounted while that route is up, so
+  /// the State that opened the picker can be DISPOSED before the picker
+  /// returns — at which point `_removeTextInputEvent()` has already cleared and
+  /// disposed its `TextEditingController`. Writing the resolved mention into
+  /// that dead controller silently loses the user's selection. This registry
+  /// lets the opener hand the result to whichever composer is live for the same
+  /// conversation instead.
+  ///
+  /// Keyed by [_composerIdentityKey] — the SAME string
+  /// `TencentCloudChatMessageInput` builds the widget `Key` from — so the map
+  /// partitions conversations exactly the way the framework does and an insert
+  /// can never leak into a different chat.
+  static final Map<String, _TencentCloudChatMessageInputMobileState>
+      _liveInputs = {};
+
+  /// The conversation this composer belongs to (topic > group > user), or "".
+  String get _composerIdentityKey =>
+      TencentCloudChatUtils.checkString(widget.inputData.topicID) ??
+      TencentCloudChatUtils.checkString(widget.inputData.groupID) ??
+      TencentCloudChatUtils.checkString(widget.inputData.userID) ??
+      "";
+
   @override
   void initState() {
     super.initState();
@@ -124,6 +165,9 @@ class _TencentCloudChatMessageInputMobileState
     // must add input event after _textEditingController.text
     _addTextInputEvent();
     _setDraftContext();
+    if (_composerIdentityKey.isNotEmpty) {
+      _liveInputs[_composerIdentityKey] = this;
+    }
     unawaited(_loadDraft());
   }
 
@@ -165,6 +209,11 @@ class _TencentCloudChatMessageInputMobileState
     // NOTE: _messageAttachmentOptions is disposed inside _removeTextInputEvent();
     // do NOT also dispose it here — that double-disposes its internal
     // AnimationController ("dispose() called more than once").
+    // Only drop the registry slot if it is still OURS: a successor State for
+    // the same conversation may already have claimed it.
+    if (identical(_liveInputs[_composerIdentityKey], this)) {
+      _liveInputs.remove(_composerIdentityKey);
+    }
     WidgetsBinding.instance.removeObserver(this);
     isStarted = false;
     _cancelPendingRecordingStarter();
@@ -243,6 +292,12 @@ class _TencentCloudChatMessageInputMobileState
           _textEditingController.text = text;
           _submitTextMessage();
         };
+        // Send-only twin: submit the CURRENT field contents (see the seam's
+        // doc). Same production path, no assignment.
+        debugRealUiMobileComposerSend = () {
+          if (!mounted) return;
+          _submitTextMessage();
+        };
       }
       _textEditingFocusNode.addListener(() {
         if (_textEditingFocusNode.hasFocus) {
@@ -269,6 +324,7 @@ class _TencentCloudChatMessageInputMobileState
       if (kDebugMode) {
         debugRealUiMobileComposerSetText = null;
         debugRealUiMobileComposerSendText = null;
+        debugRealUiMobileComposerSend = null;
       }
       _textEditingController.removeListener(_onTextChanged);
       _textEditingController.clear();
@@ -293,9 +349,13 @@ class _TencentCloudChatMessageInputMobileState
     _recordingStarter = null;
   }
 
+  /// [iconKey] is an AUTOMATION-ONLY handle placed on the tappable `InkWell`
+  /// (never on an animated ancestor — see the mic/send swap below). It is
+  /// optional and defaults to null, so every existing call site is unchanged.
   Widget _buildInputAreaIcon({
     required IconData icon,
     required GestureTapDownCallback onTapDown,
+    Key? iconKey,
   }) {
     return TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => Material(
@@ -303,6 +363,7 @@ class _TencentCloudChatMessageInputMobileState
               shape: const CircleBorder(),
               clipBehavior: Clip.hardEdge,
               child: InkWell(
+                key: iconKey,
                 onTapDown: onTapDown,
                 child: Container(
                   margin: EdgeInsets.only(bottom: getSquareSize(1.5)),
@@ -436,18 +497,40 @@ class _TencentCloudChatMessageInputMobileState
       final compareResult =
           TencentCloudChatUtils.compareString(_inputText, newText);
       if (compareResult.isAddText && compareResult.character == "@") {
-        /// Add "@" mentioned member tag
+        /// Add "@" mentioned member tag.
+        ///
+        /// THE AWAIT BELOW CAN OUTLIVE THIS STATE. `onChooseGroupMembers()`
+        /// pushes the full-screen `TencentCloudChatAtGroupMemberList` route;
+        /// on the tablet master-detail shell the chat pane is remounted while
+        /// that route is up, so `dispose()` (and with it
+        /// `_removeTextInputEvent()`, which CLEARS and disposes the controller)
+        /// can run between the push and the pop. Proved live on iPad: the
+        /// successor State restored the pre-`@` draft, the resolved mention was
+        /// written into the dead controller, and the group received the bare
+        /// prefix with neither the label nor the `@`.
+        ///
+        /// So two invariants are established here:
+        ///   1. the draft is flushed to what is ON SCREEN (the text WITH the
+        ///      `@`) BEFORE handing control to the route — the end-of-method
+        ///      `_updateDraft` is unreachable until the picker closes, which is
+        ///      exactly why a remount used to restore the stale pre-`@` value;
+        ///   2. the result is applied to whichever composer is LIVE for this
+        ///      conversation when the picker closes, not blindly to `this`.
+        _inputText = newText;
+        if (!_suppressDraftSave) {
+          _updateDraft(newText);
+        }
         final List<V2TimGroupMemberFullInfo> memberList =
             await widget.inputMethods.onChooseGroupMembers();
 
+        final mentioned = <({String userID, String label})>[];
         final mentionTextList = memberList.map((targetMember) {
           final String targetMemberLabel =
               TencentCloudChatUtils.checkString(targetMember.nameCard) ??
                   TencentCloudChatUtils.checkString(targetMember.nickName) ??
                   targetMember.userID;
 
-          _mentionedUsers
-              .add((label: targetMemberLabel, userID: targetMember.userID));
+          mentioned.add((label: targetMemberLabel, userID: targetMember.userID));
           return "@$targetMemberLabel ";
         }).toList();
         final mentionText = mentionTextList.join();
@@ -456,10 +539,21 @@ class _TencentCloudChatMessageInputMobileState
           /// Insert mentionText after the "@" character
           final updatedText = newText.replaceRange(
               compareResult.index, compareResult.index + 1, mentionText);
-          _textEditingController.text = updatedText;
-          _textEditingController.selection = TextSelection.collapsed(
-              offset: compareResult.index + mentionText.length);
+          final caret = compareResult.index + mentionText.length;
+          final target = mounted ? this : _liveInputs[_composerIdentityKey];
+          if (target != null) {
+            target._applyMentionInsertion(updatedText, caret, mentioned);
+          } else {
+            // Nothing is mounted for this conversation right now. Persist the
+            // completed mention as the draft so the NEXT composer for it
+            // restores the inserted label instead of the bare "@".
+            _mentionedUsers.addAll(mentioned);
+            _updateDraft(updatedText);
+          }
         }
+        // Everything past this branch touches `this`'s controller/State, which
+        // is gone when the pane was remounted under the picker.
+        if (!mounted) return;
       } else if (!compareResult.isAddText) {
         final atIndex =
             _inputText.lastIndexOf('@', max(0, compareResult.index - 1));
@@ -520,6 +614,34 @@ class _TencentCloudChatMessageInputMobileState
 
   void _updateDraft(String draftText) {
     _draftCoordinator.saveDraft(draftText);
+  }
+
+  /// Apply an @-mention resolved by the picker route to THIS (live) composer.
+  ///
+  /// Invoked on `this` in the normal case, and on the SUCCESSOR State for the
+  /// same conversation when the opener was disposed while the picker was up
+  /// (see the mention branch in [_onTextChanged]). Assigning `.text` re-enters
+  /// `_onTextChanged`, which sees a multi-character addition ("@<label> ") —
+  /// never the single "@" that opens the picker — so this cannot recurse into
+  /// a second route.
+  void _applyMentionInsertion(
+    String text,
+    int caret,
+    List<({String userID, String label})> mentioned,
+  ) {
+    if (!mounted) return;
+    for (final member in mentioned) {
+      if (!_mentionedUsers.any((e) => e.userID == member.userID)) {
+        _mentionedUsers.add(member);
+      }
+    }
+    _textEditingController.text = text;
+    _textEditingController.selection =
+        TextSelection.collapsed(offset: caret.clamp(0, text.length));
+    _inputText = text;
+    if (!_suppressDraftSave) {
+      _updateDraft(text);
+    }
   }
 
   bool _submitTextMessage() {
@@ -679,6 +801,12 @@ class _TencentCloudChatMessageInputMobileState
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   _buildInputAreaIcon(
+                    // toxee automation anchor: the mobile composer's ONE
+                    // attachment affordance (the "+" left of the input pill).
+                    // Mirrored in lib/ui/testing/ui_keys.dart as
+                    // UiKeys.messageAttachmentOptionsButton. Automation-only.
+                    iconKey:
+                        const ValueKey('message_attachment_options_button'),
                     icon: Icons.add_circle_outline_rounded,
                     onTapDown: (details) {
                       _textEditingFocusNode.unfocus();
@@ -806,6 +934,24 @@ class _TencentCloudChatMessageInputMobileState
                                         message:
                                             tL10n.holdToRecordReleaseToSend,
                                         child: Listener(
+                                          // toxee automation anchor for the
+                                          // hold-to-record mic. Deliberately on
+                                          // the Listener (a plain
+                                          // RenderPointerListener that wraps a
+                                          // padded Icon) and NOT on the
+                                          // Transform/AnimatedBuilder above it:
+                                          // keying an animated widget with a
+                                          // value that flips per state remounts
+                                          // it and destroys the rotation
+                                          // animation. The mic and
+                                          // `chat_send_button` are the two arms
+                                          // of the SAME ternary, so presence of
+                                          // this key IS "_showSendButton ==
+                                          // false". Mirrored in
+                                          // lib/ui/testing/ui_keys.dart as
+                                          // UiKeys.chatVoiceRecordButton.
+                                          key: const ValueKey(
+                                              'chat_voice_record_button'),
                                           onPointerDown: _onStartRecording,
                                           onPointerUp: _onStopRecording,
                                           child: Container(

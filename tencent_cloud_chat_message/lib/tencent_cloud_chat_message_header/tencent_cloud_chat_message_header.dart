@@ -41,6 +41,14 @@ class _TencentCloudChatMessageHeaderState
               children: [
                 if (!isDesktop)
                   IconButton(
+                      // Automation anchor: the ONLY real affordance that pops
+                      // the pushed mobile/tablet chat route back to the
+                      // conversation list. Without a key the harness had to
+                      // blind-tap the app-bar corner, which silently missed and
+                      // left the chat route covering the home shell (every
+                      // conversation-row menu case then long-pressed the chat
+                      // page instead of the row).
+                      key: const ValueKey('chat_header_back_button'),
                       color: colorTheme.primaryColor,
                       onPressed: () => popDialogIfCurrent(context),
                       icon: const Icon(Icons.arrow_back_ios_rounded)),

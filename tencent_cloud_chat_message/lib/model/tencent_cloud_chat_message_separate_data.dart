@@ -1213,10 +1213,18 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
   Future deleteMessagesForMe({
     required List<V2TimMessage> messages,
   }) async {
+    // toxee: identify each message by its msgID, FALLING BACK to the local `id`.
+    // Upstream mapped `e.msgID ?? ""`, so a message that has not been assigned a
+    // server/peer msgID yet (a failed or still-pending send) was sent down as the
+    // empty string, which matches nothing in any store — the delete silently
+    // no-op'd. A failed message is keyed by its local `id` in the failed-message
+    // persistence, so the fallback is what makes deleting one actually work.
+    // The list LENGTH is preserved (never filtered) because it stays index
+    // aligned with `webMessageInstanceList`.
     final deleteRes = await TencentCloudChat.instance.chatSDKInstance.messageSDK.deleteMessagesForMe(
       msgIDs: messages
           .map(
-            (e) => e.msgID ?? "",
+            (e) => TencentCloudChatUtils.checkString(e.msgID) ?? TencentCloudChatUtils.checkString(e.id) ?? "",
           )
           .toList(),
       webMessageInstanceList: messages.map((e) => e.messageFromWeb).toList(),
@@ -1228,12 +1236,34 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
             _userID ??
             "");
 
+    // toxee: `code == 0` now means "none of these messages is in a local store
+    // any more", which the Tox platform answers for an idempotent re-delete too
+    // (Tim2ToxSdkPlatform.deleteMessages). A NON-zero code means the delete
+    // could not be PERFORMED, and keeping the row is then the truthful UI state
+    // — the message really is still there and the user can retry. It is
+    // deliberately not surfaced as a toast: the UIKit's only error channel here
+    // is `callbacks.onUserNotificationEvent`, which toxee does not wire to any
+    // renderer, so emitting one would be another silent no-op.
     if (deleteRes?.code == 0) {
       for (final element in messages) {
+        // toxee: the trailing `&& checkString(msg.msgID) != null` conjunct is
+        // GONE. It re-required a non-empty msgID *after* the two-branch match
+        // had already accepted a row on its local `id`, so the `id` branch was
+        // dead for exactly the rows that need it: a msgID-less message could
+        // never leave the UIKit list even when the SDK reported the delete as a
+        // success. Each branch still carries its own non-empty guard, so a row
+        // is never removed on a null == null coincidence.
+        //
+        // The `identical` arm is the LAST resort, for the row this method maps
+        // to `""` above: a message carrying neither a non-empty `msgID` nor a
+        // non-empty `id` matches neither keyed branch (both demand non-empty),
+        // so without it such a row could never leave the list no matter what
+        // the SDK returned. Comparing object identity cannot false-positive —
+        // it removes exactly the instance the caller passed in.
         currentHistoryMsgList.removeWhere((msg) =>
-            ((msg.msgID == element.msgID && TencentCloudChatUtils.checkString(msg.msgID) != null) ||
-                (msg.id == element.id && TencentCloudChatUtils.checkString(msg.id) != null)) &&
-            TencentCloudChatUtils.checkString(msg.msgID) != null);
+            identical(msg, element) ||
+            (msg.msgID == element.msgID && TencentCloudChatUtils.checkString(msg.msgID) != null) ||
+            (msg.id == element.id && TencentCloudChatUtils.checkString(msg.id) != null));
       }
     }
     TencentCloudChat.instance.dataInstance.messageData.updateMessageList(

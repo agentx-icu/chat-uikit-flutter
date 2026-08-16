@@ -50,6 +50,13 @@ class _TencentCloudChatMessageForwardState extends TencentCloudChatState<Tencent
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: TextButton(
+                    // Twin of `forward_picker_send_button` for the picker's
+                    // DISMISS action. Without it a case that only wants to
+                    // assert the picker SURFACE (e.g. the multi-select
+                    // forward path) had no deterministic way to close the
+                    // modal again — a barrier tap is unreliable on the
+                    // desktop popup and Escape is a no-op on mobile.
+                    key: const ValueKey('forward_picker_cancel_button'),
                     onPressed: widget.methods.onCancel,
                     child: Text(
                       tL10n.cancel,

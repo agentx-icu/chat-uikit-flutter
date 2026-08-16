@@ -78,6 +78,12 @@ class TencentCloudChatAtGroupMemberListState extends TencentCloudChatState<Tence
             appBar: AppBar(
               leadingWidth: getWidth(100),
               leading: GestureDetector(
+                // toxee automation anchor. This screen is MULTI-select and only
+                // commits when it is popped, so both app-bar affordances call
+                // the SAME `_submitAtMemberList()`; "back" is not a cancel, it
+                // commits whatever is currently ticked (possibly nothing).
+                // Mirrored as UiKeys.mentionMemberListBackButton.
+                key: const ValueKey('mention_member_list_back_button'),
                 onTap: () async {
                   _submitAtMemberList();
                 },
@@ -100,6 +106,9 @@ class TencentCloudChatAtGroupMemberListState extends TencentCloudChatState<Tence
               ),
               actions: [
                 TextButton(
+                  // toxee automation anchor; mirrored as
+                  // UiKeys.mentionMemberListConfirmButton.
+                  key: const ValueKey('mention_member_list_confirm_button'),
                   onPressed: () {
                     _submitAtMemberList();
                   },
@@ -253,6 +262,23 @@ class TencentCloudChatGroupProfileMemberListItemState
         build: (context, colorTheme, textStyle) => Container(
               color: colorTheme.backgroundColor,
               child: InkWell(
+                  // toxee automation anchor. Shares the `mention_member:<uid>`
+                  // contract with the DESKTOP inline mention panel
+                  // (..._input_member_mention_panel.dart) so one real-UI case
+                  // can drive either surface; the two are never mounted at the
+                  // same time (platform-exclusive composers), and this
+                  // list/item pair is instantiated only from
+                  // TencentCloudChatAtGroupMemberList, so no other screen can
+                  // produce a duplicate. The @everyone pseudo-member uses the
+                  // SDK sentinel userID, which maps to the stable
+                  // `mention_member:atAll` string
+                  // (UiKeys.mentionMemberAtAll) rather than leaking the
+                  // sentinel into the key.
+                  key: ValueKey(
+                    widget.memberFullInfo.userID == SDKConst.sdkAtAllUserID
+                        ? 'mention_member:atAll'
+                        : 'mention_member:${widget.memberFullInfo.userID}',
+                  ),
                   onTap: () {
                     isSelected = !isSelected;
                     widget.onSelectGroupMember(isSelected);

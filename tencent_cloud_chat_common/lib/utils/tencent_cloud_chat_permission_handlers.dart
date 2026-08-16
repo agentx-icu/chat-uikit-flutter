@@ -6,6 +6,28 @@ import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/widgets/dialog/tencent_cloud_chat_dialog.dart';
 
 class TencentCloudChatPermissionHandler {
+  // toxee: WHY THE NON-ANDROID BRANCHES BELOW READ "iOS" AND macOS IS NOT
+  // MENTIONED. `isAndroid` is false on desktop too, so macOS/Linux/Windows fall
+  // into the same arms — but that is not a live path and macOS deliberately does
+  // NOT get the `ios/Podfile` PERMISSION_* treatment:
+  //
+  //   1. `permission_handler` 11.4.0 ships NO macOS implementation. The endorsed
+  //      federated packages are permission_handler_android,
+  //      permission_handler_apple (an iOS-only pod) and permission_handler_html
+  //      — see pubspec.lock. There is no pod for `macos/Podfile` to configure,
+  //      so a `PERMISSION_PHOTOS=1` line there would be inert.
+  //   2. Every reachable caller of `checkPermission` for these media strings is
+  //      already gated on `isAndroid` / `isMobile`: the file bubble's `_openFile`
+  //      (message_file.dart), the attachment pickers (input_container.dart), the
+  //      camera sheet and the mobile composer. Desktop media access runs through
+  //      out-of-process pickers (FilePicker -> NSOpenPanel), which grant
+  //      per-file access with no runtime permission to request.
+  //   3. `macos/Runner/Info.plist` already carries NSPhotoLibraryUsageDescription
+  //      for the day some macOS path does touch PHPhotoLibrary directly.
+  //
+  // If a desktop path ever DOES reach here, the right fix is a `null` (no gate)
+  // for these strings on non-mobile platforms — never a Podfile macro for a pod
+  // that does not exist.
   static Future<Permission?> getPermissionEnum(String permissionString) async {
     switch (permissionString) {
       case 'camera':
@@ -29,6 +51,31 @@ class TencentCloudChatPermissionHandler {
           }
         }
         return Permission.photos;
+      // toxee(P0): `Permission.videos` and `Permission.audio` are ANDROID-ONLY
+      // permissions (READ_MEDIA_VIDEO / READ_MEDIA_AUDIO, API 33+). Asking for
+      // either on iOS is not merely useless, it is UNSATISFIABLE — and it fails
+      // in a way that looks like a user denial:
+      //
+      //   * `Permission.videos` is index 32 and `Permission.audio` index 33 in
+      //     permission_handler_platform_interface's `Permission` table; those
+      //     ints are handed to the iOS plugin verbatim as
+      //     `PermissiongroupVideos` / `PermissionGroupAudio`.
+      //   * `permission_handler_apple`'s `PermissionManager.createPermissionStrategy:`
+      //     has NO case for either group, so both fall to
+      //     `default: return [UnknownPermissionStrategy new]`.
+      //   * `UnknownPermissionStrategy` never consults iOS at all:
+      //     `checkPermissionStatus:` hardcodes `PermissionStatusDenied` and
+      //     `requestPermission:...` hardcodes `PermissionStatusPermanentlyDenied`.
+      //
+      // So `Permission.videos.request()` on iOS ALWAYS resolves to
+      // permanentlyDenied, which drives `checkPermission` below straight into
+      // its "go to Settings" dialog — pointing the user at a toggle that does
+      // not and cannot exist. Unlike the microphone/camera/photos breakage this
+      // is NOT fixable from `ios/Podfile` (there is no `PERMISSION_VIDEOS` /
+      // `PERMISSION_AUDIO` opt-in macro; the strategy class simply does not
+      // exist) nor from `Info.plist` (there is no usage-description key for an
+      // Android media-read permission). The fix has to be here: never route a
+      // non-Android platform at an Android-only permission.
       case 'video':
       case 'videos':
         if (TencentCloudChatPlatformAdapter().isAndroid) {
@@ -39,7 +86,11 @@ class TencentCloudChatPermissionHandler {
             return Permission.videos;
           }
         }
-        return Permission.videos;
+        // iOS: videos are Photos-library assets, gated by the SAME
+        // NSPhotoLibraryUsageDescription / PHPhotoLibrary authorisation as
+        // images — `Permission.photos` (PhotoPermissionStrategy, already
+        // enabled through `PERMISSION_PHOTOS=1` in ios/Podfile).
+        return Permission.photos;
       case 'audio':
       case 'audios':
         if (TencentCloudChatPlatformAdapter().isAndroid) {
@@ -50,7 +101,14 @@ class TencentCloudChatPermissionHandler {
             return Permission.audio;
           }
         }
-        return Permission.audio;
+        // iOS: reading an audio FILE needs no runtime permission — the picker
+        // is UIDocumentPicker/Files, which grants per-file access out of
+        // process. `Permission.mediaLibrary` is deliberately NOT used: it is
+        // the Apple Music library (NSAppleMusicUsageDescription), a different
+        // corpus this app never touches, and requesting it without that
+        // usage-description string would terminate the app. `null` means "no
+        // gate on this platform" and `checkPermission` reports success.
+        return null;
       default:
         return null;
     }

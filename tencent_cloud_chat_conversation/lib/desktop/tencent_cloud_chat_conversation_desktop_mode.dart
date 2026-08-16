@@ -131,13 +131,29 @@ class _TencentCloudChatConversationDesktopModeState
     });
   }
 
+  // This widget is ONLY constructed when the host explicitly asked for the
+  // split layout (`conversationConfig.useDesktopMode && forceDesktopLayout` in
+  // `TencentCloudChatConversation`), so re-deciding the layout from the screen
+  // classifier here is both redundant and harmful: `TencentCloudChatState.build`
+  // routes a MOBILE-classified screen to `mobileBuilder` (null here) and then to
+  // `defaultBuilder`, which returned an EMPTY `Container()`.
+  //
+  // That is exactly an iPad in PORTRAIT: `TencentCloudChatScreenAdapter`
+  // classifies 834pt wide as `DeviceScreenType.mobile` (the threshold is >900 or
+  // landscape-ish), while toxee's own breakpoint turns master-detail ON at
+  // >=720pt — so the host forced desktop mode and this widget rendered NOTHING.
+  // The whole Chats pane came up blank on iPad portrait (no conversation list,
+  // no chat pane), which took every conversation-list surface with it.
+  //
+  // Both builders now return the SAME split; there is no case where an empty
+  // Container is the right answer for a widget the host opted into.
   @override
-  Widget defaultBuilder(BuildContext context) {
-    return Container();
-  }
+  Widget defaultBuilder(BuildContext context) => _buildSplitLayout();
 
   @override
-  Widget desktopBuilder(BuildContext context) {
+  Widget desktopBuilder(BuildContext context) => _buildSplitLayout();
+
+  Widget _buildSplitLayout() {
     return TencentCloudChatThemeWidget(
       build: (context, colorTheme, textStyle) => Row(
         children: [

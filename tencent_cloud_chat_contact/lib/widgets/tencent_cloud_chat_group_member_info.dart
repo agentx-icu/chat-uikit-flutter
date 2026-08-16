@@ -210,6 +210,12 @@ class TencentCloudChatGroupMemberInfoBodyState extends TencentCloudChatState<Ten
                   Column(
                     children: [
                       InkWell(
+                        // toxee: the member-info screen's only navigation
+                        // affordance (row -> that member's user profile). Its
+                        // label is the localized `tL10n.profile`, so real-UI
+                        // automation needs a stable handle to reach the profile
+                        // from the member-info route. Automation-only key.
+                        key: const ValueKey('group_member_info_profile_entry'),
                         onTap: () {
                           navigateToUserProfile(
                             context: context,

@@ -578,6 +578,15 @@ class TencentCloudChatGroupMemberListItemState
     var handled = false;
     List<CupertinoActionSheetAction> actionList = [
       CupertinoActionSheetAction(
+        // toxee: the mobile member manage sheet's Info action. The role/kick
+        // actions below were already keyed, but this one was not, so the ONLY
+        // always-present action in the sheet had no keyed handle — automation
+        // could neither tap it nor use it to detect "the sheet is up" (role and
+        // kick are conditional on canSetAdmin()/canDeleteMember(), so on a
+        // conference row the sheet contains Info + Cancel and nothing else).
+        // Key string matches TxKeys.groupMemberActionInfoButton, whose doc
+        // comment already described this key as applied.
+        key: const ValueKey('group_member_action_info_button'),
         onPressed: () {
           if (handled) return;
           handled = true;
@@ -642,6 +651,13 @@ class TencentCloudChatGroupMemberListItemState
             build: (context, colorTheme, textStyle) => CupertinoActionSheet(
                   actions: actionList,
                   cancelButton: CupertinoActionSheetAction(
+                      // toxee: the mobile member manage sheet's dismiss action.
+                      // The other actions are already keyed
+                      // (group_member_action_{info,role,kick}_button); without
+                      // this one a case that opens the sheet has no keyed way to
+                      // close it again (an outside tap on a CupertinoActionSheet
+                      // barrier is unreliable on a narrow shell).
+                      key: const ValueKey('group_member_action_cancel_button'),
                       onPressed: () {
                         popDialogIfCurrent(context);
                       },
@@ -682,6 +698,21 @@ class TencentCloudChatGroupMemberListItemState
                       }
                     : null,
                 child: GestureDetector(
+                  // toxee: OPAQUE for the SAME reason the Listener above is —
+                  // and it is the MOBILE half of that fix. A GestureDetector
+                  // with a child defaults to HitTestBehavior.deferToChild, so a
+                  // tap only reaches onManageMember where a child RenderBox
+                  // actually sits. The row's centre is the 4px SizedBox gap
+                  // between the two left-aligned text Rows (an empty
+                  // RenderConstrainedBox hit-tests FALSE), and the right half of
+                  // the row is blank space beside them — so on iOS/iPadOS/
+                  // Android tapping the middle or right of a member row did
+                  // NOTHING, even though the row renders a trailing chevron
+                  // advertising itself as tappable. Only a tap directly on the
+                  // avatar or the name/role text opened the manage sheet.
+                  // Opaque makes the whole row tappable; children are still
+                  // hit-tested first, so any inner gesture keeps winning.
+                  behavior: HitTestBehavior.opaque,
                   onTap: onManageMember,
                   child: Padding(
                     padding: EdgeInsets.symmetric(

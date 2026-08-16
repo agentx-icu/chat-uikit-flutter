@@ -6,6 +6,7 @@ import 'package:tencent_cloud_chat_common/models/tencent_cloud_chat_models.dart'
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/widgets/desktop_popup/operation_key.dart';
 import 'package:tencent_cloud_chat_common/widgets/desktop_popup/tencent_cloud_chat_desktop_popup.dart';
+import 'package:tencent_cloud_chat_message/model/tencent_cloud_chat_message_separate_data.dart';
 import 'package:tencent_cloud_chat_message/model/tencent_cloud_chat_message_separate_data_notifier.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/forward/tencent_cloud_chat_message_forward_container.dart';
 
@@ -19,6 +20,43 @@ class TencentCloudChatMessageInputSelectModeContainer extends StatefulWidget {
 
 class _TencentCloudChatMessageInputSelectModeContainerState
     extends TencentCloudChatState<TencentCloudChatMessageInputSelectModeContainer> {
+  TencentCloudChatMessageSeparateDataProvider? _subscribedProvider;
+
+  // toxee: SUBSCRIBE to the provider instead of relying on the InheritedWidget.
+  //
+  // `TencentCloudChatMessageDataProviderInherited` is a plain InheritedWidget
+  // whose `updateShouldNotify` compares the dataProvider INSTANCE — and that
+  // instance never changes for the life of a conversation. So
+  // `notifyListeners()` did NOT rebuild this container, and the
+  // `messages: dataProvider.getSelectedMessages()` handed to the toolbar below
+  // was frozen at first build.
+  //
+  // The live consequence (iPad, 2026-08-16): tapping the header's Clear
+  // (`selectedMessages = []`, which assigns a NEW list) left this toolbar still
+  // holding the OLD list, so the very next Delete deleted the supposedly
+  // deselected message — the toolbar acted on a selection the user had
+  // cleared. The header container already subscribes this way
+  // (`tencent_cloud_chat_message_header_container.dart`); this brings the
+  // bottom half of the same surface in line. Rebuild-only: no behaviour,
+  // layout or callback change beyond reading fresh state.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final provider = TencentCloudChatMessageDataProviderInherited.of(context);
+    if (identical(provider, _subscribedProvider)) return;
+    _subscribedProvider?.removeListener(_onProviderChanged);
+    _subscribedProvider = provider..addListener(_onProviderChanged);
+  }
+
+  void _onProviderChanged() => safeSetState(() {});
+
+  @override
+  void dispose() {
+    _subscribedProvider?.removeListener(_onProviderChanged);
+    _subscribedProvider = null;
+    super.dispose();
+  }
+
   @override
   Widget defaultBuilder(BuildContext context) {
     final dataProvider = TencentCloudChatMessageDataProviderInherited.of(context);

@@ -232,10 +232,38 @@ class TencentCloudChatMessageAttachmentOptionsWidget extends StatefulWidget {
 class _TencentCloudChatMessageAttachmentOptionsWidgetState
     extends TencentCloudChatState<
         TencentCloudChatMessageAttachmentOptionsWidget> {
+  /// toxee automation anchor for a mobile attachment-panel entry.
+  ///
+  /// The panel is DATA-driven (`attachmentOptions` is a plain list built by the
+  /// app), so there is no per-entry slot to hang a key on — the key is derived
+  /// from the option's `IconData`, exactly the contract
+  /// `lib/ui/testing/ui_keys.dart` documents. Only the icons toxee actually
+  /// injects are mapped (`buildToxeeMobileAttachmentOptions`: File + Camera);
+  /// an unmapped option returns null and renders exactly as before, so this
+  /// cannot introduce duplicate sibling keys.
+  ///
+  /// `Icons.attach_file` intentionally reuses the DESKTOP toolbar's
+  /// `message_attachment_file_button` string: the two surfaces are never
+  /// mounted at the same time (platform-exclusive composers), and sharing it
+  /// lets one real-UI case cover both.
+  static Key? _attachmentOptionKey(
+      TencentCloudChatMessageGeneralOptionItem item) {
+    final IconData? icon = item.icon;
+    if (icon == null) return null;
+    if (icon == Icons.attach_file) {
+      return const ValueKey('message_attachment_file_button');
+    }
+    if (icon == Icons.camera_alt_outlined) {
+      return const ValueKey('message_attachment_camera_button');
+    }
+    return null;
+  }
+
   Widget _buildAttachmentOptionsItem(
       TencentCloudChatMessageGeneralOptionItem item) {
     return TencentCloudChatThemeWidget(build: (context, colorTheme, textStyle) {
       return InkWell(
+        key: _attachmentOptionKey(item),
         onTap: () {
           widget.methods.onActionFinish();
           item.onTap();

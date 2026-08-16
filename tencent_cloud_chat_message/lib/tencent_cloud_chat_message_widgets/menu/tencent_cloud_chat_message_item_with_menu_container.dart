@@ -478,6 +478,10 @@ class _TencentCloudChatMessageItemWithMenuContainerState
                         child: Text(tL10n.confirm),
                       ),
                     TextButton(
+                      // Escape hatch: showAdaptiveDialog defaults to
+                      // `barrierDismissible: false`, so Cancel is the ONLY way
+                      // back out of this dialog for a driver.
+                      key: const ValueKey('confirm_dialog_secondary_button'),
                       onPressed: () {
                         if (handled) return;
                         handled = true;
@@ -515,6 +519,16 @@ class _TencentCloudChatMessageItemWithMenuContainerState
                   content: Text(tL10n.messageRecallConfirmation),
                   actions: [
                     TextButton(
+                      // Stable automation handle for the NON-desktop recall
+                      // confirm primary action. The delete-confirm twin above
+                      // has carried this key for a while; recall did not, so on
+                      // every non-desktop screen (iOS/iPadOS/Android) the
+                      // dialog rendered correctly but no driver could resolve
+                      // its Recall button. Because showAdaptiveDialog defaults
+                      // to `barrierDismissible: false`, a driver that gave up
+                      // there ALSO left an undismissable modal route on the
+                      // stack, which swallowed every later tap.
+                      key: const ValueKey('confirm_dialog_primary_button'),
                       onPressed: () {
                         if (handled) return;
                         handled = true;
@@ -524,6 +538,9 @@ class _TencentCloudChatMessageItemWithMenuContainerState
                       child: Text(tL10n.recall),
                     ),
                     TextButton(
+                      // Escape hatch for the same reason: with a non-dismissable
+                      // barrier, Cancel is the ONLY way back out of this dialog.
+                      key: const ValueKey('confirm_dialog_secondary_button'),
                       onPressed: () {
                         if (handled) return;
                         handled = true;

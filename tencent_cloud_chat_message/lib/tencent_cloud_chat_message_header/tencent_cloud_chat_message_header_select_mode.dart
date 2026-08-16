@@ -33,7 +33,16 @@ class _TencentCloudChatMessageHeaderSelectModeState
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  // toxee: automation anchors for the multi-select header bar.
+                  // The three keys below are the ONLY handles on this surface —
+                  // it renders no icons and every label is localized, so a
+                  // real-UI case had to tap raw text before. Automation-only:
+                  // no behaviour/layout/callback change.
+                  //   message_select_clear_button   clears the selection
+                  //   message_select_count_text     "<n> selected" live count
+                  //   message_select_cancel_button  leaves select mode
                   TextButton(
+                    key: const ValueKey('message_select_clear_button'),
                     onPressed: widget.onClearSelect,
                     child: Text(
                       tL10n.clear,
@@ -44,6 +53,7 @@ class _TencentCloudChatMessageHeaderSelectModeState
               ),
               const Spacer(),
               Text(
+                key: const ValueKey('message_select_count_text'),
                 tL10n.numSelect(widget.selectAmount),
                 style: TextStyle(
                   fontSize: textStyle.fontsize_16,
@@ -56,6 +66,7 @@ class _TencentCloudChatMessageHeaderSelectModeState
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
+                    key: const ValueKey('message_select_cancel_button'),
                     onPressed: widget.onCancelSelect,
                     child: Text(
                       tL10n.cancel,

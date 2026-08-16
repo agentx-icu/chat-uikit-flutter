@@ -25,9 +25,31 @@ class TencentCloudChatMessageInputSelectMode extends StatefulWidget {
 
 class _TencentCloudChatMessageInputSelectModeState
     extends TencentCloudChatState<TencentCloudChatMessageInputSelectMode> {
+  // toxee: every affordance in the multi-select toolbar carries a stable
+  // `message_select_*` ValueKey so real-UI automation can drive the multi-select
+  // path (entered from `message_menu_item:multiSelect`) without depending on a
+  // localized label or an icon glyph. The keys are automation-only: they change
+  // no behaviour, layout, or callback. Naming mirrors the rest of the fork
+  // (`message_menu_item:<action>`, `forward_picker_send_button`): snake_case,
+  // `<surface>_<role>`.
+  //
+  //   message_select_delete_button                 delete (all three builders)
+  //   message_select_forward_button                phone: opens the forward sheet
+  //   message_select_forward_individually_button   tablet/desktop: direct
+  //   message_select_forward_combined_button       tablet/desktop: direct
+  //   message_select_forward_individually_item     phone sheet row
+  //   message_select_forward_combined_item         phone sheet row
+  //   message_select_delete_confirm_button         delete dialog confirm
+  //   message_select_delete_cancel_button          delete dialog cancel
+  //
+  // NOTE the combined-forward affordances are only reachable when
+  // `enableMessageForwardCombined` is true; toxee pins it to false in
+  // tencent_cloud_chat_message_input_select_mode_container.dart until the
+  // merger-elem protocol lands, so today only the individually variants render.
   Widget _buildInputAreaIcon({
     required IconData icon,
     required GestureTapCallback onTap,
+    Key? iconKey,
   }) {
     return TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => Material(
@@ -35,6 +57,7 @@ class _TencentCloudChatMessageInputSelectModeState
               shape: const CircleBorder(),
               clipBehavior: Clip.hardEdge,
               child: IconButton(
+                key: iconKey,
                 onPressed: onTap,
                 color: colorTheme.primaryColor,
                 icon: Icon(
@@ -60,6 +83,8 @@ class _TencentCloudChatMessageInputSelectModeState
                     children: <Widget>[
                       if (widget.data.enableMessageForwardIndividually)
                         ListTile(
+                          key: const ValueKey(
+                              'message_select_forward_individually_item'),
                           leading: Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
@@ -80,6 +105,8 @@ class _TencentCloudChatMessageInputSelectModeState
                         ),
                       if (widget.data.enableMessageForwardCombined)
                         ListTile(
+                          key: const ValueKey(
+                              'message_select_forward_combined_item'),
                           leading: Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
@@ -121,6 +148,7 @@ class _TencentCloudChatMessageInputSelectModeState
       actions: [
         if (widget.data.enableMessageDeleteForSelf)
           TextButton(
+            key: const ValueKey('message_select_delete_confirm_button'),
             onPressed: () {
               if (handled) return;
               handled = true;
@@ -130,6 +158,7 @@ class _TencentCloudChatMessageInputSelectModeState
             child: Text(tL10n.confirm),
           ),
         TextButton(
+          key: const ValueKey('message_select_delete_cancel_button'),
           onPressed: () {
             if (handled) return;
             handled = true;
@@ -152,10 +181,17 @@ class _TencentCloudChatMessageInputSelectModeState
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           mainAxisSize: MainAxisSize.max,
           children: [
-            if (showDeletion) _buildInputAreaIcon(icon: Icons.delete_outline_rounded, onTap: _showDeletionPopup),
+            if (showDeletion)
+              _buildInputAreaIcon(
+                  icon: Icons.delete_outline_rounded,
+                  onTap: _showDeletionPopup,
+                  iconKey: const ValueKey('message_select_delete_button')),
             // _buildInputAreaIcon(icon: Icons.info_outline_rounded, onTap: () {}),
             if (widget.data.enableMessageForwardCombined || widget.data.enableMessageForwardIndividually)
-              _buildInputAreaIcon(icon: Icons.arrow_forward_outlined, onTap: _showForwardOptions),
+              _buildInputAreaIcon(
+                  icon: Icons.arrow_forward_outlined,
+                  onTap: _showForwardOptions,
+                  iconKey: const ValueKey('message_select_forward_button')),
           ],
         ),
       ),
@@ -173,15 +209,21 @@ class _TencentCloudChatMessageInputSelectModeState
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           mainAxisSize: MainAxisSize.max,
           children: [
-            if (showDeletion) _buildInputAreaIcon(icon: Icons.delete_outline_rounded, onTap: _showDeletionPopup),
+            if (showDeletion)
+              _buildInputAreaIcon(
+                  icon: Icons.delete_outline_rounded,
+                  onTap: _showDeletionPopup,
+                  iconKey: const ValueKey('message_select_delete_button')),
             if (widget.data.enableMessageForwardIndividually)
               _buildInputAreaIcon(
                   icon: Icons.forward_to_inbox_outlined,
-                  onTap: () => widget.methods.onMessagesForward(TencentCloudChatForwardType.individually)),
+                  onTap: () => widget.methods.onMessagesForward(TencentCloudChatForwardType.individually),
+                  iconKey: const ValueKey('message_select_forward_individually_button')),
             if (widget.data.enableMessageForwardCombined)
               _buildInputAreaIcon(
                   icon: Icons.forward_outlined,
-                  onTap: () => widget.methods.onMessagesForward(TencentCloudChatForwardType.combined)),
+                  onTap: () => widget.methods.onMessagesForward(TencentCloudChatForwardType.combined),
+                  iconKey: const ValueKey('message_select_forward_combined_button')),
           ],
         ),
       ),
@@ -204,7 +246,10 @@ class _TencentCloudChatMessageInputSelectModeState
               Tooltip(
                 message: tL10n.delete,
                 preferBelow: false,
-                child: _buildInputAreaIcon(icon: Icons.delete_outline_rounded, onTap: _showDeletionPopup),
+                child: _buildInputAreaIcon(
+                    icon: Icons.delete_outline_rounded,
+                    onTap: _showDeletionPopup,
+                    iconKey: const ValueKey('message_select_delete_button')),
               ),
             if (widget.data.enableMessageForwardIndividually)
               Tooltip(
@@ -212,7 +257,8 @@ class _TencentCloudChatMessageInputSelectModeState
                 preferBelow: false,
                 child: _buildInputAreaIcon(
                     icon: Icons.forward_to_inbox_outlined,
-                    onTap: () => widget.methods.onMessagesForward(TencentCloudChatForwardType.individually)),
+                    onTap: () => widget.methods.onMessagesForward(TencentCloudChatForwardType.individually),
+                    iconKey: const ValueKey('message_select_forward_individually_button')),
               ),
             if (widget.data.enableMessageForwardCombined)
               Tooltip(
@@ -220,7 +266,8 @@ class _TencentCloudChatMessageInputSelectModeState
                 preferBelow: false,
                 child: _buildInputAreaIcon(
                     icon: Icons.forward_outlined,
-                    onTap: () => widget.methods.onMessagesForward(TencentCloudChatForwardType.combined)),
+                    onTap: () => widget.methods.onMessagesForward(TencentCloudChatForwardType.combined),
+                    iconKey: const ValueKey('message_select_forward_combined_button')),
               ),
           ],
         ),
