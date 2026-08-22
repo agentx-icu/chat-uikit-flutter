@@ -72,6 +72,15 @@ class TencentCloudChatAvatar extends StatefulWidget {
 
   final TencentCloudChatAvatarScene scene;
 
+  /// The placeholder drawn when an entry of [imageList] is empty, or when a
+  /// local/remote avatar fails to load. Defaults to the UIKit's bundled
+  /// `images/default_user_icon.png`; an app sets both to its own asset (and
+  /// `null` package for a root-bundle asset) so every "no avatar" contact,
+  /// group member and request renders the app's placeholder instead of the
+  /// UIKit stock photo. Process-wide, set once at startup.
+  static String defaultAvatarAsset = "images/default_user_icon.png";
+  static String? defaultAvatarAssetPackage = 'tencent_cloud_chat_common';
+
   const TencentCloudChatAvatar({
     Key? key,
     this.width,
@@ -104,10 +113,24 @@ class _TencentCloudChatAvatarState extends TencentCloudChatState<TencentCloudCha
   }
 
   List<String> _generateImageList(List<String?> originalList) {
-    return originalList.map((e) => TencentCloudChatUtils.checkString(e) != null ? e! : "images/default_user_icon.png").toList();
+    return originalList.map((e) => TencentCloudChatUtils.checkString(e) != null ? e! : TencentCloudChatAvatar.defaultAvatarAsset).toList();
   }
 
+  /// The "no avatar" placeholder, honouring the app-level override.
+  Widget _defaultAvatarImage(double width, double height) => Image.asset(
+        TencentCloudChatAvatar.defaultAvatarAsset,
+        package: TencentCloudChatAvatar.defaultAvatarAssetPackage,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+      );
+
   Widget _buildImage(String imagePath, double width, double height) {
+    if (imagePath == TencentCloudChatAvatar.defaultAvatarAsset) {
+      // Resolved placeholder (possibly an app asset whose path contains '/',
+      // which the local-file heuristic below would otherwise misclassify).
+      return _defaultAvatarImage(width, height);
+    }
     if (imagePath.startsWith('http') || imagePath.startsWith('https')) {
       if (imagePath.endsWith("svg") && !TencentCloudChatPlatformAdapter().isWeb) {
         return SvgPicture.network(
@@ -115,26 +138,14 @@ class _TencentCloudChatAvatarState extends TencentCloudChatState<TencentCloudCha
           placeholderBuilder: (BuildContext context) => SizedBox(
             width: width,
             height: height,
-            child: Image.asset(
-              "images/default_user_icon.png",
-              package: 'tencent_cloud_chat_common',
-              width: width,
-              height: height,
-              fit: BoxFit.cover,),
+            child: _defaultAvatarImage(width, height),
           ),
           width: width,
           height: height,
         );
       }
       return CachedNetworkImage(
-        placeholder: (context, url) {
-          return Image.asset(
-            "images/default_user_icon.png",
-            package: 'tencent_cloud_chat_common',
-            width: width,
-            height: height,
-            fit: BoxFit.cover,);
-        },
+        placeholder: (context, url) => _defaultAvatarImage(width, height),
         imageUrl: imagePath,
         width: width,
         height: height,
@@ -170,24 +181,12 @@ class _TencentCloudChatAvatarState extends TencentCloudChatState<TencentCloudCha
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
               // Fallback to default avatar if file doesn't exist
-              return Image.asset(
-                "images/default_user_icon.png",
-                package: 'tencent_cloud_chat_common',
-                width: width,
-                height: height,
-                fit: BoxFit.cover,
-              );
+              return _defaultAvatarImage(width, height);
             },
           );
         } catch (e) {
           // Fallback to default avatar on error
-          return Image.asset(
-            "images/default_user_icon.png",
-            package: 'tencent_cloud_chat_common',
-            width: width,
-            height: height,
-            fit: BoxFit.cover,
-          );
+          return _defaultAvatarImage(width, height);
         }
       } else {
         // Use Image.asset for asset paths

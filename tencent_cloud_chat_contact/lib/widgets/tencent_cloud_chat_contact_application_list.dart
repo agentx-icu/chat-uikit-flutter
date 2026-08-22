@@ -109,7 +109,14 @@ class TencentCloudChatContactApplicationItemState
           userID: widget.application.userID,
         );
       });
+      TencentCloudChat.instance.dataInstance.contact.deleteApplicationList(
+          [widget.application.userID], 'onFriendApplicationListDeleted');
     } else {
+      // toxee: drop the row ONLY on a real accept. The delete used to be
+      // unconditional, which removed the application locally after a FAILED
+      // accept — the user saw the failure notification and then had nothing
+      // left to retry until a later refresh happened to restore it. A failure
+      // is now reported and the request stays put.
       TencentCloudChat.instance.callbacks.onUserNotificationEvent(
         TencentCloudChatComponentsEnum.contact,
         TencentCloudChatUserNotificationEvent(
@@ -118,8 +125,6 @@ class TencentCloudChatContactApplicationItemState
         ),
       );
     }
-    TencentCloudChat.instance.dataInstance.contact.deleteApplicationList(
-        [widget.application.userID], 'onFriendApplicationListDeleted');
   }
 
   Future<void> _refuseFromMenu() async {

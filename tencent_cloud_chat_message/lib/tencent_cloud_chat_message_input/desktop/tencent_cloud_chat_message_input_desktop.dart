@@ -1002,6 +1002,11 @@ class _TencentCloudChatMessageInputDesktopState
                                           disabledBorder: InputBorder.none,
                                           errorBorder: InputBorder.none,
                                           focusedErrorBorder: InputBorder.none,
+                                          // Same placeholder the mobile
+                                          // composer shows; without it the
+                                          // flat, borderless desktop field
+                                          // reads as an empty white band.
+                                          hintText: tL10n.sendAMessage,
                                           hintStyle: TextStyle(
                                             color:
                                                 colorTheme.secondaryTextColor,

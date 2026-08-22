@@ -110,15 +110,19 @@ class TencentCloudChatContactAzlistState
       );
     }
 
+    final indexTags = SuspensionUtil.getTagIndexList(showFriendList)
+        .where((element) => element != "@")
+        .toList();
     return Scrollbar(
         child: AzListView(
       physics:
           const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       data: showFriendList,
       itemCount: showFriendList.length,
-      indexBarData: SuspensionUtil.getTagIndexList(showFriendList)
-          .where((element) => element != "@")
-          .toList(),
+      // The A-Z jump bar only earns its place once there is something to jump
+      // across; with a handful of letters it floats as stray glyphs beside an
+      // otherwise empty column. Section headers still render regardless.
+      indexBarData: indexTags.length >= 6 ? indexTags : const <String>[],
       itemBuilder: (context, index) {
         if (showFriendList[index].friendInfo is TTabItem) {
           return TencentCloudChat.instance.dataInstance.contact.contactBuilder
