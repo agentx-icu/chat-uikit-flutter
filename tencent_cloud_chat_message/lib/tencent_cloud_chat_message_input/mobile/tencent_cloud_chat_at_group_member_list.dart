@@ -313,6 +313,13 @@ class TencentCloudChatGroupProfileMemberListItemState
                     child: Row(
                       children: [
                         Checkbox(
+                          // toxee automation anchor: the ROW key proves the row
+                          // exists; this one makes the ticked-but-not-committed
+                          // state observable (multi-select before confirm).
+                          key: ValueKey(widget.memberFullInfo.userID ==
+                                  SDKConst.sdkAtAllUserID
+                              ? 'mention_member_checkbox:atAll'
+                              : 'mention_member_checkbox:${widget.memberFullInfo.userID}'),
                           value: isSelected,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(50),
