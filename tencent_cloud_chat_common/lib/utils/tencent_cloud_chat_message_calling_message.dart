@@ -284,7 +284,17 @@ class CallingMessage {
       } else if (_protocolType == CallProtocolType.cancel) {
         display = isCaller ? tL10n.callCancelCaller : tL10n.callCancelCallee;
       } else if (_protocolType == CallProtocolType.hangup)  {
-        final showDuration = getShowTime(_signalingJsonData!['call_end']);
+        // toxee: `call_end` is the call duration in seconds and may be ABSENT
+        // or non-numeric in a persisted record (a zero-duration hang-up used to
+        // omit it). This formatter is the display trust boundary for custom
+        // message JSON: a missing duration renders as 00:00, it must never
+        // throw — an exception here becomes an ErrorWidget in every
+        // conversation row that shows this message as its last message
+        // (iPhone real-UI pair, 2026-08-24).
+        final rawCallEnd = _signalingJsonData?['call_end'];
+        var durationSeconds = rawCallEnd is num ? rawCallEnd.toInt() : 0;
+        if (durationSeconds < 0) durationSeconds = 0;
+        final showDuration = getShowTime(durationSeconds);
         display = "${tL10n.stopCallTip}$showDuration";
       } else if (_protocolType == CallProtocolType.timeout) {
         display = isCaller ? tL10n.callTimeoutCaller : tL10n.callTimeoutCallee;
