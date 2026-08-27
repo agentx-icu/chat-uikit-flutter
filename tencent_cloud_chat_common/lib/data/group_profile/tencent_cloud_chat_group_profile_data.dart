@@ -243,7 +243,15 @@ class TencentCloudChatGroupProfileData<T> extends TencentCloudChatDataAB<T> {
     if(TencentCloudChatUtils.checkString(groupID) != null){
       final targetList = getGroupMemberList(groupID);
       if(targetList.isNotEmpty){
-        setGroupMemberList(groupID!, targetList.getRange(0, min(targetList.length - 1, 20)).toList());
+        // toxee fix: cap the retained cache at 20 members WITHOUT dropping
+        // anyone in small groups. The upstream `length - 1` off-by-one
+        // silently discarded the LAST member on every _cleanGroupData (chat
+        // close/switch); in a 2-member group that could be SELF, after which
+        // loadGroupMemberList's debounce window serves the truncated cache and
+        // _resolveIsGroupAdmin finds no self row -> the @All mention entry
+        // vanishes. Master-detail shells (iPad) hit this constantly because
+        // pane rebinds fire _cleanGroupData between chat opens.
+        setGroupMemberList(groupID!, targetList.getRange(0, min(targetList.length, 20)).toList());
       }
     }
   }
