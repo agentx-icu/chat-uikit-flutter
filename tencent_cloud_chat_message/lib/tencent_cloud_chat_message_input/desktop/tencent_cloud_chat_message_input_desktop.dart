@@ -311,10 +311,14 @@ class _TencentCloudChatMessageInputDesktopState
         return (label: targetMemberLabel, userID: e.userID);
       })));
       _textEditingFocusNode.requestFocus();
-    } else if (!TencentCloudChatUtils.deepEqual(
-            widget.inputData.membersNeedToMention,
+    } else if (!identical(widget.inputData.membersNeedToMention,
             oldWidget.inputData.membersNeedToMention) &&
         widget.inputData.membersNeedToMention != null) {
+      // toxee: `membersNeedToMention` is an EVENT — the layout container hands
+      // the composer a fresh list per panel selection and never clears it.
+      // Comparing by value ignored a second selection of the same member
+      // (identical list contents) and silently inserted nothing; comparing by
+      // identity consumes every selection exactly once.
       _addMentionedUsers(
           groupMembersInfo: widget.inputData.membersNeedToMention);
     }
@@ -739,17 +743,32 @@ class _TencentCloudChatMessageInputDesktopState
   }
 
   void _replaceAtTag(String selectedMember) {
-    int cursorPosition = _textEditingController.selection.baseOffset;
+    // toxee: the selection is NOT guaranteed valid here. Tapping a row of the
+    // mention panel can move focus off the field, and a programmatic
+    // `controller.text = …` leaves the selection at -1; the old code then
+    // called `lastIndexOf('@', -2)`, which throws RangeError inside the
+    // gesture callback and inserts nothing. Fall back to the caret at the end
+    // of the text and to the LAST '@' in the text.
+    final text = _textEditingController.text;
+    final selection = _textEditingController.selection;
+    final hasCursor = selection.isValid &&
+        selection.baseOffset >= 0 &&
+        selection.baseOffset <= text.length;
+    final cursorPosition = hasCursor ? selection.baseOffset : text.length;
     int atIndex =
-        _textEditingController.text.lastIndexOf('@', cursorPosition - 1);
-    if (atIndex >= 0) {
-      String beforeAt = _textEditingController.text.substring(0, atIndex);
-      String afterAt = _textEditingController.text.substring(cursorPosition);
-      _textEditingController.text = '$beforeAt@$selectedMember $afterAt';
-      _textEditingController.selection =
-          TextSelection.collapsed(offset: atIndex + selectedMember.length + 2);
-      _inputText = '$beforeAt@$selectedMember $afterAt';
-    }
+        cursorPosition > 0 ? text.lastIndexOf('@', cursorPosition - 1) : -1;
+    if (atIndex < 0) atIndex = text.lastIndexOf('@');
+    if (atIndex < 0) return;
+    final replaceEnd = cursorPosition > atIndex ? cursorPosition : text.length;
+    final beforeAt = text.substring(0, atIndex);
+    final afterAt = text.substring(replaceEnd);
+    final updated = '$beforeAt@$selectedMember $afterAt';
+    _textEditingController.value = TextEditingValue(
+      text: updated,
+      selection:
+          TextSelection.collapsed(offset: atIndex + selectedMember.length + 2),
+    );
+    _inputText = updated;
   }
 
   void _handleMentionUser(V2TimGroupMemberFullInfo memberFullInfo) {
