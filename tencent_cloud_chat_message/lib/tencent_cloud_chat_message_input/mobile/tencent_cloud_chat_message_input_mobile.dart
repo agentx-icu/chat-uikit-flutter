@@ -235,7 +235,7 @@ class _TencentCloudChatMessageInputMobileState
 
     if (!draftContextChanged &&
         widget.inputData.specifiedMessageText !=
-        oldWidget.inputData.specifiedMessageText) {
+            oldWidget.inputData.specifiedMessageText) {
       _draftCoordinator.invalidateLoad();
       _textEditingController.text = widget.inputData.specifiedMessageText ?? "";
       _mentionedUsers.clear();
@@ -409,11 +409,20 @@ class _TencentCloudChatMessageInputMobileState
         Tooltip.dismissAllToolTips();
       });
     } else {
-      RenderBox trashIconBox =
-          trashIconKey.currentContext?.findRenderObject() as RenderBox;
-      final boxHitTestResult = BoxHitTestResult();
-      bool isOverTrashIcon = trashIconBox.hitTest(boxHitTestResult,
-          position: trashIconBox.globalToLocal(event.position));
+      // toxee fix: the trash key now lives on the recording State (it was a
+      // module-level GlobalKey shared across instances — duplicate-key tree
+      // corruption when two inputs coexist a frame). Reach it through our
+      // own recording instance, and treat an unmounted icon as "not over
+      // trash" instead of crashing on a null cast.
+      final trashIconObject = _recordingWidgetKey
+          .currentState?.trashIconKey.currentContext
+          ?.findRenderObject();
+      var isOverTrashIcon = false;
+      if (trashIconObject is RenderBox) {
+        final boxHitTestResult = BoxHitTestResult();
+        isOverTrashIcon = trashIconObject.hitTest(boxHitTestResult,
+            position: trashIconObject.globalToLocal(event.position));
+      }
       safeSetState(() {
         _isRecording = false;
       });
@@ -530,7 +539,8 @@ class _TencentCloudChatMessageInputMobileState
                   TencentCloudChatUtils.checkString(targetMember.nickName) ??
                   targetMember.userID;
 
-          mentioned.add((label: targetMemberLabel, userID: targetMember.userID));
+          mentioned
+              .add((label: targetMemberLabel, userID: targetMember.userID));
           return "@$targetMemberLabel ";
         }).toList();
         final mentionText = mentionTextList.join();

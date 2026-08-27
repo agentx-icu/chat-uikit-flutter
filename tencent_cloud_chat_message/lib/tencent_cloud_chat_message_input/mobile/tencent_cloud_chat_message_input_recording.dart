@@ -12,8 +12,6 @@ import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 
-GlobalKey trashIconKey = GlobalKey();
-
 class RecordInfo {
   final String path;
   final int duration;
@@ -42,6 +40,15 @@ class TencentCloudChatMessageInputRecording extends StatefulWidget {
 class TencentCloudChatMessageInputRecordingState
     extends TencentCloudChatState<TencentCloudChatMessageInputRecording>
     with SingleTickerProviderStateMixin {
+  /// toxee fix: this was a MODULE-LEVEL GlobalKey shared by every recording
+  /// instance — the moment two message inputs coexist for one frame (fast
+  /// conversation switch, route transition), Flutter reported "Duplicate
+  /// GlobalKey detected", silently corrupted the element tree, and the next
+  /// structural rebuild (e.g. logout) died on framework asserts with the
+  /// whole app replaced by an ErrorWidget. Per-State keys cannot collide;
+  /// the input reaches it via _recordingWidgetKey.currentState.
+  final GlobalKey trashIconKey = GlobalKey();
+
   late AnimationController _shakeAnimationController;
   bool _isRecording = false;
   double _recordingProgress = 0.0;
