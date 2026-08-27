@@ -35,20 +35,24 @@ class TencentCloudChatAtGroupMemberList extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatAtGroupMemberListState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatAtGroupMemberListState();
 }
 
-class TencentCloudChatAtGroupMemberListState extends TencentCloudChatState<TencentCloudChatAtGroupMemberList> {
+class TencentCloudChatAtGroupMemberListState
+    extends TencentCloudChatState<TencentCloudChatAtGroupMemberList> {
   final List<V2TimGroupMemberFullInfo> selectMembers = [];
 
-  void _onSelectGroupMember(bool isSelect, V2TimGroupMemberFullInfo memberFullInfo) {
+  void _onSelectGroupMember(
+      bool isSelect, V2TimGroupMemberFullInfo memberFullInfo) {
     if (isSelect) {
       selectMembers.add(memberFullInfo);
       if (memberFullInfo.userID == SDKConst.sdkAtAllUserID) {
         _submitAtMemberList();
       }
     } else {
-      selectMembers.removeWhere((element) => element.userID == memberFullInfo.userID);
+      selectMembers
+          .removeWhere((element) => element.userID == memberFullInfo.userID);
     }
   }
 
@@ -129,6 +133,11 @@ class TencentCloudChatAtGroupMemberListState extends TencentCloudChatState<Tence
                   child: TencentCloudChatGroupProfileMemberListAzList(
                     groupInfo: widget.groupInfo,
                     memberInfoList: widget.memberInfoList,
+                    // toxee: forward the admin verdict the container resolved.
+                    // Dropping it here left the AzList on its `true` default,
+                    // so the desktopBuilder and defaultBuilder disagreed about
+                    // who may @All.
+                    isGroupAdmin: widget.isGroupAdmin,
                     onSelectGroupMember: _onSelectGroupMember,
                   ),
                 ))));
@@ -139,7 +148,8 @@ class TencentCloudChatGroupProfileMemberListAzList extends StatefulWidget {
   final V2TimGroupInfo groupInfo;
   final List<V2TimGroupMemberFullInfo> memberInfoList;
   final bool isGroupAdmin;
-  final Function(bool isSelect, V2TimGroupMemberFullInfo memberFullInfo) onSelectGroupMember;
+  final Function(bool isSelect, V2TimGroupMemberFullInfo memberFullInfo)
+      onSelectGroupMember;
 
   const TencentCloudChatGroupProfileMemberListAzList({
     Key? key,
@@ -150,11 +160,13 @@ class TencentCloudChatGroupProfileMemberListAzList extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatGroupProfileMemberListAzListState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatGroupProfileMemberListAzListState();
 }
 
 class TencentCloudChatGroupProfileMemberListAzListState
-    extends TencentCloudChatState<TencentCloudChatGroupProfileMemberListAzList> {
+    extends TencentCloudChatState<
+        TencentCloudChatGroupProfileMemberListAzList> {
   List<ISuspensionBeanImpl> list = [];
 
   @override
@@ -168,7 +180,9 @@ class TencentCloudChatGroupProfileMemberListAzListState
     for (var i = 0; i < widget.memberInfoList.length; i++) {
       final item = widget.memberInfoList[i];
       String showName = widget.memberInfoList[i].userID;
-      if (TencentCloudChatUtils.checkString(widget.memberInfoList[i].nickName) != null) {
+      if (TencentCloudChatUtils.checkString(
+              widget.memberInfoList[i].nickName) !=
+          null) {
         showName = widget.memberInfoList[i].nickName!;
       }
 
@@ -183,11 +197,12 @@ class TencentCloudChatGroupProfileMemberListAzListState
     }
     SuspensionUtil.sortListBySuspensionTag(showList);
     // add @everyone item — admin/owner only (parity with the desktop inline
-    // mention, which gates @All on isGroupAdmin; mobile previously offered @All
-    // to every member regardless of role).
-    final canAtGroupType = ["Work", "Public", "Meeting"];
-    if (widget.isGroupAdmin &&
-        canAtGroupType.contains(widget.groupInfo.groupType)) {
+    // mention, which gates @All on isGroupAdmin and on NOTHING else; mobile
+    // previously also required groupType ∈ {Work, Public, Meeting}, a
+    // Tencent-IM taxonomy that toxee's lowercase types ('group', 'public',
+    // 'conference', …) can never satisfy — @All was unreachable on mobile for
+    // EVERY toxee group while the desktop panel offered it freely.
+    if (widget.isGroupAdmin) {
       showList.insert(
           0,
           ISuspensionBeanImpl(
@@ -219,7 +234,8 @@ class TencentCloudChatGroupProfileMemberListAzListState
         );
       },
       indexBarData: SuspensionUtil.getTagIndexList(list),
-      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      physics:
+          const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       susItemBuilder: (context, index) {
         ISuspensionBeanImpl tag = list[index];
         if (tag.getSuspensionTag() == "") {
@@ -241,10 +257,14 @@ class TencentCloudChatGroupProfileMemberListItem extends StatefulWidget {
   final Function(bool isSelect) onSelectGroupMember;
 
   const TencentCloudChatGroupProfileMemberListItem(
-      {super.key, required this.memberFullInfo, required this.groupInfo, required this.onSelectGroupMember});
+      {super.key,
+      required this.memberFullInfo,
+      required this.groupInfo,
+      required this.onSelectGroupMember});
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatGroupProfileMemberListItemState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatGroupProfileMemberListItemState();
 }
 
 class TencentCloudChatGroupProfileMemberListItemState
@@ -254,7 +274,8 @@ class TencentCloudChatGroupProfileMemberListItemState
   @override
   Widget defaultBuilder(BuildContext context) {
     String showName = widget.memberFullInfo.userID;
-    if (TencentCloudChatUtils.checkString(widget.memberFullInfo.nickName) != null) {
+    if (TencentCloudChatUtils.checkString(widget.memberFullInfo.nickName) !=
+        null) {
       showName = widget.memberFullInfo.nickName!;
     }
 
@@ -296,7 +317,8 @@ class TencentCloudChatGroupProfileMemberListItemState
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(50),
                           ),
-                          side: BorderSide(width: 1, color: colorTheme.primaryTextColor),
+                          side: BorderSide(
+                              width: 1, color: colorTheme.primaryTextColor),
                           onChanged: (bool? value) {
                             isSelected = value ?? false;
                             widget.onSelectGroupMember(isSelected);
@@ -306,7 +328,10 @@ class TencentCloudChatGroupProfileMemberListItemState
                         Padding(
                             padding: EdgeInsets.only(right: getWidth(16)),
                             child: TencentCloudChatAvatar(
-                              imageList: [TencentCloudChatUtils.checkString(widget.memberFullInfo.faceUrl)],
+                              imageList: [
+                                TencentCloudChatUtils.checkString(
+                                    widget.memberFullInfo.faceUrl)
+                              ],
                               width: getSquareSize(40),
                               height: getSquareSize(40),
                               borderRadius: getSquareSize(20),
@@ -315,7 +340,9 @@ class TencentCloudChatGroupProfileMemberListItemState
                         Expanded(
                             child: Text(
                           showName,
-                          style: TextStyle(color: colorTheme.groupProfileTextColor, fontSize: textStyle.fontsize_14),
+                          style: TextStyle(
+                              color: colorTheme.groupProfileTextColor,
+                              fontSize: textStyle.fontsize_14),
                         )),
                       ],
                     ),
@@ -333,7 +360,8 @@ class TencentCloudChatGroupProfileMemberListTag extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => TencentCloudChatGroupProfileMemberListTagState();
+  State<StatefulWidget> createState() =>
+      TencentCloudChatGroupProfileMemberListTagState();
 }
 
 class TencentCloudChatGroupProfileMemberListTagState
