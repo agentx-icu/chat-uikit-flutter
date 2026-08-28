@@ -147,6 +147,11 @@ class _TencentCloudChatMessageHeaderContainerState
   }
 
   _startVideoCall() async {
+    // toxee diag: which handler a header tap actually fired (video-vs-voice
+    // adjacency hunt on Android).
+    TencentCloudChat.instance.logInstance.console(
+        componentName: 'MessageHeaderContainer',
+        logs: 'startVideoCall tapped (userID=${widget.userID})');
     final useCallKit = TencentCloudChat.instance.dataInstance.basic.useCallKit;
     if (useCallKit) {
       if (TencentCloudChatUtils.checkString(widget.groupID) != null) {
@@ -176,6 +181,9 @@ class _TencentCloudChatMessageHeaderContainerState
   }
 
   _startVoiceCall() async {
+    TencentCloudChat.instance.logInstance.console(
+        componentName: 'MessageHeaderContainer',
+        logs: 'startVoiceCall tapped (userID=${widget.userID})');
     final useCallKit = TencentCloudChat.instance.dataInstance.basic.useCallKit;
     if (useCallKit) {
       if (TencentCloudChatUtils.checkString(widget.groupID) != null) {
