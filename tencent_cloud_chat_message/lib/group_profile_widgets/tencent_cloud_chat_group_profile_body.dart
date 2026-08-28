@@ -489,6 +489,9 @@ class TencentCloudChatGroupProfileChatButtonState
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    // toxee automation anchor (mirrors the friend-profile tiles): lets real-UI
+    // drives tap a SPECIFIC tile instead of the row wrapper's center.
+    Key? tileKey,
   }) {
     return TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => Material(
@@ -509,6 +512,7 @@ class TencentCloudChatGroupProfileChatButtonState
                 child: Material(
                     color: Colors.transparent,
                     child: InkWell(
+                      key: tileKey,
                       onTap: onTap,
                       borderRadius: BorderRadius.circular(getSquareSize(12)),
                       child: Container(
@@ -550,6 +554,8 @@ class TencentCloudChatGroupProfileChatButtonState
               children: [
                 Expanded(
                   child: _buildClickableItem(
+                      tileKey:
+                          const ValueKey('group_profile_send_message_tile'),
                       icon: Icons.message_rounded,
                       label: tL10n.sendMsg,
                       onTap: () {
