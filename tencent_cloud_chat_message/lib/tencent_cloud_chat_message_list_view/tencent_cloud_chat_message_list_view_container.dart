@@ -25,6 +25,20 @@ class TencentCloudChatMessageListViewContainer extends StatefulWidget {
 
 class _TencentCloudChatMessageListViewContainerState extends TencentCloudChatState<TencentCloudChatMessageListViewContainer> {
   List<V2TimMessage> _messageList = [];
+
+  /// toxee: VALUE snapshot of each rendered row's isPeerRead, taken whenever
+  /// [_messageList] is (re)assigned. The change detection below cannot rely
+  /// on comparing message objects: V2TimMessage.operator== ignores
+  /// isPeerRead, and several data-layer paths mutate the SAME instances this
+  /// state already holds — either way "previous" equals "next" and the pane
+  /// never repaints a read-receipt flip (the own-bubble ✓ froze until a
+  /// conversation rebind reloaded history; recorded desktop master-detail
+  /// gap). A primitive-value snapshot is immune to both aliasing and the
+  /// blind equality.
+  List<bool?> _renderedPeerRead = const [];
+
+  List<bool?> _peerReadSnapshot(List<V2TimMessage> list) =>
+      list.map((m) => m.isPeerRead).toList(growable: false);
   Stream<TencentCloudChatMessageData<dynamic>>? _messageDataStream = TencentCloudChat.instance.eventBusInstance.on<TencentCloudChatMessageData>("TencentCloudChatMessageData");
   late StreamSubscription<TencentCloudChatMessageData<dynamic>>? _messageDataSubscription;
   late TencentCloudChatMessageSeparateDataProvider dataProvider;
@@ -91,6 +105,7 @@ class _TencentCloudChatMessageListViewContainerState extends TencentCloudChatSta
               // Create a new list instance to ensure Flutter detects the change
               // This is important for FlutterListView to detect new items
               _messageList = List<V2TimMessage>.from(nextList);
+              _renderedPeerRead = _peerReadSnapshot(_messageList);
             });
           } else {
             // Message not found in _messageList - it may have been just added
@@ -115,6 +130,7 @@ class _TencentCloudChatMessageListViewContainerState extends TencentCloudChatSta
                 // Create a new list instance to ensure Flutter detects the change
                 // This is important for FlutterListView to detect new items
                 _messageList = List<V2TimMessage>.from(nextList);
+              _renderedPeerRead = _peerReadSnapshot(_messageList);
               });
             });
           }
@@ -140,6 +156,19 @@ class _TencentCloudChatMessageListViewContainerState extends TencentCloudChatSta
           if (!listsAreDifferent) {
             // If lengths are same, check content using deepEqual
             listsAreDifferent = !TencentCloudChatUtils.deepEqual(previousList, nextList);
+          }
+          // toxee: compare against the VALUE snapshot taken at the last
+          // repaint (see [_renderedPeerRead]) — object comparison is blind
+          // here (equality ignores isPeerRead; mutation aliases previous and
+          // next). Both lists are newest-first, so pairwise index comparison
+          // is sound at equal length.
+          if (!listsAreDifferent && _renderedPeerRead.length == nextList.length) {
+            for (var i = 0; i < nextList.length; i++) {
+              if (_renderedPeerRead[i] != nextList[i].isPeerRead) {
+                listsAreDifferent = true;
+                break;
+              }
+            }
           }
           if (listsAreDifferent) {
             // Only scroll to bottom when the newest message changed (new message or send),
@@ -310,6 +339,7 @@ class _TencentCloudChatMessageListViewContainerState extends TencentCloudChatSta
               // Create a new list instance to ensure Flutter detects the change
               // This is important for FlutterListView to detect new items
               _messageList = List<V2TimMessage>.from(nextList);
+              _renderedPeerRead = _peerReadSnapshot(_messageList);
               _haveMoreLatestData = dataProvider.haveMoreLatestData;
               _haveMorePreviousData = dataProvider.haveMorePreviousData;
             });
@@ -393,6 +423,7 @@ class _TencentCloudChatMessageListViewContainerState extends TencentCloudChatSta
         messageListKey: TencentCloudChatUtils.checkString(widget.topicID) ?? TencentCloudChatUtils.checkString(widget.groupID) ?? widget.userID,
       );
       _messageList = nextList;
+      _renderedPeerRead = _peerReadSnapshot(_messageList);
       _haveMoreLatestData = dataProvider.haveMoreLatestData;
       _haveMorePreviousData = dataProvider.haveMorePreviousData;
     });

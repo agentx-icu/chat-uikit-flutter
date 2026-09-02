@@ -39,8 +39,16 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
   // A flag indicating whether the message was in a group.
   bool isGroupMessage = false;
 
-  // A flag indicting whether the message was read by others.
-  bool showReadByOthersStatus = false;
+  // toxee: whether the message was read by others — computed LIVE from the
+  // current widget data on every read. This used to be a state field set in
+  // initState/didUpdateWidget, which froze the ✓ tick whenever the receipt
+  // flip reached the row instance without a fresh widget config (V2TimMessage
+  // equality ignores isPeerRead, so ancestors often skip rebuilding): the
+  // bubble then showed "sent" forever while the data already said peer-read.
+  bool get showReadByOthersStatus => isGroupMessage
+      ? (widget.data.messageReceipt != null &&
+          (widget.data.messageReceipt!.readCount ?? 0) > 0)
+      : (widget.data.message.isPeerRead ?? false);
 
   final isDesktopScreen = TencentCloudChatScreenAdapter.deviceScreenType == DeviceScreenType.desktop;
   // log for this components
@@ -319,7 +327,7 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
     super.initState();
     sentFromSelf = widget.data.message.isSelf ?? false;
     isGroupMessage = TencentCloudChatUtils.checkString(widget.data.message.groupID) != null;
-    showReadByOthersStatus = isGroupMessage ? (widget.data.messageReceipt != null && (widget.data.messageReceipt!.readCount ?? 0) > 0) : (widget.data.message.isPeerRead ?? false);
+    // showReadByOthersStatus is now a live getter — nothing to cache here.
 
     // Start the message highlighting animation if the message should be highlighted.
     if (widget.data.shouldBeHighlighted) {
@@ -341,7 +349,7 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
 
     sentFromSelf = widget.data.message.isSelf ?? false;
     isGroupMessage = TencentCloudChatUtils.checkString(widget.data.message.groupID) != null;
-    showReadByOthersStatus = isGroupMessage ? (widget.data.messageReceipt != null && (widget.data.messageReceipt!.readCount ?? 0) > 0) : (widget.data.message.isPeerRead ?? false);
+    // showReadByOthersStatus is now a live getter — nothing to cache here.
   }
 
 }

@@ -60,7 +60,17 @@ class _TencentCloudChatMessageRowContainerState extends TencentCloudChatState<Te
   @override
   void didUpdateWidget(covariant TencentCloudChatMessageRowContainer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.message != _message && widget.message != oldWidget.message) {
+    // toxee: compare by IDENTITY, not by V2TimMessage.== — that equality
+    // covers only msgID+id+status, so a fresh instance whose only change is
+    // isPeerRead (the read-receipt ✓ -> ✓✓ flip) compared "equal" to the
+    // cached _message, this guard skipped the refresh, and the row kept
+    // rendering the stale pre-receipt instance forever (the final blocker
+    // behind the frozen single tick — the data layer, list container, and
+    // bubble getter were all already correct). A parent that passes a NEW
+    // instance means the row content changed; taking it cannot clobber a
+    // local messageNeedUpdate refresh with stale data, because the parent's
+    // list is refreshed from the same store before it rebuilds this row.
+    if (!identical(widget.message, oldWidget.message)) {
       _message = widget.message;
     }
   }
@@ -301,7 +311,17 @@ class _TencentCloudChatMessageRowContainerState extends TencentCloudChatState<Te
             return Container();
           }
 
-          if (sendingMessageData?.message != null && sendingMessageData?.message.msgID == _message.msgID) {
+          // toxee: adopt the send-progress copy ONLY while the send is still
+          // in flight. This cache holds the SEND-ERA instance (isPeerRead
+          // null) and is never evicted on completion, so the old
+          // unconditional assignment re-clobbered _message with that stale
+          // copy on EVERY rebuild — silently undoing the read-receipt flip
+          // the moment it arrived (the true writer behind the frozen single
+          // tick; every upstream layer was already handing down the fresh
+          // row).
+          if (sendingMessageData?.message != null &&
+              sendingMessageData?.message.msgID == _message.msgID &&
+              !(sendingMessageData?.isSendComplete ?? true)) {
             _message = sendingMessageData!.message;
           }
 

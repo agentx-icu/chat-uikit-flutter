@@ -582,20 +582,84 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
   }
 
   // Callback for receiving c2c message read receipts.
+  // toxee: REPLACE the flipped rows instead of mutating them in place. The
+  // open chat's list container decides whether to setState by comparing its
+  // previously rendered list against this map with an identity-based
+  // DeepCollectionEquality (V2TimMessage does not override ==), and both
+  // lists hold the SAME element instances — an in-place
+  // `element.isPeerRead = true` therefore mutated "previous" and "next"
+  // simultaneously, the comparison saw no difference, and the mounted
+  // message list never rebuilt: the own-bubble single tick only flipped to
+  // ✓✓ after a conversation rebind reloaded history (desktop master-detail
+  // pane; mobile hid it by re-pushing the chat route). A fresh instance per
+  // flipped row makes the change visible to that comparison, so the open
+  // pane refreshes live on every platform.
+  /// toxee: C2C peer-read watermark per conversation (userID -> newest
+  /// receipt timestamp, seconds). A receipt can arrive BEFORE the just-sent
+  /// row lands in [_messageListMap] (the row insertion rides an async stream
+  /// hop), in which case the flip loop below finds nothing and no later
+  /// receipt ever comes for that row — the bubble froze at the single tick
+  /// (reproduced deterministically in the p1 sweep's recall->receipt
+  /// adjacency). [onReceiveNewMessage] consults this watermark when a SELF
+  /// row is inserted, so whichever side of the race runs last applies the
+  /// truth — the same conversation-level c2cReadTimestamp semantics the
+  /// stock SDK uses.
+  final Map<String, int> _c2cPeerReadWatermark = {};
+
   void onReceiveC2CMessageReadReceipts(List<V2TimMessageReceipt> receiptList) {
     try {
       for (var receipt in receiptList) {
         final userID = receipt.userID;
+        final receiptTs = receipt.timestamp ?? 0;
+        if (TencentCloudChatUtils.checkString(userID) != null &&
+            receiptTs > 0 &&
+            receiptTs > (_c2cPeerReadWatermark[userID!] ?? 0)) {
+          _c2cPeerReadWatermark[userID] = receiptTs;
+        }
         final messageList = _messageListMap[userID];
         final isNotEmpty = messageList?.isNotEmpty ?? false;
         if (isNotEmpty) {
-          for (V2TimMessage element in messageList!) {
+          for (var i = 0; i < messageList!.length; i++) {
+            final element = messageList[i];
             final isSelf = element.isSelf ?? true;
             final isPeerRead = element.isPeerRead ?? false;
+            // Revoked/deleted rows can never become peer-read — and a recall
+            // tombstone's synthesized field mix is exactly the kind of row a
+            // toJson/fromJson clone chokes on. One throwing row must not
+            // abort the flip for the WHOLE conversation (that would freeze
+            // every later bubble at the single tick after any recall), so
+            // tombstones are skipped and the clone is guarded per row.
+            if (element.status ==
+                    MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED ||
+                element.status == MessageStatus.V2TIM_MSG_STATUS_HAS_DELETED) {
+              continue;
+            }
+            // Bound the flip by the receipt's timestamp (codex): a delayed
+            // receipt for an OLD row must not mark a NEWER unread row. Same
+            // second-granular coarseness as the stock SDK's c2cReadTimestamp
+            // semantics; the data layer stays row-exact via hash matching.
+            if (receiptTs > 0 && (element.timestamp ?? 0) > receiptTs) {
+              continue;
+            }
             if (isSelf && !isPeerRead) {
-              element.isPeerRead = true;
+              try {
+                final updated = V2TimMessage.fromJson(element.toJson());
+                updated.isPeerRead = true;
+                messageList[i] = updated;
+              } catch (_) {
+                // Per-row fallback: flip in place — the unconditional notify
+                // below plus the container's isPeerRead drift check still
+                // repaint it.
+                element.isPeerRead = true;
+              }
             }
           }
+          // Notify even when this loop found nothing to flip: the row may
+          // have entered the map already peer-read (the receipt-updated copy
+          // re-delivered through onReceiveNewMessage), with the mounted
+          // bubble still showing its pre-receipt state — the list
+          // container's isPeerRead drift check decides whether a rebuild is
+          // actually needed.
           updateMessageList(messageList: messageList, userID: userID);
         }
       }
@@ -718,7 +782,8 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
     if (locallyRevokedKeys.isNotEmpty && messageList.isNotEmpty) {
       final currentUser =
           TencentCloudChat.instance.dataInstance.basic.currentUser;
-      for (final element in messageList) {
+      for (var i = 0; i < messageList.length; i++) {
+        final element = messageList[i];
         if (element.status == MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED) {
           continue;
         }
@@ -728,8 +793,19 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
             (msgID != null && msgID.isNotEmpty && locallyRevokedKeys.contains(msgID)) ||
                 (id != null && id.isNotEmpty && locallyRevokedKeys.contains(id));
         if (revoked) {
-          element.status = MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED;
-          element.revokerInfo ??= currentUser;
+          // REPLACE, never mutate in place: the open pane's list container
+          // decides whether to setState by comparing its previously rendered
+          // list against this read with identity-based equality (V2TimMessage
+          // has no ==), and the pane's copy holds these SAME instances — an
+          // in-place status flip changed "previous" and "next" together, the
+          // comparison saw nothing, and the original bubble stayed rendered
+          // (the flaky missing-tombstone on recall). A fresh instance makes
+          // the flip visible to that comparison. Same discipline as
+          // onReceiveC2CMessageReadReceipts.
+          final updated = V2TimMessage.fromJson(element.toJson());
+          updated.status = MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED;
+          updated.revokerInfo = element.revokerInfo ?? currentUser;
+          messageList[i] = updated;
         }
       }
     }
@@ -823,8 +899,42 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
 
   /// Callback for receiving message was recalled
   /// function(V2TimMessage)
-  void onReceiveMessageRecalled(String msgID) async {
-    // replaced with onRecvMessageRevokedWithInfo
+  ///
+  /// toxee: NOT dead code. Tim2Tox's platform fan-out fires only this PLAIN
+  /// variant (a Tox `__revoke__` carries no operator profile, so it cannot
+  /// build the WithInfo payload). Leaving it a no-op meant a peer-recalled
+  /// bubble in an OPEN chat never tombstoned live — the data deletion landed
+  /// but the pane only caught up on a reload (recorded real-UI gap). Resolve
+  /// the row from the in-memory map (no findMessages round-trip: the platform
+  /// deletes the persisted copy in a racing microtask) and run the same
+  /// LOCAL_REVOKED → messageNeedUpdate pipeline as the WithInfo variant,
+  /// minus the operator info this transport does not have.
+  void onReceiveMessageRecalled(String msgID) {
+    if (TencentCloudChatUtils.checkString(msgID) == null) return;
+    try {
+      for (final entry in _messageListMap.entries) {
+        final list = entry.value;
+        final index = list.indexWhere((element) =>
+            element.msgID == msgID ||
+            (TencentCloudChatUtils.checkString(element.id) != null &&
+                element.id == msgID));
+        if (index == -1) continue;
+        // REPLACE, never mutate: see onReceiveC2CMessageReadReceipts.
+        final updated = V2TimMessage.fromJson(list[index].toJson());
+        updated.status = MessageStatus.V2TIM_MSG_STATUS_LOCAL_REVOKED;
+        list[index] = updated;
+        updateMessageList(
+          userID: TencentCloudChatUtils.checkString(updated.groupID) == null
+              ? entry.key
+              : null,
+          groupID: TencentCloudChatUtils.checkString(updated.groupID),
+          messageList: list,
+          disableNotify: true,
+        );
+        messageNeedUpdate = updated;
+        break;
+      }
+    } catch (_) {}
   }
 
   void onRecvMessageRevokedWithInfo(String msgID, V2TimUserFullInfo operateUser, String reason) async {
@@ -869,6 +979,20 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
       return;
     }
     
+    // toxee: apply the C2C peer-read watermark to a SELF row entering the
+    // map. The row insertion can lose the race against the peer's read
+    // receipt (see [_c2cPeerReadWatermark]); consulting the watermark here
+    // makes the outcome order-independent.
+    if (newMessage.isSelf == true &&
+        newMessage.isPeerRead != true &&
+        TencentCloudChatUtils.checkString(newMessage.groupID) == null) {
+      final watermark = _c2cPeerReadWatermark[conversationID] ?? 0;
+      final ts = newMessage.timestamp ?? 0;
+      if (watermark > 0 && ts > 0 && ts <= watermark) {
+        newMessage.isPeerRead = true;
+      }
+    }
+
     List<V2TimMessage> messageList = getMessageList(key: conversationID);
 
     // Check if the message list already contains the new message.

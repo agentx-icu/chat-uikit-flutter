@@ -120,6 +120,22 @@ class _TencentCloudChatMessageItemWithMenuContainerState
   }
 
   @override
+  void didUpdateWidget(covariant TencentCloudChatMessageItemWithMenuContainer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // toxee: this layer cached widget.message in initState and never
+    // refreshed it on a parent rebuild, so a row whose isPeerRead flipped
+    // upstream (the read-receipt ✓ -> ✓✓) kept rendering the initState-era
+    // instance forever — the last cache in the chain behind the frozen
+    // single tick. Identity comparison, not V2TimMessage.== (which ignores
+    // isPeerRead): a parent that passes a NEW instance means the row
+    // changed. The local messageNeedUpdate refresh path is unaffected — the
+    // parent's list is refreshed from the same store before it rebuilds us.
+    if (!identical(widget.message, oldWidget.message)) {
+      _message = widget.message;
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
     _message = widget.message;
