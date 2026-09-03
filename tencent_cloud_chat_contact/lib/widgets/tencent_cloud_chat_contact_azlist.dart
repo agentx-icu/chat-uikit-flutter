@@ -1,4 +1,6 @@
 import 'package:azlistview_all_platforms/azlistview_all_platforms.dart';
+import 'package:scrollable_positioned_list_for_us/scrollable_positioned_list_for_us.dart';
+import 'package:tencent_cloud_chat_contact/tencent_cloud_chat_contact.dart';
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/data/contact/tencent_cloud_chat_contact_data.dart';
 import 'package:tencent_cloud_chat_common/models/tencent_cloud_chat_models.dart';
@@ -20,6 +22,25 @@ class TencentCloudChatContactAzlist extends StatefulWidget {
 
 class TencentCloudChatContactAzlistState
     extends TencentCloudChatState<TencentCloudChatContactAzlist> {
+  /// Owned by THIS list (ItemScrollController is single-attach), and published
+  /// to the component controller only while mounted so the host app can scroll
+  /// the visible contacts list back to the top.
+  final ItemScrollController _itemScrollController = ItemScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    TencentCloudChatContactManager.controller
+        .registerScrollController(_itemScrollController);
+  }
+
+  @override
+  void dispose() {
+    TencentCloudChatContactManager.controller
+        .unregisterScrollController(_itemScrollController);
+    super.dispose();
+  }
+
   _getShowName(V2TimFriendInfo item) {
     final friendRemark = item.friendRemark ?? "";
     final nickName = item.userProfile?.nickName ?? "";
@@ -115,6 +136,9 @@ class TencentCloudChatContactAzlistState
         .toList();
     return Scrollbar(
         child: AzListView(
+      // Shared with the component controller so the host app can scroll this
+      // list back to the top (bottom-nav re-tap convention).
+      itemScrollController: _itemScrollController,
       physics:
           const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       data: showFriendList,
