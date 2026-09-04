@@ -77,7 +77,10 @@ class _TencentCloudChatMessageRowState
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.max,
-                children: [widget.widgets.messageRowTips ?? Container()],
+                // Flexible: a bare Row child gets UNBOUNDED width, so the tip
+                // sized itself to the WINDOW and overflowed the (narrower)
+                // desktop message pane by ~94 px for a long recall notice.
+                children: [Flexible(child: widget.widgets.messageRowTips ?? Container())],
               )
             : GestureDetector(
                 onTap: widget.data.inSelectMode
@@ -222,7 +225,9 @@ class _TencentCloudChatMessageRowState
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  widget.widgets.messageRowTips ?? Container(),
+                  // Flexible (same as the desktop row): a bare child gets
+                  // unbounded width and can overflow the row.
+                  Flexible(child: widget.widgets.messageRowTips ?? Container()),
                 ],
               )
             : GestureDetector(

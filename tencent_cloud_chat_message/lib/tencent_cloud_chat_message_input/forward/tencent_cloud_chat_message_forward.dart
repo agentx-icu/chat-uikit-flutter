@@ -41,9 +41,16 @@ class _TencentCloudChatMessageForwardState extends TencentCloudChatState<Tencent
   Widget _renderHeader() => TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => Padding(
           padding: EdgeInsets.only(top: getHeight(8), left: getWidth(4), right: getWidth(4)),
-          // Equal-flex side slots keep the title geometrically centered on the
-          // sheet even when the Cancel/Send labels differ in width (zh/ja
-          // locales), on every breakpoint that shares this header.
+          // Three EQUAL, TIGHT slots (Expanded / Expanded / Expanded) keep
+          // the title geometrically centered on the sheet even when the
+          // Cancel/Send labels differ in width (zh/ja locales), on every
+          // breakpoint that shares this header. The middle slot must be
+          // `Expanded`, not `Flexible`: a loose middle slot only takes the
+          // title's intrinsic width, and Flutter's flex layout does NOT hand
+          // its unused share back to the siblings — the trailing slot then
+          // starts right after the title, so "Send" ended up ~1/3-of-width
+          // minus the title width short of the right edge (and the title
+          // sat left of center) on the desktop dialog.
           child: Row(
             children: [
               Expanded(
@@ -65,7 +72,7 @@ class _TencentCloudChatMessageForwardState extends TencentCloudChatState<Tencent
                   ),
                 ),
               ),
-              Flexible(
+              Expanded(
                 child: Text(
                   widget.data.type == TencentCloudChatForwardType.individually
                       ? tL10n.forwardIndividually

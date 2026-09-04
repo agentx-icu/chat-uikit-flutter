@@ -586,24 +586,63 @@ class TencentCloudChatConversationItemContentState
     return wid;
   }
 
-  getDraftWidget(TencentCloudChatTextStyle textStyle,
+  /// The one-line preview beside the status icon: the `[Draft]…` text, the
+  /// group-@ tips and the last-message summary rendered as ONE ellipsized
+  /// rich Text in ONE flex slot.
+  ///
+  /// They used to be three separate bare `Text`s in the preview Row, so any
+  /// of them could push the Row past its bounds: a multi-line composer draft
+  /// laid itself out at its widest line's intrinsic width ("RIGHT OVERFLOWED
+  /// BY 67 PIXELS" on the conversation list), and `[@All] [Someone @ me]`
+  /// could do the same on a narrow phone or at a large text scale. A single
+  /// `Expanded` text cannot — and it keeps the whole width for whichever
+  /// parts exist (the summary is empty whenever a draft exists, see
+  /// TencentCloudChatUtils.getMessageSummary). Newlines and runs of
+  /// whitespace in the draft are collapsed so the preview stays one line.
+  Widget getPreviewWidget(TencentCloudChatTextStyle textStyle,
       TencentCloudChatThemeColors colorTheme) {
-    var draft = getDraftText();
-    Widget draftWidget = draft.isEmpty
-        ? Container()
-        : Text(
-            draft,
-            style: TextStyle(
-              color: colorTheme.conversationItemDraftTextColor,
-              fontSize: textStyle.fontsize_12,
-              fontWeight: FontWeight.w400,
+    final draft = getDraftText().replaceAll(RegExp(r'\s+'), ' ').trim();
+    final atTips = getGroupAtTipsText();
+    final summary = getLastMessageText();
+    if (draft.isEmpty && atTips.isEmpty && summary.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final base = TextStyle(
+      fontSize: textStyle.fontsize_12,
+      fontWeight: FontWeight.w400,
+    );
+    return Expanded(
+      child: Text.rich(
+        TextSpan(children: [
+          if (draft.isNotEmpty)
+            TextSpan(
+              text: draft,
+              style: base.copyWith(
+                  color: colorTheme.conversationItemDraftTextColor),
             ),
-          );
-    return draftWidget;
+          if (atTips.isNotEmpty)
+            TextSpan(
+              text: atTips,
+              style: base.copyWith(
+                  color: colorTheme.conversationItemGroupAtInfoTextColor),
+            ),
+          if (summary.isNotEmpty)
+            TextSpan(
+              text: summary,
+              style: base.copyWith(
+                  color: colorTheme.conversationItemLastMessageTextColor),
+            ),
+        ]),
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
   }
 
-  getLastMessageWidget(TencentCloudChatTextStyle textStyle,
-      TencentCloudChatThemeColors colorTheme) {
+  /// Last-message summary with emoji short-codes expanded; empty when there
+  /// is nothing to show (no message, or a draft takes precedence).
+  String getLastMessageText() {
     final laseMessage = widget.conversation.lastMessage;
     String originalText = TencentCloudChatUtils.getMessageSummary(
       message: laseMessage,
@@ -612,23 +651,9 @@ class TencentCloudChatConversationItemContentState
       draftText: widget.conversation.draftText,
     );
 
-    String replaceText =
-        FaceManager.emojiMap.keys.fold(originalText, (previous, key) {
+    return FaceManager.emojiMap.keys.fold(originalText, (previous, key) {
       return previous.replaceAll(key, FaceManager.emojiMap[key]!);
     });
-
-    return Expanded(
-      child: Text(
-        replaceText,
-        style: TextStyle(
-          fontSize: textStyle.fontsize_12,
-          fontWeight: FontWeight.w400,
-          color: colorTheme.conversationItemLastMessageTextColor,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
   }
 
   int? _getShowAtType(List<V2TimGroupAtInfo> mentionedInfoList) {
@@ -649,15 +674,10 @@ class TencentCloudChatConversationItemContentState
     return atType;
   }
 
-  getGroupAtInfo(TencentCloudChatTextStyle textStyle,
-      TencentCloudChatThemeColors colorTheme) {
-    List<Widget> tips = [];
-
-    var style = TextStyle(
-      color: colorTheme.conversationItemGroupAtInfoTextColor,
-      fontSize: textStyle.fontsize_12,
-      fontWeight: FontWeight.w400,
-    );
+  /// `"[@All] [Someone @ me] "`-style tips for the pending group mentions,
+  /// or an empty string. Rendered inside [getPreviewWidget].
+  String getGroupAtTipsText() {
+    String atTips = '';
     if (widget.conversation.groupAtInfoList != null) {
       if (widget.conversation.groupAtInfoList!.isNotEmpty) {
         List<V2TimGroupAtInfo> mentionedInfoList = [];
@@ -670,7 +690,6 @@ class TencentCloudChatConversationItemContentState
 
         int? atType = _getShowAtType(mentionedInfoList);
         if (atType != null) {
-          String atTips = '';
           switch (atType) {
             case 1:
               atTips = "[${tL10n.atMeTips}] ";
@@ -685,23 +704,10 @@ class TencentCloudChatConversationItemContentState
               print("error: invalid atType!");
               break;
           }
-
-          if (atTips.isNotEmpty) {
-            tips.add(Text(
-              atTips,
-              style: style,
-            ));
-          }
         }
       }
     }
-    if (tips.isNotEmpty) {
-      return Row(
-        children: tips,
-      );
-    } else {
-      return Container();
-    }
+    return atTips;
   }
 
   @override
@@ -712,9 +718,7 @@ class TencentCloudChatConversationItemContentState
       child:
           TencentCloudChatThemeWidget(build: (context, colorTheme, textStyle) {
         Widget status = getLastMessageStatus(colorTheme);
-        Widget draft = getDraftWidget(textStyle, colorTheme);
-        Widget lastMessage = getLastMessageWidget(textStyle, colorTheme);
-        Widget mentionedInfo = getGroupAtInfo(textStyle, colorTheme);
+        Widget preview = getPreviewWidget(textStyle, colorTheme);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.max,
@@ -736,10 +740,8 @@ class TencentCloudChatConversationItemContentState
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                draft,
                 status,
-                mentionedInfo,
-                lastMessage,
+                preview,
               ],
             )
           ],
@@ -756,9 +758,7 @@ class TencentCloudChatConversationItemContentState
       child:
           TencentCloudChatThemeWidget(build: (context, colorTheme, textStyle) {
         Widget status = getLastMessageStatus(colorTheme);
-        Widget draft = getDraftWidget(textStyle, colorTheme);
-        Widget lastMessage = getLastMessageWidget(textStyle, colorTheme);
-        Widget mentionedInfo = getGroupAtInfo(textStyle, colorTheme);
+        Widget preview = getPreviewWidget(textStyle, colorTheme);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.max,
@@ -777,10 +777,8 @@ class TencentCloudChatConversationItemContentState
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                draft,
                 status,
-                mentionedInfo,
-                lastMessage,
+                preview,
               ],
             )
           ],

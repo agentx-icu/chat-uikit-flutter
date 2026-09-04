@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
@@ -25,7 +26,7 @@ class _TencentCloudChatMessageTipsCommonState extends TencentCloudChatState<Tenc
   Widget defaultBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(
       build: (context, colorTheme, textStyle) => TencentCloudChatUtils.checkString(widget.text) != null
-          ? Container(
+          ? LayoutBuilder(builder: (context, constraints) => Container(
               margin: EdgeInsets.symmetric(vertical: getSquareSize(4), horizontal: getSquareSize(4)),
               padding: EdgeInsets.symmetric(vertical: getSquareSize(4), horizontal: getSquareSize(8)),
               decoration: BoxDecoration(
@@ -33,8 +34,19 @@ class _TencentCloudChatMessageTipsCommonState extends TencentCloudChatState<Tenc
                 borderRadius: BorderRadius.all(Radius.circular(getSquareSize(16))),
               ),
               constraints: BoxConstraints(
-                // margin(horizontal) x 2 + padding(horizontal) x 2
-                maxWidth: MediaQuery.of(context).size.width - getSquareSize(24),
+                // Cap to the PANE this tip is laid out in (the message row wraps
+                // it in Flexible, so the constraint is bounded), minus the
+                // horizontal margin (constraints apply outside the padding but
+                // inside the margin). The old window-wide cap let a long recall
+                // notice overflow the narrower desktop pane by ~94 px
+                // (Windows real-UI screenshot, 2026-09-04).
+                maxWidth: math.max(
+                  0.0,
+                  (constraints.hasBoundedWidth
+                          ? constraints.maxWidth
+                          : MediaQuery.sizeOf(context).width) -
+                      getSquareSize(8),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -67,7 +79,7 @@ class _TencentCloudChatMessageTipsCommonState extends TencentCloudChatState<Tenc
                     )
                 ],
               ),
-            )
+            ))
           : Container(),
     );
   }

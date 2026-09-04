@@ -46,6 +46,26 @@ abstract class ChatMessageProviderWithSendResult extends ChatMessageProvider {
     required String text,
     String? clientMessageID,
   });
+
+  /// Media twin of [sendTextWithResult]: the identity + pending state of the
+  /// local echo the transport produced for this image, so the caller can
+  /// reconcile its optimistic (`created_temp_id-*`) message with the echo
+  /// that arrives on the message stream instead of showing both. `null`
+  /// means the transport produced no echo (nothing to reconcile).
+  Future<ChatMessageSendResult?> sendImageWithResult({
+    String? userID,
+    String? groupID,
+    required String imagePath,
+    String? imageName,
+  });
+
+  /// See [sendImageWithResult].
+  Future<ChatMessageSendResult?> sendFileWithResult({
+    String? userID,
+    String? groupID,
+    required String filePath,
+    String? fileName,
+  });
 }
 
 /// Optional account-scoped storage used by UIKit for regenerable media files.
