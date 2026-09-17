@@ -704,5 +704,13 @@
   "inviteToGroupFrom": "来自{inviter}的邀请",
   "applyToJoin": "申请加入:",
   "requestWait": "邀请成功，等待处理",
-  "dismissGroupTips": "您所在的群 {groupName} 已解散"
+  "dismissGroupTips": "您所在的群 {groupName} 已解散",
+  "reactionList": "回应列表",
+  "toxIdCopied": "Tox ID 已复制",
+  "openChat": "打开聊天",
+  "copyToxId": "复制 Tox ID",
+  "viewToxId": "查看 Tox ID",
+  "reject": "拒绝",
+  "retry": "重试",
+  "noStickers": "暂无贴纸"
 }

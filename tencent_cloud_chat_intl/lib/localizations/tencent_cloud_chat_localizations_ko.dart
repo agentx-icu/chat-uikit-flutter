@@ -2,9 +2,11 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'tencent_cloud_chat_localizations.dart';
+
+// ignore_for_file: type=lint
 
 /// The translations for Korean (`ko`).
 class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
@@ -254,7 +256,8 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   }
 
   @override
-  String get swipeLeftToCancelOrReleaseToSend => '왼쪽으로 스와이프하여 취소하거나 보내기 위해 놓으십시오';
+  String get swipeLeftToCancelOrReleaseToSend =>
+      '왼쪽으로 스와이프하여 취소하거나 보내기 위해 놓으십시오';
 
   @override
   String get releaseToCancel => '취소하려면 놓으십시오';
@@ -367,7 +370,8 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   String get addSilencedMember => '무음 멤버 추가';
 
   @override
-  String get onlyGroupOwnerAndAdminsCanSendMessages => '활성화하면 그룹 소유자와 관리자만 메시지를 보낼 수 있습니다.';
+  String get onlyGroupOwnerAndAdminsCanSendMessages =>
+      '활성화하면 그룹 소유자와 관리자만 메시지를 보낼 수 있습니다.';
 
   @override
   String someoneEnabledSilenceAll(String name) {
@@ -636,7 +640,8 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   String get messageReadStatus => '메시지 읽음 상태';
 
   @override
-  String get messageReadStatusDescription => '메시지 읽음 상태를 표시하고 다른 사람이 메시지를 읽었는지 확인할 수 있는지 여부를 제어합니다.';
+  String get messageReadStatusDescription =>
+      '메시지 읽음 상태를 표시하고 다른 사람이 메시지를 읽었는지 확인할 수 있는지 여부를 제어합니다.';
 
   @override
   String get onlineStatus => '온라인 상태';
@@ -780,7 +785,7 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   String get darkTheme => '어두운 테마';
 
   @override
-  String get denyAny => '거부';
+  String get denyAny => '모두 거부';
 
   @override
   String get edit => '편집';
@@ -1072,7 +1077,8 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   String get changeTheme => '외관 변경';
 
   @override
-  String get deleteAccountNotification => '계정을 삭제한 후 현재 계정을 사용할 수 없으며 관련 데이터가 삭제되어 복구할 수 없습니다.';
+  String get deleteAccountNotification =>
+      '계정을 삭제한 후 현재 계정을 사용할 수 없으며 관련 데이터가 삭제되어 복구할 수 없습니다.';
 
   @override
   String get restartAppForLanguage => '언어 변경 사항을 적용하려면 앱을 다시 시작하십시오';
@@ -1167,7 +1173,8 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   }
 
   @override
-  String get unableToSendWithFolders => '폴더가 포함되어 있어 파일을 보낼 수 없습니다. 개별 파일만 선택해주세요.';
+  String get unableToSendWithFolders =>
+      '폴더가 포함되어 있어 파일을 보낼 수 없습니다. 개별 파일만 선택해주세요.';
 
   @override
   String get channelSwitch => '채널: ';
@@ -1185,7 +1192,8 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   String get chatNow => '지금 채팅하기';
 
   @override
-  String get onlineServiceTimeFrom10To20 => '온라인 서비스 시간: 월요일부터 금요일까지 오전 10시부터 오후 8시까지';
+  String get onlineServiceTimeFrom10To20 =>
+      '온라인 서비스 시간: 월요일부터 금요일까지 오전 10시부터 오후 8시까지';
 
   @override
   String get officialWebsite => '공식 웹사이트';
@@ -1281,7 +1289,7 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   String get openLinkContextMenuBtnText => '새 창에서 열기';
 
   @override
-  String get reactionList => 'Reaction List';
+  String get reactionList => '반응 목록';
 
   @override
   String get translatedBy => 'Tencent RTC 에 의해 제공됨';
@@ -1412,10 +1420,11 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   String get forwardVoteFailedTip => '투표 메시지는 전달을 지원하지 않습니다!';
 
   @override
-  String get forwardOneByOneLimitNumberTip => '전달된 메시지가 너무 많습니다. 현재는 하나씩 전달하는 기능이 지원되지 않습니다.';
+  String get forwardOneByOneLimitNumberTip =>
+      '전달된 메시지가 너무 많습니다. 현재는 하나씩 전달하는 기능이 지원되지 않습니다.';
 
   @override
-  String get modifyRemark => '修改备注';
+  String get modifyRemark => '비고 수정';
 
   @override
   String banned(Object targetUser, Object time) {
@@ -1500,7 +1509,8 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   String get groupCallConfirmSwitchToAudio => '영상을 음성으로 변환하는 데 동의합니다.';
 
   @override
-  String get callkitInPeerBlacklist => '통화를 시작하지 못했습니다. 사용자가 블랙리스트에 있으므로 통화를 시작할 수 없습니다.';
+  String get callkitInPeerBlacklist =>
+      '통화를 시작하지 못했습니다. 사용자가 블랙리스트에 있으므로 통화를 시작할 수 없습니다.';
 
   @override
   String get resendTips => '다시 보내시겠습니까?';
@@ -1752,16 +1762,20 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   String get groupCommunityType => '지역 사회';
 
   @override
-  String get groupWorkDesc => '친구 작업 그룹(Work) : 일반 위챗 그룹과 유사하게 생성 후, 이미 그룹에 속한 친구만 그룹에 초대할 수 있으며, 초대한 당사자의 동의나 그룹의 승인이 필요하지 않습니다. 소유자.';
+  String get groupWorkDesc =>
+      '친구 작업 그룹(Work) : 일반 위챗 그룹과 유사하게 생성 후, 이미 그룹에 속한 친구만 그룹에 초대할 수 있으며, 초대한 당사자의 동의나 그룹의 승인이 필요하지 않습니다. 소유자.';
 
   @override
-  String get groupPublicDesc => '낯선 소셜 그룹(공개): QQ 그룹과 마찬가지로 그룹 생성 후 그룹 소유자가 그룹 관리자를 지정할 수 있습니다. 사용자가 그룹 ID를 검색하고 그룹 가입 신청을 시작한 후 그룹에 가입하기 전에 그룹 소유자 또는 관리자의 승인이 필요합니다. .';
+  String get groupPublicDesc =>
+      '낯선 소셜 그룹(공개): QQ 그룹과 마찬가지로 그룹 생성 후 그룹 소유자가 그룹 관리자를 지정할 수 있습니다. 사용자가 그룹 ID를 검색하고 그룹 가입 신청을 시작한 후 그룹에 가입하기 전에 그룹 소유자 또는 관리자의 승인이 필요합니다. .';
 
   @override
-  String get groupMeetingDesc => '임시 회의 그룹(Meeting): 생성 후 마음대로 입장 및 퇴장할 수 있으며, 그룹에 참여하기 전 메시지 보기를 지원합니다. 음성 및 영상 회의 시나리오, 온라인 교육 시나리오 및 실시간 오디오와 결합된 기타 시나리오에 적합합니다. 그리고 비디오 제품.';
+  String get groupMeetingDesc =>
+      '임시 회의 그룹(Meeting): 생성 후 마음대로 입장 및 퇴장할 수 있으며, 그룹에 참여하기 전 메시지 보기를 지원합니다. 음성 및 영상 회의 시나리오, 온라인 교육 시나리오 및 실시간 오디오와 결합된 기타 시나리오에 적합합니다. 그리고 비디오 제품.';
 
   @override
-  String get groupCommunityDesc => '커뮤니티: 생성 후 자유롭게 입장 및 탈퇴가 가능하며, 기록 메시지 저장을 지원하며, 사용자가 그룹 ID를 검색하고 그룹 신청을 한 후 관리자 승인 없이 그룹에 가입할 수 있습니다.';
+  String get groupCommunityDesc =>
+      '커뮤니티: 생성 후 자유롭게 입장 및 탈퇴가 가능하며, 기록 메시지 저장을 지원하며, 사용자가 그룹 ID를 검색하고 그룹 신청을 한 후 관리자 승인 없이 그룹에 가입할 수 있습니다.';
 
   @override
   String get groupDetail => '그룹 채팅 세부정보';
@@ -1802,4 +1816,25 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   String dismissGroupTips(Object groupName) {
     return '귀하가 속해 있던 $groupName 그룹이 해체되었습니다.';
   }
+
+  @override
+  String get toxIdCopied => 'Tox ID를 복사했습니다';
+
+  @override
+  String get openChat => '채팅 열기';
+
+  @override
+  String get copyToxId => 'Tox ID 복사';
+
+  @override
+  String get viewToxId => 'Tox ID 보기';
+
+  @override
+  String get reject => '거절';
+
+  @override
+  String get retry => '다시 시도';
+
+  @override
+  String get noStickers => '스티커 없음';
 }

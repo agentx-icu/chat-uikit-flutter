@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tencent_cloud_chat_intl/tencent_cloud_chat_intl.dart';
 import 'package:tencent_cloud_chat_sdk/tencent_im_sdk_plugin.dart';
 import 'package:tencent_cloud_chat_sticker/tencent_cloud_chat_sticker.dart';
 import 'package:tencent_cloud_chat_sticker/tencent_cloud_chat_sticker_model.dart';
@@ -91,12 +92,12 @@ class TencentCloudChatStickerError extends StatelessWidget {
   const TencentCloudChatStickerError({super.key});
   @override
   Widget build(BuildContext context) {
-    return const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Padding(
+    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+      const Padding(
         padding: EdgeInsets.only(right: 10),
         child: Icon(Icons.error_outline),
       ),
-      Text("暂无表情"),
+      Text(tL10n.noStickers),
     ]);
   }
 }

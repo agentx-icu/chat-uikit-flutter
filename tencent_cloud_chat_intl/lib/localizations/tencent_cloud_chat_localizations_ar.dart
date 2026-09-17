@@ -2,9 +2,11 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'tencent_cloud_chat_localizations.dart';
+
+// ignore_for_file: type=lint
 
 /// The translations for Arabic (`ar`).
 class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
@@ -139,7 +141,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get more => 'المزيد';
 
   @override
-  String get noConversationsContactsOrMessagesFound => 'لم يتم العثور على محادثات أو جهات اتصال أو رسائل';
+  String get noConversationsContactsOrMessagesFound =>
+      'لم يتم العثور على محادثات أو جهات اتصال أو رسائل';
 
   @override
   String get contactInfo => 'معلومات الاتصال';
@@ -254,7 +257,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   }
 
   @override
-  String get swipeLeftToCancelOrReleaseToSend => 'اسحب لليسار للإلغاء أو الإفلات للإرسال';
+  String get swipeLeftToCancelOrReleaseToSend =>
+      'اسحب لليسار للإلغاء أو الإفلات للإرسال';
 
   @override
   String get releaseToCancel => 'إفلات للإلغاء';
@@ -367,7 +371,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get addSilencedMember => 'إضافة عضو مكتوم';
 
   @override
-  String get onlyGroupOwnerAndAdminsCanSendMessages => 'بعد التمكين، يمكن لمالك المجموعة والمشرفين فقط إرسالة.';
+  String get onlyGroupOwnerAndAdminsCanSendMessages =>
+      'بعد التمكين، يمكن لمالك المجموعة والمشرفين فقط إرسالة.';
 
   @override
   String someoneEnabledSilenceAll(String name) {
@@ -510,7 +515,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get allowAnyUserAddYouAsContact => 'السماح لأي شخص بإضافتك كجهة اتصال';
 
   @override
-  String get declineContactRequestFromAnyUser => 'رفض طلبات جهة الاتصال تلقائيًا';
+  String get declineContactRequestFromAnyUser =>
+      'رفض طلبات جهة الاتصال تلقائيًا';
 
   @override
   String get anyoneUponRequest => 'قبول الطلبات يدويًا';
@@ -576,7 +582,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get personalInformationCollected => 'المعلومات الشخصية المجمعة';
 
   @override
-  String get informationSharedWithThirdParties => 'المعلومات المشتركة مع الأطراف الثالثة';
+  String get informationSharedWithThirdParties =>
+      'المعلومات المشتركة مع الأطراف الثالثة';
 
   @override
   String get deleteAccount => 'حذف الحساب';
@@ -636,13 +643,15 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get messageReadStatus => 'حالة قراءة الرسالة';
 
   @override
-  String get messageReadStatusDescription => 'يتحكم فيعرض حالة القراءة لرسائلك ومعرفة ما إذا كان الآخرين يمكنهم رؤية ما إذا كنت قد قرأت رسائلهم.';
+  String get messageReadStatusDescription =>
+      'يتحكم فيعرض حالة القراءة لرسائلك ومعرفة ما إذا كان الآخرين يمكنهم رؤية ما إذا كنت قد قرأت رسائلهم.';
 
   @override
   String get onlineStatus => 'حالة الاتصال';
 
   @override
-  String get onlineStatusDescription => 'يحدد ما إذا كانت حالة اتصالك مرئية لجهات اتصالك.';
+  String get onlineStatusDescription =>
+      'يحدد ما إذا كانت حالة اتصالك مرئية لجهات اتصالك.';
 
   @override
   String get noBio => 'لا نبذة';
@@ -700,7 +709,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get recordAVideo => 'تسجيل فيديو';
 
   @override
-  String get pullDownToLoadMoreMessages => 'اسحب لأسفل لتحميل المزيد من الرسائل';
+  String get pullDownToLoadMoreMessages =>
+      'اسحب لأسفل لتحميل المزيد من الرسائل';
 
   @override
   String get releaseToLoadMore => 'أفلت لتحميل المزيد';
@@ -712,7 +722,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get pullUpToLoadMoreMessages => 'اسحب لأعلى لتحميل المزيد من الرسائل';
 
   @override
-  String get holdToRecordReleaseToSend => 'اضغط مع الاستمرار للتسجيل ، وأفلت للإرسال';
+  String get holdToRecordReleaseToSend =>
+      'اضغط مع الاستمرار للتسجيل ، وأفلت للإرسال';
 
   @override
   String get forwardIndividually => 'إعادة توجيه بشكل فردي';
@@ -771,7 +782,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get allowAny => 'السماح لأي';
 
   @override
-  String get cannotSendApplicationToWorkGroup => 'لا يمكن إرسال الطلب إلى مجموعة العمل';
+  String get cannotSendApplicationToWorkGroup =>
+      'لا يمكن إرسال الطلب إلى مجموعة العمل';
 
   @override
   String get appearance => 'المظهر';
@@ -995,7 +1007,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get disallowJoinGroup => 'عدم السماح بالانضمام إلى المجموعة';
 
   @override
-  String get joinGroupNeedApproval => 'يتطلب الموافقة من المشرف للانضمام إلى المجموعة';
+  String get joinGroupNeedApproval =>
+      'يتطلب الموافقة من المشرف للانضمام إلى المجموعة';
 
   @override
   String get joinGroupDirectly => 'الانضمام إلى المجموعة مباشرة بعد التقدم';
@@ -1004,10 +1017,12 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get disallowInviting => 'عدم السماح بالدعوة للانضمام إلى المجموعة';
 
   @override
-  String get requireApprovalForInviting => 'يتطلب الموافقة من المشرف للدعوة للانضمام إلى المجموعة';
+  String get requireApprovalForInviting =>
+      'يتطلب الموافقة من المشرف للدعوة للانضمام إلى المجموعة';
 
   @override
-  String get joinDirectlyBeenInvited => 'الانضمام إلى المجموعة مباشرة بعد تلقي الدعوة';
+  String get joinDirectlyBeenInvited =>
+      'الانضمام إلى المجموعة مباشرة بعد تلقي الدعوة';
 
   @override
   String get unmuted => 'إلغاء كتم الصوت';
@@ -1072,10 +1087,12 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get changeTheme => 'تغيير المظهر';
 
   @override
-  String get deleteAccountNotification => 'بعد حذف الحساب، لن تتمكن من استخدام حسابك الحالي، وسيتم حذف البيانات المتعلقة ولا يمكن استردادها.';
+  String get deleteAccountNotification =>
+      'بعد حذف الحساب، لن تتمكن من استخدام حسابك الحالي، وسيتم حذف البيانات المتعلقة ولا يمكن استردادها.';
 
   @override
-  String get restartAppForLanguage => 'يرجى إعادة تشغيل التطبيق لتفعيل تغيير اللغة';
+  String get restartAppForLanguage =>
+      'يرجى إعادة تشغيل التطبيق لتفعيل تغيير اللغة';
 
   @override
   String get deleteAllMessages => 'مسح سجل الدردشة';
@@ -1090,7 +1107,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get messageRecall => 'استرجاع الرسالة';
 
   @override
-  String get messageRecallConfirmation => 'هل أنت متأكد من أنك تريد استرجاع هذه الرسالة؟';
+  String get messageRecallConfirmation =>
+      'هل أنت متأكد من أنك تريد استرجاع هذه الرسالة؟';
 
   @override
   String get quit => 'الخروج من المحادثة الجماعية';
@@ -1167,7 +1185,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   }
 
   @override
-  String get unableToSendWithFolders => 'تعذر إرسال الملفات بسبب تضمين المجلدات. يرجى تحديد الملفات الفردية فقط.';
+  String get unableToSendWithFolders =>
+      'تعذر إرسال الملفات بسبب تضمين المجلدات. يرجى تحديد الملفات الفردية فقط.';
 
   @override
   String get channelSwitch => 'القناة: ';
@@ -1179,13 +1198,15 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get tGWA => 'تيليجرام و واتساب';
 
   @override
-  String get contactUsIfQuestions => 'في حال وجود أي أسئلة أو أفكار أخرى، لا تتردد في الاتصال بنا!';
+  String get contactUsIfQuestions =>
+      'في حال وجود أي أسئلة أو أفكار أخرى، لا تتردد في الاتصال بنا!';
 
   @override
   String get chatNow => 'دردش الآن';
 
   @override
-  String get onlineServiceTimeFrom10To20 => 'وقت الخدمة عبر الإنترنت: من الساعة 10 صباحًا حتى الساعة 8 مساءً، من الاثنين إلى الجمعة';
+  String get onlineServiceTimeFrom10To20 =>
+      'وقت الخدمة عبر الإنترنت: من الساعة 10 صباحًا حتى الساعة 8 مساءً، من الاثنين إلى الجمعة';
 
   @override
   String get officialWebsite => 'الموقع الرسمي';
@@ -1200,7 +1221,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get personalInformationCollectionList => 'قائمة جمع المعلومات الشخصية';
 
   @override
-  String get thirdPartyInformationSharingList => 'قائمة مشاركة المعلومات من طرف ثالث';
+  String get thirdPartyInformationSharingList =>
+      'قائمة مشاركة المعلومات من طرف ثالث';
 
   @override
   String get version => 'الإصدار';
@@ -1281,7 +1303,7 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get openLinkContextMenuBtnText => 'فتح في نافذة جديدة';
 
   @override
-  String get reactionList => 'Reaction List';
+  String get reactionList => 'قائمة التفاعلات';
 
   @override
   String get translatedBy => 'مدعوم من Tencent RTC';
@@ -1328,13 +1350,15 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get friendLimit => 'لقد وصلت إلى الحد الأقصى لعدد الأصدقاء في النظام';
 
   @override
-  String get otherFriendLimit => 'لقد وصل الشخص المطلوب إلى الحد الأقصى لعدد الأصدقاء في النظام';
+  String get otherFriendLimit =>
+      'لقد وصل الشخص المطلوب إلى الحد الأقصى لعدد الأصدقاء في النظام';
 
   @override
   String get inBlacklist => 'الشخص المطلوب موجود في القائمة السوداء الخاصة بك';
 
   @override
-  String get setInBlacklist => 'لقد تم إضافتك إلى القائمة السوداء من قبل الشخص المطلوب';
+  String get setInBlacklist =>
+      'لقد تم إضافتك إلى القائمة السوداء من قبل الشخص المطلوب';
 
   @override
   String get forbidAddFriend => 'الشخص المطلوب قد منع إضافة الأصدقاء';
@@ -1391,7 +1415,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get sendMsg => 'إرسال رسالة';
 
   @override
-  String get groupMemberMute => 'لا يمكن إرسال الرسالة لأنها محظورة. يرجى التحقق مما إذا كان المرسل قد تم حظره.';
+  String get groupMemberMute =>
+      'لا يمكن إرسال الرسالة لأنها محظورة. يرجى التحقق مما إذا كان المرسل قد تم حظره.';
 
   @override
   String get forwardFailedTip => 'لا يمكن تحويل الرسائل التي فشلت في الإرسال!';
@@ -1412,7 +1437,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get forwardVoteFailedTip => 'رسائل التصويت لا تدعم إعادة التوجيه!';
 
   @override
-  String get forwardOneByOneLimitNumberTip => 'تم تحويل الرسائل بكمية كبيرة جدًا، لا يمكن تحويلها تلو الأخرى.';
+  String get forwardOneByOneLimitNumberTip =>
+      'تم تحويل الرسائل بكمية كبيرة جدًا، لا يمكن تحويلها تلو الأخرى.';
 
   @override
   String get modifyRemark => 'تعديل الملاحظات';
@@ -1500,7 +1526,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get groupCallConfirmSwitchToAudio => 'تأكيد تحويل الفيديو إلى صوتي ';
 
   @override
-  String get callkitInPeerBlacklist => 'فشلت المكالمة ، المستخدم في القائمة السوداء ، ممنوع الإطلاق.';
+  String get callkitInPeerBlacklist =>
+      'فشلت المكالمة ، المستخدم في القائمة السوداء ، ممنوع الإطلاق.';
 
   @override
   String get resendTips => 'هل تريد إعادة الإرسال؟';
@@ -1713,13 +1740,16 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get createCommunity => 'إنشاء مجتمع';
 
   @override
-  String get communityIDEditFormatTips => 'يجب أن يكون معرف المجتمع مسبوقًا بـ @TGS#_!';
+  String get communityIDEditFormatTips =>
+      'يجب أن يكون معرف المجتمع مسبوقًا بـ @TGS#_!';
 
   @override
-  String get groupIDEditFormatTips => 'ا يمكن أن يكون بادئة معرف المجموعة @TGS# !';
+  String get groupIDEditFormatTips =>
+      'ا يمكن أن يكون بادئة معرف المجموعة @TGS# !';
 
   @override
-  String get groupIDEditExceedTips => 'يجب أن يكون معرف المجموعة أقل من 48 بايت!';
+  String get groupIDEditExceedTips =>
+      'يجب أن يكون معرف المجموعة أقل من 48 بايت!';
 
   @override
   String get groupTypeContentButton => 'عرض دليل المنتج';
@@ -1752,16 +1782,20 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get groupCommunityType => 'مجتمع (Community)';
 
   @override
-  String get groupWorkDesc => 'مجموعة عمل الأصدقاء (Work): تشبه محادثات WeChat العادية، بعد الإنشاء، يمكن للأصدقاء الموجودين في المجموعة دعوة أصدقائهم للانضمام دون الحاجة إلى موافقة المضافين أو الموافقة من قبل مالك المجموعة.';
+  String get groupWorkDesc =>
+      'مجموعة عمل الأصدقاء (Work): تشبه محادثات WeChat العادية، بعد الإنشاء، يمكن للأصدقاء الموجودين في المجموعة دعوة أصدقائهم للانضمام دون الحاجة إلى موافقة المضافين أو الموافقة من قبل مالك المجموعة.';
 
   @override
-  String get groupPublicDesc => 'مجموعة تواصل الغرباء (Public): تشبه مجموعات QQ، بعد الإنشاء، يمكن لمالك المجموعة تعيين مشرفين للمجموعة، عندما يبحث المستخدمون عن معرف المجموعة ويطلبون الانضمام، يجب عليهم الحصول على موافقة من مالك المجموعة أو المشرفين قبل الانضمام إلى المجموعة.';
+  String get groupPublicDesc =>
+      'مجموعة تواصل الغرباء (Public): تشبه مجموعات QQ، بعد الإنشاء، يمكن لمالك المجموعة تعيين مشرفين للمجموعة، عندما يبحث المستخدمون عن معرف المجموعة ويطلبون الانضمام، يجب عليهم الحصول على موافقة من مالك المجموعة أو المشرفين قبل الانضمام إلى المجموعة.';
 
   @override
-  String get groupMeetingDesc => 'مجموعة اجتماعات مؤقتة (Meeting): بعد الإنشاء، يمكن للمستخدمين الانضمام والخروج من المجموعة بحرية، ويمكنهم عرض الرسائل قبل الانضمام إلى المجموعة. تستخدم هذه المجموعات في سيناريوهات الاجتماعات الصوتية والمرئية والتعليم عبر الإنترنت وغيرها من السيناريوهات التي تتطلب منتجات الصوت والفيديو الفورية.';
+  String get groupMeetingDesc =>
+      'مجموعة اجتماعات مؤقتة (Meeting): بعد الإنشاء، يمكن للمستخدمين الانضمام والخروج من المجموعة بحرية، ويمكنهم عرض الرسائل قبل الانضمام إلى المجموعة. تستخدم هذه المجموعات في سيناريوهات الاجتماعات الصوتية والمرئية والتعليم عبر الإنترنت وغيرها من السيناريوهات التي تتطلب منتجات الصوت والفيديو الفورية.';
 
   @override
-  String get groupCommunityDesc => ' المجتمع (Community): بعد الإنشاء يمكن الدخول والخروج بحرية، يدعم حتى 100000 شخص، يدعم تخزين الرسائل السابقة، بعد البحث عن معرف المجموعة وإرسال طلب الانضمام، يمكن الانضمام إلى المجموعة دون حاجة لموافقة المشرف.';
+  String get groupCommunityDesc =>
+      ' المجتمع (Community): بعد الإنشاء يمكن الدخول والخروج بحرية، يدعم حتى 100000 شخص، يدعم تخزين الرسائل السابقة، بعد البحث عن معرف المجموعة وإرسال طلب الانضمام، يمكن الانضمام إلى المجموعة دون حاجة لموافقة المشرف.';
 
   @override
   String get groupDetail => 'تفاصيل المحادثة الجماعية';
@@ -1785,7 +1819,8 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get serverGroupInvalidReq => 'الطلب غير صالح.';
 
   @override
-  String get serverGroupReqAlreadyBeenProcessed => 'تم معالجة هذا الطلب أو الدعوة بالفعل';
+  String get serverGroupReqAlreadyBeenProcessed =>
+      'تم معالجة هذا الطلب أو الدعوة بالفعل';
 
   @override
   String inviteToGroupFrom(Object inviter) {
@@ -1802,4 +1837,25 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String dismissGroupTips(Object groupName) {
     return 'لقد تم حل المجموعة التي كنت فيها $groupName';
   }
+
+  @override
+  String get toxIdCopied => 'تم نسخ Tox ID';
+
+  @override
+  String get openChat => 'فتح الدردشة';
+
+  @override
+  String get copyToxId => 'نسخ Tox ID';
+
+  @override
+  String get viewToxId => 'عرض Tox ID';
+
+  @override
+  String get reject => 'رفض';
+
+  @override
+  String get retry => 'إعادة المحاولة';
+
+  @override
+  String get noStickers => 'لا توجد ملصقات';
 }

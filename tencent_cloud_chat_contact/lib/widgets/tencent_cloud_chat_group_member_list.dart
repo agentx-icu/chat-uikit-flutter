@@ -374,9 +374,9 @@ class TencentCloudChatGroupMemberListItemState
     if (widget.lastMessageTime != null && widget.lastMessageTime! > 0) {
       final dateTime =
           DateTime.fromMillisecondsSinceEpoch(widget.lastMessageTime! * 1000);
-      return TencentCloudChatIntl.getFormattedTimeString(dateTime: dateTime);
+      return TencentCloudChatIntl.formatDateTime(dateTime, context);
     }
-    return '无';
+    return tL10n.none;
   }
 
   bool canSetAdmin() {
@@ -436,9 +436,9 @@ class TencentCloudChatGroupMemberListItemState
     await Clipboard.setData(ClipboardData(text: widget.memberFullInfo.userID));
     if (!mounted) return;
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      const SnackBar(
-        content: Text('Tox ID copied'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(tL10n.toxIdCopied),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -452,25 +452,25 @@ class TencentCloudChatGroupMemberListItemState
         Overlay.of(context).context.findRenderObject() as RenderBox?;
 
     final List<PopupMenuEntry<String>> items = <PopupMenuEntry<String>>[
-      const PopupMenuItem<String>(
+      PopupMenuItem<String>(
         value: 'info',
         child: KeyedSubtree(
-          key: ValueKey('group_member_desktop_info_item'),
+          key: const ValueKey('group_member_desktop_info_item'),
           child: ListTile(
-            leading: Icon(Icons.person_outline),
-            title: Text('Info'),
+            leading: const Icon(Icons.person_outline),
+            title: Text(tL10n.info),
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
         ),
       ),
-      const PopupMenuItem<String>(
+      PopupMenuItem<String>(
         value: 'copy',
         child: KeyedSubtree(
-          key: ValueKey('group_member_desktop_copy_id_item'),
+          key: const ValueKey('group_member_desktop_copy_id_item'),
           child: ListTile(
-            leading: Icon(Icons.copy),
-            title: Text('Copy Tox ID'),
+            leading: const Icon(Icons.copy),
+            title: Text(tL10n.copyToxId),
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),

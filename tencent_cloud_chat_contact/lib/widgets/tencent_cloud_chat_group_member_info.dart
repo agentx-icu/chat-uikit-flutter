@@ -87,9 +87,9 @@ class TencentCloudChatGroupMemberInfoBodyState extends TencentCloudChatState<Ten
 
   String _getJoinTime() {
     final joinTime = widget.memberFullInfo.joinTime ?? 0;
-    if (joinTime <= 0) return '无';
+    if (joinTime <= 0) return tL10n.none;
     final dateTime = DateTime.fromMillisecondsSinceEpoch(joinTime * 1000);
-    return TencentCloudChatIntl.getFormattedTimeString(dateTime: dateTime);
+    return TencentCloudChatIntl.formatDateTime(dateTime, context);
   }
 
   @override
@@ -143,7 +143,7 @@ class TencentCloudChatGroupMemberInfoBodyState extends TencentCloudChatState<Ten
                                 'group_member_info_copy_id_button',
                               ),
                               icon: const Icon(Icons.copy, size: 16),
-                              tooltip: 'Copy',
+                              tooltip: tL10n.copy,
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                               onPressed: () async {
@@ -154,8 +154,8 @@ class TencentCloudChatGroupMemberInfoBodyState extends TencentCloudChatState<Ten
                                 );
                                 if (!mounted) return;
                                 ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Tox ID copied'),
+                                  SnackBar(
+                                    content: Text(tL10n.toxIdCopied),
                                   ),
                                 );
                               },

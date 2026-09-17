@@ -2,9 +2,11 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'tencent_cloud_chat_localizations.dart';
+
+// ignore_for_file: type=lint
 
 /// The translations for Japanese (`ja`).
 class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
@@ -367,7 +369,8 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get addSilencedMember => 'ミュートされたメンバーを追加';
 
   @override
-  String get onlyGroupOwnerAndAdminsCanSendMessages => '有効にすると、グループの所有者と管理者のみがメッセージを送信できます。';
+  String get onlyGroupOwnerAndAdminsCanSendMessages =>
+      '有効にすると、グループの所有者と管理者のみがメッセージを送信できます。';
 
   @override
   String someoneEnabledSilenceAll(String name) {
@@ -403,7 +406,7 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   }
 
   @override
-  String get searchUserID => 'SearchUserID';
+  String get searchUserID => 'ユーザーIDを検索';
 
   @override
   String get none => 'なし';
@@ -594,7 +597,7 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get phoneNumber => '電話番号';
 
   @override
-  String get email => 'EMail';
+  String get email => 'メール';
 
   @override
   String get verificationCode => '確認コード';
@@ -636,7 +639,8 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get messageReadStatus => 'メッセージの既読ステータス';
 
   @override
-  String get messageReadStatusDescription => 'あなたのメッセージの既読ステータスが表示されるかどうかを制御し、他の人があなたのメッセージを読んだかどうかを確認できるかどうかを制御します。';
+  String get messageReadStatusDescription =>
+      'あなたのメッセージの既読ステータスが表示されるかどうかを制御し、他の人があなたのメッセージを読んだかどうかを確認できるかどうかを制御します。';
 
   @override
   String get onlineStatus => 'オンラインステータス';
@@ -768,19 +772,19 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get allMembersRead => '全メンバーが読んだ';
 
   @override
-  String get allowAny => 'Allow Any';
+  String get allowAny => 'すべて許可';
 
   @override
   String get cannotSendApplicationToWorkGroup => '作業グループにアプリケーションを送信できません';
 
   @override
-  String get appearance => 'Appearance';
+  String get appearance => '外観';
 
   @override
-  String get darkTheme => 'Dark';
+  String get darkTheme => 'ダーク';
 
   @override
-  String get denyAny => 'Deny Any';
+  String get denyAny => 'すべて拒否';
 
   @override
   String get edit => '編集';
@@ -792,7 +796,7 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get groupJoined => 'グループに参加しました';
 
   @override
-  String get lightTheme => 'Light';
+  String get lightTheme => 'ライト';
 
   @override
   String get noBlockList => 'ブロックされたユーザーはいません';
@@ -858,7 +862,7 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get callEnded => '通話が終了しました';
 
   @override
-  String get unknownCallStatus => 'Calling';
+  String get unknownCallStatus => '呼び出し中';
 
   @override
   String get groupChatCreated => 'グループチャットが正常に作成されました！';
@@ -1072,7 +1076,8 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get changeTheme => '外観を変更';
 
   @override
-  String get deleteAccountNotification => 'アカウントを削除すると、現在のアカウントを使用できなくなり、関連データが削除されて復元できなくなります。';
+  String get deleteAccountNotification =>
+      'アカウントを削除すると、現在のアカウントを使用できなくなり、関連データが削除されて復元できなくなります。';
 
   @override
   String get restartAppForLanguage => '言語の変更を適用するには、アプリを再起動してください';
@@ -1167,7 +1172,8 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   }
 
   @override
-  String get unableToSendWithFolders => 'フォルダが含まれているため、ファイルを送信できません。個々のファイルのみを選択してください。';
+  String get unableToSendWithFolders =>
+      'フォルダが含まれているため、ファイルを送信できません。個々のファイルのみを選択してください。';
 
   @override
   String get channelSwitch => 'チャンネル：';
@@ -1281,7 +1287,7 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get openLinkContextMenuBtnText => '新しいウィンドウで開く';
 
   @override
-  String get reactionList => 'Reaction List';
+  String get reactionList => 'リアクション一覧';
 
   @override
   String get translatedBy => 'Tencent RTC によって提供される';
@@ -1391,7 +1397,8 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get sendMsg => 'メッセージを送信';
 
   @override
-  String get groupMemberMute => 'メッセージは禁止されているため送信できません。送信者が禁止されているかどうかを確認してください。';
+  String get groupMemberMute =>
+      'メッセージは禁止されているため送信できません。送信者が禁止されているかどうかを確認してください。';
 
   @override
   String get forwardFailedTip => '失敗したメッセージの転送はサポートされていません。';
@@ -1412,10 +1419,11 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get forwardVoteFailedTip => '投票メッセージは転送をサポートしていません。';
 
   @override
-  String get forwardOneByOneLimitNumberTip => '転送されたメッセージが多すぎます。現時点では、1 つずつの転送はサポートされていません。';
+  String get forwardOneByOneLimitNumberTip =>
+      '転送されたメッセージが多すぎます。現時点では、1 つずつの転送はサポートされていません。';
 
   @override
-  String get modifyRemark => '修改备注';
+  String get modifyRemark => '備考を編集';
 
   @override
   String banned(Object targetUser, Object time) {
@@ -1713,7 +1721,8 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get createCommunity => 'コミュニティを作成する';
 
   @override
-  String get communityIDEditFormatTips => 'コミュニティ ID には接頭辞として @TGS#_ を付ける必要があります。';
+  String get communityIDEditFormatTips =>
+      'コミュニティ ID には接頭辞として @TGS#_ を付ける必要があります。';
 
   @override
   String get groupIDEditFormatTips => 'グループ ID プレフィックスを @TGS# にすることはできません。';
@@ -1752,16 +1761,20 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get groupCommunityType => 'コミュニティ';
 
   @override
-  String get groupWorkDesc => '友達ワークグループ（Work）：通常のWeChatグループと同様に、作成後はすでにグループに参加している友達のみをグループに招待でき、招待された側の同意やグループの承認は必要ありません。所有者。';
+  String get groupWorkDesc =>
+      '友達ワークグループ（Work）：通常のWeChatグループと同様に、作成後はすでにグループに参加している友達のみをグループに招待でき、招待された側の同意やグループの承認は必要ありません。所有者。';
 
   @override
-  String get groupPublicDesc => '見知らぬソーシャル グループ (パブリック): QQ グループと同様に、グループ所有者は作成後にグループ管理者を指定できます。ユーザーがグループ ID を検索してグループへの参加申請を開始した後、グループに参加する前にグループ所有者または管理者の承認が必要です。 。';
+  String get groupPublicDesc =>
+      '見知らぬソーシャル グループ (パブリック): QQ グループと同様に、グループ所有者は作成後にグループ管理者を指定できます。ユーザーがグループ ID を検索してグループへの参加申請を開始した後、グループに参加する前にグループ所有者または管理者の承認が必要です。 。';
 
   @override
-  String get groupMeetingDesc => '一時的な会議グループ (会議): 作成後は自由に出入りでき、グループに参加する前にメッセージの表示をサポートするため、音声会議やビデオ会議のシナリオ、オンライン教育のシナリオ、およびリアルタイム音声と組み合わせたその他のシナリオに適しています。そしてビデオ製品。';
+  String get groupMeetingDesc =>
+      '一時的な会議グループ (会議): 作成後は自由に出入りでき、グループに参加する前にメッセージの表示をサポートするため、音声会議やビデオ会議のシナリオ、オンライン教育のシナリオ、およびリアルタイム音声と組み合わせたその他のシナリオに適しています。そしてビデオ製品。';
 
   @override
-  String get groupCommunityDesc => 'コミュニティ: 作成後は自由に参加および退出でき、最大 100,000 人のユーザーがグループ ID を検索してグループ アプリケーションを開始すると、管理者の承認なしでグループに参加できます。';
+  String get groupCommunityDesc =>
+      'コミュニティ: 作成後は自由に参加および退出でき、最大 100,000 人のユーザーがグループ ID を検索してグループ アプリケーションを開始すると、管理者の承認なしでグループに参加できます。';
 
   @override
   String get groupDetail => 'グループチャットの詳細';
@@ -1785,7 +1798,8 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String get serverGroupInvalidReq => '不正なリクエスト';
 
   @override
-  String get serverGroupReqAlreadyBeenProcessed => 'この招待または申請リクエストはすでに処理されています。';
+  String get serverGroupReqAlreadyBeenProcessed =>
+      'この招待または申請リクエストはすでに処理されています。';
 
   @override
   String inviteToGroupFrom(Object inviter) {
@@ -1802,4 +1816,25 @@ class TencentCloudChatLocalizationsJa extends TencentCloudChatLocalizations {
   String dismissGroupTips(Object groupName) {
     return 'あなたが所属していたグループ $groupName は解散しました';
   }
+
+  @override
+  String get toxIdCopied => 'Tox ID をコピーしました';
+
+  @override
+  String get openChat => 'チャットを開く';
+
+  @override
+  String get copyToxId => 'Tox ID をコピー';
+
+  @override
+  String get viewToxId => 'Tox ID を表示';
+
+  @override
+  String get reject => '拒否';
+
+  @override
+  String get retry => '再試行';
+
+  @override
+  String get noStickers => 'ステッカーがありません';
 }

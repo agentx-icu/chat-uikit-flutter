@@ -145,13 +145,10 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
   Widget _renderFailedStatus(TencentCloudChatThemeColors colorTheme,
       TencentCloudChatTextStyle textStyle) {
     final iconSize = textStyle.standardText;
-    // Hardcoded English semantics label — no matching key in tL10n / app i18n;
-    // when toxee adds a "retry" string we can swap this in. Visible UI shows
-    // only the refresh glyph, so this string is for screen readers.
-    const retrySemantics = 'Retry';
+    // Visible UI shows only the refresh glyph; the label is for screen readers.
     return Semantics(
       button: true,
-      label: retrySemantics,
+      label: tL10n.retry,
       child: Container(
         margin: const EdgeInsets.only(right: 4),
         child: Row(
@@ -259,7 +256,7 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
                       ? colorTheme.selfMessageTextColor.withOpacity(0.25)
                       : colorTheme.secondaryTextColor.withOpacity(0.5));
               return Text(
-                TencentCloudChatIntl.formatTimestampToTime(widget.data.message.timestamp ?? 0),
+                TencentCloudChatIntl.formatTimestampToTime(widget.data.message.timestamp ?? 0, context),
                 style: TextStyle(
                   color: timeColor,
                   fontSize: fontSize ?? textStyle.standardSmallText,

@@ -1,5 +1,5 @@
 {
-  "album": "相册",
+  "album": "相簿",
   "chat": "對話",
   "chats": "對話",
   "calls": "通話",
@@ -17,8 +17,8 @@
   "newChat": "新對話",
   "newGroup": "新群組",
   "frequentlyContacted": "常聯絡人",
-  "addParticipants": "加成員",
-  "addMembers": "加成員",
+  "addParticipants": "新增成員",
+  "addMembers": "新增成員",
   "cancel": "取消",
   "next": "下一步",
   "back": "返回",
@@ -36,7 +36,7 @@
   "you": "你",
   "today": "今日",
   "yesterday": "昨日",
-  "youCreatedGroup": "你創建咗群組 {groupName}",
+  "youCreatedGroup": "你建立了群組 {groupName}",
   "@youCreatedGroup": {
     "description": "你創建咗群組",
     "placeholders": {
@@ -50,7 +50,7 @@
   "chatRecord": "訊息",
   "messages": "訊息",
   "more": "更多",
-  "noConversationsContactsOrMessagesFound": "冇搜尋到對話、聯絡人或訊息",
+  "noConversationsContactsOrMessagesFound": "找不到相符的對話、聯絡人或訊息",
   "contactInfo": "聯絡人信息",
   "exportChat": "導出對話",
   "clearChat": "清除對話",
@@ -62,12 +62,12 @@
   "voiceCall": "語音通話",
   "missedVoiceCall": "未接語音通話",
   "location": "位置",
-  "youStartedACall": "你發起咗個通話",
+  "youStartedACall": "你發起了通話",
   "star": "星標",
   "copy": "複製",
   "forward": "轉發",
   "multiSelect": "多選",
-  "select": "揀選",
+  "select": "選擇",
   "quote": "引用",
   "reply": "回覆",
   "all": "全部",
@@ -76,7 +76,7 @@
   "delivered": "已送達",
   "readBy": "已讀",
   "deliveredTo": "已送達",
-  "numSelect": "{num, plural, zero {揀選訊息} other {{num} 已揀選}}",
+  "numSelect": "{num, plural, zero {選擇訊息} other {已選擇 {num} 則}}",
   "@numSelect": {
     "description": "揀選咗幾條訊息",
     "placeholders": {
@@ -86,7 +86,7 @@
       }
     }
   },
-  "numChats": "{num, plural, zero {冇揀選對話} one {1 個對話} other {{num} 個對話}}",
+  "numChats": "{num, plural, zero {未選擇對話} one {1 個對話} other {{num} 個對話}}",
   "@numChats": {
     "description": "揀選咗幾個對話",
     "placeholders": {
@@ -133,8 +133,8 @@
   "groupType": "群組類型",
   "addGroupWay": "主動加群方式",
   "inviteGroupType": "邀請進群方式",
-  "myAliasInGroup": "我在群裡嘅別名",
-  "myGroupNickName": "我在群裡嘅別名",
+  "myAliasInGroup": "我在群組中的別名",
+  "myGroupNickName": "我在群組中的別名",
   "groupMembers": "群成員",
   "admin": "管理員",
   "adminNum": "管理員 ({num})",
@@ -152,9 +152,9 @@
   "announcement": "群通知",
   "totalSilence": "全員禁言",
   "silenceAll": "全員禁言",
-  "addSilencedMember": "加禁言成員",
-  "onlyGroupOwnerAndAdminsCanSendMessages": "開啟後，只有群主同管理員可以發訊息。",
-  "someoneEnabledSilenceAll": "{name} 開啟咗「全員禁言」",
+  "addSilencedMember": "新增禁言成員",
+  "onlyGroupOwnerAndAdminsCanSendMessages": "開啟後，只有群主與管理員可以發訊息。",
+  "someoneEnabledSilenceAll": "{name} 開啟了「全員禁言」",
   "@someoneEnabledSilenceAll": {
     "description": "某人開啟咗全員禁言",
     "placeholders": {
@@ -164,7 +164,7 @@
       }
     }
   },
-  "someoneDisabledSilenceAll": "{name} 關閉咗「全員禁言」",
+  "someoneDisabledSilenceAll": "{name} 關閉了「全員禁言」",
   "@someoneDisabledSilenceAll": {
     "description": "某人關閉咗全員禁言",
     "placeholders": {
@@ -180,7 +180,7 @@
   "blockList": "封鎖用戶",
   "groupChatNotifications": "群對話通知",
   "userID": "用戶ID",
-  "myUserID": "我嘅用戶ID: {userID}",
+  "myUserID": "我的用戶ID: {userID}",
   "@myUserID": {
     "description": "我嘅用戶ID",
     "placeholders": {
@@ -202,8 +202,8 @@
       }
     }
   },
-  "addToContacts": "加到聯絡人",
-  "addContact": "加聯絡人",
+  "addToContacts": "加入聯絡人",
+  "addContact": "新增聯絡人",
   "bio": "簡介",
   "bioIs": "簡介: {bio}",
   "@bioIs": {
@@ -220,10 +220,10 @@
   "remark": "備註",
   "group": "分組",
   "send": "發送",
-  "contactAddedSuccessfully": "成功加聯絡人",
+  "contactAddedSuccessfully": "已成功新增聯絡人",
   "requestSent": "請求已發送",
-  "cannotAddContact": "唔可以加聯絡人",
-  "addGroup": "加群組",
+  "cannotAddContact": "無法新增聯絡人",
+  "addGroup": "新增群組",
   "typeIs": "類型: {type}",
   "@typeIs": {
     "description": "類型: ",
@@ -234,7 +234,7 @@
       }
     }
   },
-  "groupNotAcceptingRequests": "群組唔接受請求",
+  "groupNotAcceptingRequests": "群組不接受請求",
   "joinedGroupSuccessfully": "成功加入群組",
   "numNewApplications": "{num, plural, one {{num} 個新申請} other {{num} 個新申請}}",
   "@numNewApplications": {
@@ -283,7 +283,7 @@
   "deleteAccount": "刪除帳戶",
   "contactUs": "聯絡我們",
   "countryOrRegion": "國家/地區",
-  "selectACountry": "揀選國家或地區",
+  "selectACountry": "選擇國家或地區",
   "phoneNumber": "電話號碼",
   "email": "電子郵件",
   "verificationCode": "驗證碼",
@@ -332,7 +332,7 @@
       }
     }
   },
-  "newMsgCount": "{num, plural, one {一條新訊息} other {{num} 條新訊息}}",
+  "newMsgCount": "{num, plural, one {一則新訊息} other {{num} 則新訊息}}",
   "@newMsgCount": {
     "description": "新訊息數量",
     "placeholders": {
@@ -351,7 +351,7 @@
   "holdToRecordReleaseToSend": "按住錄音，鬆開發送",
   "forwardIndividually": "單獨轉發",
   "forwardCombined": "合併轉發",
-  "selectConversations": "揀選對話",
+  "selectConversations": "選擇對話",
   "recent": "最近",
   "recall": "撤回",
   "replyTo": "回覆 {name}",
@@ -366,7 +366,7 @@
   },
   "confirmDeletion": "確認刪除",
   "askDeleteThisMessage": "確定刪除此訊息嗎？",
-  "deleteMessageCount": "{num, plural, zero {未刪除訊息} one {刪除一條訊息？} other {刪除 {num} 條訊息？}}",
+  "deleteMessageCount": "{num, plural, zero {未刪除訊息} one {刪除一則訊息？} other {刪除 {num} 則訊息？}}",
   "@deleteMessageCount": {
     "description": "刪除訊息數量",
     "placeholders": {
@@ -418,7 +418,7 @@
   "callInProgress": "通話進行中",
   "callEnded": "通話結束",
   "unknownCallStatus": "正在通話",
-  "groupChatCreated": "群聊成功創建！",
+  "groupChatCreated": "群聊建立成功！",
   "vote": "投票",
   "callCancelled": "通話已取消",
   "unknownGroupTips": "未知群組提示",
@@ -459,8 +459,8 @@
   "muteTime": "靜音 {duration} 秒",
   "poll": "投票",
   "callDuration": "通話時長：{duration}",
-  "selectMembers": "揀選成員",
-  "numSelectMembers": "{num, plural, zero {揀選成員} other {{num} 已選}}",
+  "selectMembers": "選擇成員",
+  "numSelectMembers": "{num, plural, zero {選擇成員} other {已選擇 {num} 人}}",
   "@numSelectMembers": {
     "description": "揀選成員數量",
     "placeholders": {
@@ -486,7 +486,7 @@
   "downloading": "下載中...",
   "viewFullImage": "查看原圖",
   "messageRecall": "訊息撤回",
-  "messageRecallConfirmation": "您確定要撤回這條訊息嗎？",
+  "messageRecallConfirmation": "您確定要撤回這則訊息嗎？",
   "openInNewWindow": "在新視窗中開啟",
   "selectAChat": "選擇一個聊天",
   "noConversationSelected": "未選擇對話",
@@ -518,7 +518,7 @@
   "about": "關於",
   "profile": "個人資料",
   "unpin": "取消置頂",
-  "mentionedMessages": "{count} 條訊息提及我",
+  "mentionedMessages": "{count} 則訊息提及我",
   "longPressToNavigate": "按住查看",
   "permissionDeniedTitle": "權限被禁止",
   "permissionDeniedContent": "請前往設定並允許 {permissionString} 權限。",
@@ -527,21 +527,21 @@
     "markAsRead": "標為已讀",
   "reEdit": "重新編輯",
   "translate": "翻譯",
-  "memberRecalledMessage": "{member}撤回咗一條訊息",
+  "memberRecalledMessage": "{member} 撤回了一則訊息",
   "copyImageContextMenuBtnText": "複製圖片",
   "saveToLocalContextMenuBtnText": "另存為",
   "copyLinkContextMenuBtnText": "複製連結",
-  "openLinkContextMenuBtnText": "喺新窗口打開",
+  "openLinkContextMenuBtnText": "在新視窗中開啟",
   "copyFileSuccess": "複製文件成功",
   "saveFileSuccess": "儲存文件成功",
   "saveFileFailed": "儲存文件失敗",
   "copyLinkSuccess": "複製連結成功",
   "translatedBy": "由騰訊 RTC 提供支持",
   "convertToText": "轉換",
-  "numMessages": "{count, plural, =1 {1 條訊息} other {{count} 條訊息}}",
+  "numMessages": "{count, plural, =1 {1 則訊息} other {{count} 則訊息}}",
   "filterBy": "篩選",
   "text": "文字",
-  "numMessagesOver99": "99+ 條訊息",
+  "numMessagesOver99": "99+ 則訊息",
   "setGroupAnnouncement": "設置群公告",
   "setNickName": "設置群名片",
   "joinTime": "加入時間",
@@ -568,7 +568,7 @@
   "deleteFriendSuccess": "刪除好友成功",
   "deleteFriendFailed": "刪除好友失敗",
   "clearMsgTip": "確認清除聊天記錄？",
-  "sendMsg": "发送消息",
+  "sendMsg": "發送訊息",
   "groupMemberMute": "因被禁言而不能發送消息，請檢查發送者是否被設置禁言。",
   "forwardFailedTip": "發送失敗訊息不支持轉發！",
   "fileTooLarge": "文件大小超出了限制",
@@ -577,7 +577,7 @@
   "atAllTips": "@所有人",
   "forwardVoteFailedTip": "投票訊息不支援轉發！",
   "forwardOneByOneLimitNumberTip": "轉發訊息過多，暫不支持逐條轉發",
-  "modifyRemark": "修改备注",
+  "modifyRemark": "修改備註",
   "banned": "{targetUser} 被禁言 {time}",
   "cancelBanned": "{targetUser} 被取消禁言",
   "day": "天",
@@ -662,7 +662,7 @@
   "tuiEmojiMoon": "[月亮]",
   "tuiEmojiSun": "[太陽]",
   "tuiEmojiStar": "[星星]",
-  "tuiEmojiRedPacket": "[红包]",
+  "tuiEmojiRedPacket": "[紅包]",
   "tuiEmojiCelebrate": "[慶祝]",
   "tuiEmojiBless": "[福]",
   "tuiEmojiFortune": "[發]",
@@ -673,14 +673,14 @@
   "tuiEmojiKnife": "[刀]",
   "tuiEmojiLike": "[讚]",
   "startConversation": "發起會話",
-  "createGroupChat": "創建群聊",
-  "createGroupTips": "創建群組",
-  "createCommunity": "創建社群",
+  "createGroupChat": "建立群聊",
+  "createGroupTips": "建立群組",
+  "createCommunity": "建立社群",
   "communityIDEditFormatTips": "社群 ID 前綴必須為 @TGS#_ !",
   "groupIDEditFormatTips": "群組 ID 前綴不能為 @TGS# !",
   "groupIDEditExceedTips": "群組 ID 最長 48 字節!",
   "groupTypeContentButton": "查看產品文檔",
-  "create": "創建",
+  "create": "建立",
   "groupName": "群名稱",
   "groupIDOption": "群ID (選填)",
   "groupFaceUrl": "群頭像",
@@ -689,10 +689,10 @@
   "groupPublicType": "陌生人社交群(Public)",
   "groupMeetingType": "臨時會議群(Meeting)",
   "groupCommunityType": "社群(Community)",
-  "groupWorkDesc": "好友工作群(Work）：類似普通微信群，創建後僅支持已在群內的好友邀請加群，且無需被邀請方同意或群主審批。",
-  "groupPublicDesc": "陌生人社交群(Public）：類似 QQ 群，創建後群主可以指定群管理員，用戶搜索群 ID 發起加群申請後，需要群主或管理員審批通過才能入群。",
-  "groupMeetingDesc": "臨時會議群(Meeting）：創建後可以隨意進出，且支持查看入群前消息；適用於音視頻會議場景、在線教育場景等與實時音視頻產品結合的場景。",
-  "groupCommunityDesc": "社群(Community)：創建後可以隨意進出，最多支持100000人，支持歷史消息存儲，用戶搜索群 ID 發起加群申請後，無需管理員審批即可進群。",
+  "groupWorkDesc": "好友工作群(Work）：類似普通微信群，建立後僅支持已在群內的好友邀請加群，且無需被邀請方同意或群主審批。",
+  "groupPublicDesc": "陌生人社交群(Public）：類似 QQ 群，建立後群主可以指定群管理員，用戶搜索群 ID 發起加群申請後，需要群主或管理員審批通過才能入群。",
+  "groupMeetingDesc": "臨時會議群(Meeting）：建立後可以隨意進出，且支持查看入群前消息；適用於音視頻會議場景、在線教育場景等與實時音視頻產品結合的場景。",
+  "groupCommunityDesc": "社群(Community)：建立後可以隨意進出，最多支持100000人，支持歷史消息存儲，用戶搜索群 ID 發起加群申請後，無需管理員審批即可進群。",
   "groupDetail": "群聊詳情",
   "transferGroupOwner": "轉讓群主",
   "privateGroup": "討論組",
@@ -704,5 +704,14 @@
   "inviteToGroupFrom": "來自{inviter}的邀請",
   "applyToJoin": "申請加入:",
   "requestWait": "邀請成功，等待處理",
-  "dismissGroupTips": "您所在的群組 {groupName} 已解散"
+  "dismissGroupTips": "您所在的群組 {groupName} 已解散",
+  "dissolve": "解散群組",
+  "reactionList": "回應列表",
+  "toxIdCopied": "已複製 Tox ID",
+  "openChat": "開啟對話",
+  "copyToxId": "複製 Tox ID",
+  "viewToxId": "查看 Tox ID",
+  "reject": "拒絕",
+  "retry": "重試",
+  "noStickers": "沒有貼圖"
 }

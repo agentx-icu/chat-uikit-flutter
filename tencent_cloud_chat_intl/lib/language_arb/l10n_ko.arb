@@ -380,7 +380,7 @@
   "cannotSendApplicationToWorkGroup": "작업 그룹에 신청서를 보낼 수 없습니다",
   "appearance": "외관",
   "darkTheme": "어두운 테마",
-  "denyAny": "거부",
+  "denyAny": "모두 거부",
   "edit": "편집",
   "friendsPermission": "친구 권한",
   "groupJoined": "그룹 가입됨",
@@ -587,7 +587,7 @@
   "atAllTips": "@모든 사람",
   "forwardVoteFailedTip": "투표 메시지는 전달을 지원하지 않습니다!",
   "forwardOneByOneLimitNumberTip": "전달된 메시지가 너무 많습니다. 현재는 하나씩 전달하는 기능이 지원되지 않습니다.",
-  "modifyRemark": "修改备注",
+  "modifyRemark": "비고 수정",
   "banned": "{targetUser} 금지된 {time}",
   "cancelBanned": "{targetUser}님의 차단이 해제되었습니다",
   "day": "일",
@@ -714,5 +714,13 @@
   "inviteToGroupFrom": "{inviter}의 초대",
   "applyToJoin": "가입 신청:",
   "requestWait": "초대가 성공했습니다. 처리를 기다리고 있습니다.",
-  "dismissGroupTips": "귀하가 속해 있던 {groupName} 그룹이 해체되었습니다."
+  "dismissGroupTips": "귀하가 속해 있던 {groupName} 그룹이 해체되었습니다.",
+  "reactionList": "반응 목록",
+  "toxIdCopied": "Tox ID를 복사했습니다",
+  "openChat": "채팅 열기",
+  "copyToxId": "Tox ID 복사",
+  "viewToxId": "Tox ID 보기",
+  "reject": "거절",
+  "retry": "다시 시도",
+  "noStickers": "스티커 없음"
 }

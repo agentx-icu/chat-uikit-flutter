@@ -2,9 +2,11 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'tencent_cloud_chat_localizations.dart';
+
+// ignore_for_file: type=lint
 
 /// The translations for Chinese (`zh`).
 class TencentCloudChatLocalizationsZh extends TencentCloudChatLocalizations {
@@ -636,7 +638,8 @@ class TencentCloudChatLocalizationsZh extends TencentCloudChatLocalizations {
   String get messageReadStatus => '消息阅读状态';
 
   @override
-  String get messageReadStatusDescription => '控制是否显示您的消息的已读状态，以及他人是否可以看到您已读他们的消息。';
+  String get messageReadStatusDescription =>
+      '控制是否显示您的消息的已读状态，以及他人是否可以看到您已读他们的消息。';
 
   @override
   String get onlineStatus => '在线状态';
@@ -1281,7 +1284,7 @@ class TencentCloudChatLocalizationsZh extends TencentCloudChatLocalizations {
   String get openLinkContextMenuBtnText => '在新窗口打开';
 
   @override
-  String get reactionList => 'Reaction List';
+  String get reactionList => '回应列表';
 
   @override
   String get translatedBy => '由腾讯云IM提供支持';
@@ -1752,16 +1755,20 @@ class TencentCloudChatLocalizationsZh extends TencentCloudChatLocalizations {
   String get groupCommunityType => '社群(Community)';
 
   @override
-  String get groupWorkDesc => '好友工作群(Work）：类似普通微信群，创建后仅支持已在群内的好友邀请加群，且无需被邀请方同意或群主审批。';
+  String get groupWorkDesc =>
+      '好友工作群(Work）：类似普通微信群，创建后仅支持已在群内的好友邀请加群，且无需被邀请方同意或群主审批。';
 
   @override
-  String get groupPublicDesc => '陌生人社交群(Public）：类似 QQ 群，创建后群主可以指定群管理员，用户搜索群 ID 发起加群申请后，需要群主或管理员审批通过才能入群。';
+  String get groupPublicDesc =>
+      '陌生人社交群(Public）：类似 QQ 群，创建后群主可以指定群管理员，用户搜索群 ID 发起加群申请后，需要群主或管理员审批通过才能入群。';
 
   @override
-  String get groupMeetingDesc => '临时会议群(Meeting）：创建后可以随意进出，且支持查看入群前消息；适用于音视频会议场景、在线教育场景等与实时音视频产品结合的场景。';
+  String get groupMeetingDesc =>
+      '临时会议群(Meeting）：创建后可以随意进出，且支持查看入群前消息；适用于音视频会议场景、在线教育场景等与实时音视频产品结合的场景。';
 
   @override
-  String get groupCommunityDesc => '社群(Community)：创建后可以随意进出，最多支持100000人，支持历史消息存储，用户搜索群 ID 发起加群申请后，无需管理员审批即可进群。';
+  String get groupCommunityDesc =>
+      '社群(Community)：创建后可以随意进出，最多支持100000人，支持历史消息存储，用户搜索群 ID 发起加群申请后，无需管理员审批即可进群。';
 
   @override
   String get groupDetail => '群聊详情';
@@ -1802,21 +1809,42 @@ class TencentCloudChatLocalizationsZh extends TencentCloudChatLocalizations {
   String dismissGroupTips(Object groupName) {
     return '您所在的群 $groupName 已解散';
   }
+
+  @override
+  String get toxIdCopied => 'Tox ID 已复制';
+
+  @override
+  String get openChat => '打开聊天';
+
+  @override
+  String get copyToxId => '复制 Tox ID';
+
+  @override
+  String get viewToxId => '查看 Tox ID';
+
+  @override
+  String get reject => '拒绝';
+
+  @override
+  String get retry => '重试';
+
+  @override
+  String get noStickers => '暂无贴纸';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
-class TencentCloudChatLocalizationsZhHans extends TencentCloudChatLocalizationsZh {
-  TencentCloudChatLocalizationsZhHans(): super('zh_Hans');
-
-
+class TencentCloudChatLocalizationsZhHans
+    extends TencentCloudChatLocalizationsZh {
+  TencentCloudChatLocalizationsZhHans() : super('zh_Hans');
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
-class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZh {
-  TencentCloudChatLocalizationsZhHant(): super('zh_Hant');
+class TencentCloudChatLocalizationsZhHant
+    extends TencentCloudChatLocalizationsZh {
+  TencentCloudChatLocalizationsZhHant() : super('zh_Hant');
 
   @override
-  String get album => '相册';
+  String get album => '相簿';
 
   @override
   String get chat => '對話';
@@ -1870,10 +1898,10 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get frequentlyContacted => '常聯絡人';
 
   @override
-  String get addParticipants => '加成員';
+  String get addParticipants => '新增成員';
 
   @override
-  String get addMembers => '加成員';
+  String get addMembers => '新增成員';
 
   @override
   String get cancel => '取消';
@@ -1928,7 +1956,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
 
   @override
   String youCreatedGroup(String groupName) {
-    return '你創建咗群組 $groupName';
+    return '你建立了群組 $groupName';
   }
 
   @override
@@ -1944,7 +1972,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get more => '更多';
 
   @override
-  String get noConversationsContactsOrMessagesFound => '冇搜尋到對話、聯絡人或訊息';
+  String get noConversationsContactsOrMessagesFound => '找不到相符的對話、聯絡人或訊息';
 
   @override
   String get contactInfo => '聯絡人信息';
@@ -1980,7 +2008,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get location => '位置';
 
   @override
-  String get youStartedACall => '你發起咗個通話';
+  String get youStartedACall => '你發起了通話';
 
   @override
   String get star => '星標';
@@ -1995,7 +2023,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get multiSelect => '多選';
 
   @override
-  String get select => '揀選';
+  String get select => '選擇';
 
   @override
   String get quote => '引用';
@@ -2026,8 +2054,8 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
     String _temp0 = intl.Intl.pluralLogic(
       num,
       locale: localeName,
-      other: '$num 已揀選',
-      zero: '揀選訊息',
+      other: '已選擇 $num 則',
+      zero: '選擇訊息',
     );
     return '$_temp0';
   }
@@ -2039,7 +2067,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
       locale: localeName,
       other: '$num 個對話',
       one: '1 個對話',
-      zero: '冇揀選對話',
+      zero: '未選擇對話',
     );
     return '$_temp0';
   }
@@ -2137,10 +2165,10 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get inviteGroupType => '邀請進群方式';
 
   @override
-  String get myAliasInGroup => '我在群裡嘅別名';
+  String get myAliasInGroup => '我在群組中的別名';
 
   @override
-  String get myGroupNickName => '我在群裡嘅別名';
+  String get myGroupNickName => '我在群組中的別名';
 
   @override
   String get groupMembers => '群成員';
@@ -2169,19 +2197,19 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get silenceAll => '全員禁言';
 
   @override
-  String get addSilencedMember => '加禁言成員';
+  String get addSilencedMember => '新增禁言成員';
 
   @override
-  String get onlyGroupOwnerAndAdminsCanSendMessages => '開啟後，只有群主同管理員可以發訊息。';
+  String get onlyGroupOwnerAndAdminsCanSendMessages => '開啟後，只有群主與管理員可以發訊息。';
 
   @override
   String someoneEnabledSilenceAll(String name) {
-    return '$name 開啟咗「全員禁言」';
+    return '$name 開啟了「全員禁言」';
   }
 
   @override
   String someoneDisabledSilenceAll(String name) {
-    return '$name 關閉咗「全員禁言」';
+    return '$name 關閉了「全員禁言」';
   }
 
   @override
@@ -2204,7 +2232,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
 
   @override
   String myUserID(String userID) {
-    return '我嘅用戶ID: $userID';
+    return '我的用戶ID: $userID';
   }
 
   @override
@@ -2219,10 +2247,10 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   }
 
   @override
-  String get addToContacts => '加到聯絡人';
+  String get addToContacts => '加入聯絡人';
 
   @override
-  String get addContact => '加聯絡人';
+  String get addContact => '新增聯絡人';
 
   @override
   String get bio => '簡介';
@@ -2248,16 +2276,16 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get send => '發送';
 
   @override
-  String get contactAddedSuccessfully => '成功加聯絡人';
+  String get contactAddedSuccessfully => '已成功新增聯絡人';
 
   @override
   String get requestSent => '請求已發送';
 
   @override
-  String get cannotAddContact => '唔可以加聯絡人';
+  String get cannotAddContact => '無法新增聯絡人';
 
   @override
-  String get addGroup => '加群組';
+  String get addGroup => '新增群組';
 
   @override
   String typeIs(String type) {
@@ -2265,7 +2293,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   }
 
   @override
-  String get groupNotAcceptingRequests => '群組唔接受請求';
+  String get groupNotAcceptingRequests => '群組不接受請求';
 
   @override
   String get joinedGroupSuccessfully => '成功加入群組';
@@ -2393,7 +2421,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get countryOrRegion => '國家/地區';
 
   @override
-  String get selectACountry => '揀選國家或地區';
+  String get selectACountry => '選擇國家或地區';
 
   @override
   String get phoneNumber => '電話號碼';
@@ -2441,7 +2469,8 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get messageReadStatus => '訊息已讀狀態';
 
   @override
-  String get messageReadStatusDescription => '控制是否顯示您的訊息已讀狀態以及其他人是否可以看到您已讀他們的訊息。';
+  String get messageReadStatusDescription =>
+      '控制是否顯示您的訊息已讀狀態以及其他人是否可以看到您已讀他們的訊息。';
 
   @override
   String get onlineStatus => '在線狀態';
@@ -2492,8 +2521,8 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
     String _temp0 = intl.Intl.pluralLogic(
       num,
       locale: localeName,
-      other: '$num 條新訊息',
-      one: '一條新訊息',
+      other: '$num 則新訊息',
+      one: '一則新訊息',
     );
     return '$_temp0';
   }
@@ -2526,7 +2555,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get forwardCombined => '合併轉發';
 
   @override
-  String get selectConversations => '揀選對話';
+  String get selectConversations => '選擇對話';
 
   @override
   String get recent => '最近';
@@ -2550,8 +2579,8 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
     String _temp0 = intl.Intl.pluralLogic(
       num,
       locale: localeName,
-      other: '刪除 $num 條訊息？',
-      one: '刪除一條訊息？',
+      other: '刪除 $num 則訊息？',
+      one: '刪除一則訊息？',
       zero: '未刪除訊息',
     );
     return '$_temp0';
@@ -2666,7 +2695,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get unknownCallStatus => '正在通話';
 
   @override
-  String get groupChatCreated => '群聊成功創建！';
+  String get groupChatCreated => '群聊建立成功！';
 
   @override
   String get vote => '投票';
@@ -2831,15 +2860,15 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   }
 
   @override
-  String get selectMembers => '揀選成員';
+  String get selectMembers => '選擇成員';
 
   @override
   String numSelectMembers(int num) {
     String _temp0 = intl.Intl.pluralLogic(
       num,
       locale: localeName,
-      other: '$num 已選',
-      zero: '揀選成員',
+      other: '已選擇 $num 人',
+      zero: '選擇成員',
     );
     return '$_temp0';
   }
@@ -2895,10 +2924,13 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get messageRecall => '訊息撤回';
 
   @override
-  String get messageRecallConfirmation => '您確定要撤回這條訊息嗎？';
+  String get messageRecallConfirmation => '您確定要撤回這則訊息嗎？';
 
   @override
   String get quit => '退出群聊';
+
+  @override
+  String get dissolve => '解散群組';
 
   @override
   String get setGroupName => '設置群組名稱';
@@ -3024,7 +3056,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
 
   @override
   String mentionedMessages(num count) {
-    return '$count 條訊息提及我';
+    return '$count 則訊息提及我';
   }
 
   @override
@@ -3055,7 +3087,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
 
   @override
   String memberRecalledMessage(Object member) {
-    return '$member撤回咗一條訊息';
+    return '$member 撤回了一則訊息';
   }
 
   @override
@@ -3080,7 +3112,10 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get copyLinkContextMenuBtnText => '複製連結';
 
   @override
-  String get openLinkContextMenuBtnText => '喺新窗口打開';
+  String get openLinkContextMenuBtnText => '在新視窗中開啟';
+
+  @override
+  String get reactionList => '回應列表';
 
   @override
   String get translatedBy => '由騰訊 RTC 提供支持';
@@ -3093,8 +3128,8 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count 條訊息',
-      one: '1 條訊息',
+      other: '$count 則訊息',
+      one: '1 則訊息',
     );
     return '$_temp0';
   }
@@ -3106,7 +3141,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get text => '文字';
 
   @override
-  String get numMessagesOver99 => '99+ 條訊息';
+  String get numMessagesOver99 => '99+ 則訊息';
 
   @override
   String get setGroupAnnouncement => '設置群公告';
@@ -3187,7 +3222,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get clearMsgTip => '確認清除聊天記錄？';
 
   @override
-  String get sendMsg => '发送消息';
+  String get sendMsg => '發送訊息';
 
   @override
   String get groupMemberMute => '因被禁言而不能發送消息，請檢查發送者是否被設置禁言。';
@@ -3214,7 +3249,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get forwardOneByOneLimitNumberTip => '轉發訊息過多，暫不支持逐條轉發';
 
   @override
-  String get modifyRemark => '修改备注';
+  String get modifyRemark => '修改備註';
 
   @override
   String banned(Object targetUser, Object time) {
@@ -3470,7 +3505,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get tuiEmojiStar => '[星星]';
 
   @override
-  String get tuiEmojiRedPacket => '[红包]';
+  String get tuiEmojiRedPacket => '[紅包]';
 
   @override
   String get tuiEmojiCelebrate => '[慶祝]';
@@ -3503,13 +3538,13 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get startConversation => '發起會話';
 
   @override
-  String get createGroupChat => '創建群聊';
+  String get createGroupChat => '建立群聊';
 
   @override
-  String get createGroupTips => '創建群組';
+  String get createGroupTips => '建立群組';
 
   @override
-  String get createCommunity => '創建社群';
+  String get createCommunity => '建立社群';
 
   @override
   String get communityIDEditFormatTips => '社群 ID 前綴必須為 @TGS#_ !';
@@ -3524,7 +3559,7 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get groupTypeContentButton => '查看產品文檔';
 
   @override
-  String get create => '創建';
+  String get create => '建立';
 
   @override
   String get groupName => '群名稱';
@@ -3551,16 +3586,20 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String get groupCommunityType => '社群(Community)';
 
   @override
-  String get groupWorkDesc => '好友工作群(Work）：類似普通微信群，創建後僅支持已在群內的好友邀請加群，且無需被邀請方同意或群主審批。';
+  String get groupWorkDesc =>
+      '好友工作群(Work）：類似普通微信群，建立後僅支持已在群內的好友邀請加群，且無需被邀請方同意或群主審批。';
 
   @override
-  String get groupPublicDesc => '陌生人社交群(Public）：類似 QQ 群，創建後群主可以指定群管理員，用戶搜索群 ID 發起加群申請後，需要群主或管理員審批通過才能入群。';
+  String get groupPublicDesc =>
+      '陌生人社交群(Public）：類似 QQ 群，建立後群主可以指定群管理員，用戶搜索群 ID 發起加群申請後，需要群主或管理員審批通過才能入群。';
 
   @override
-  String get groupMeetingDesc => '臨時會議群(Meeting）：創建後可以隨意進出，且支持查看入群前消息；適用於音視頻會議場景、在線教育場景等與實時音視頻產品結合的場景。';
+  String get groupMeetingDesc =>
+      '臨時會議群(Meeting）：建立後可以隨意進出，且支持查看入群前消息；適用於音視頻會議場景、在線教育場景等與實時音視頻產品結合的場景。';
 
   @override
-  String get groupCommunityDesc => '社群(Community)：創建後可以隨意進出，最多支持100000人，支持歷史消息存儲，用戶搜索群 ID 發起加群申請後，無需管理員審批即可進群。';
+  String get groupCommunityDesc =>
+      '社群(Community)：建立後可以隨意進出，最多支持100000人，支持歷史消息存儲，用戶搜索群 ID 發起加群申請後，無需管理員審批即可進群。';
 
   @override
   String get groupDetail => '群聊詳情';
@@ -3601,4 +3640,25 @@ class TencentCloudChatLocalizationsZhHant extends TencentCloudChatLocalizationsZ
   String dismissGroupTips(Object groupName) {
     return '您所在的群組 $groupName 已解散';
   }
+
+  @override
+  String get toxIdCopied => '已複製 Tox ID';
+
+  @override
+  String get openChat => '開啟對話';
+
+  @override
+  String get copyToxId => '複製 Tox ID';
+
+  @override
+  String get viewToxId => '查看 Tox ID';
+
+  @override
+  String get reject => '拒絕';
+
+  @override
+  String get retry => '重試';
+
+  @override
+  String get noStickers => '沒有貼圖';
 }

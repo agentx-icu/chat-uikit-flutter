@@ -161,7 +161,7 @@ class TencentCloudChatContactAppBarNameState
                   // than relying on MenuAnchor state here.
                   addContacts();
                 },
-                tooltip: 'Add Contact',
+                tooltip: tL10n.addContact,
               );
             },
             menuChildren: [
@@ -209,7 +209,7 @@ class TencentCloudChatContactAppBarNameState
                 onPressed: () {
                   addContacts();
                 },
-                tooltip: 'Add Contact',
+                tooltip: tL10n.addContact,
               );
             },
             menuChildren: [

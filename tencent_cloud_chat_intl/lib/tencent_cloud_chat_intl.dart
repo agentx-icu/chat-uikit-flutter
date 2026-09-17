@@ -86,6 +86,16 @@ class TencentCloudChatIntl extends ChangeNotifier {
     return dateString;
   }
 
+  /// Formats [dateTime] as a date plus time of day for display, in the current
+  /// UIKit locale's own convention ("Sep 17, 2026 9:28 AM" in English,
+  /// "2026年9月17日 09:28" in Chinese, ...). Resolves the locale like
+  /// [formatTimestampToTime]. Use this — not [getFormattedTimeString], which is
+  /// a fixed English log format — for anything a user reads.
+  static String formatDateTime(DateTime dateTime, [BuildContext? context]) {
+    final locale = _formatLocale(context);
+    return _withLocaleFallback(locale, (l) => DateFormat.yMMMd(l).add_jm()).format(dateTime);
+  }
+
   /// Returns a formatted string representation of the current date and time.
   ///
   /// [dateTime] (optional) represents the date and time to format. If not provided, the current date and time will be used.
@@ -93,6 +103,7 @@ class TencentCloudChatIntl extends ChangeNotifier {
   /// Returns a string in the format "yyyy-MM-dd hh:mm:ss a".
   ///
   /// This function is used to format the date and time for logging purposes.
+  /// It is locale-independent on purpose; never show it in the UI.
   ///
   /// Example:
   /// ```dart
@@ -116,30 +127,49 @@ class TencentCloudChatIntl extends ChangeNotifier {
     return dateFormat.format(dateTime);
   }
 
-  /// Formats a given timestamp (in seconds) into a time string in the format of "11:00 AM".
+  /// Formats a given timestamp (in seconds) into a time-of-day string in the
+  /// current UIKit locale's own convention ("11:00 AM" in English, "11:00" in
+  /// Chinese, ...).
   ///
   /// This method takes an integer [timestamp] representing the number of seconds since the Unix epoch
   /// (January 1, 1970 at 00:00:00 UTC) and returns a formatted time string.
   ///
-  /// The returned string will be in the format of "hh:mm a", where "hh" is the hour (00-11),
-  /// "mm" is the minute (00-59), and "a" is either "AM" or "PM".
+  /// The locale is the one [getCurrentLocale] resolves for [context] — the same
+  /// source [formatTimestampToHumanReadable] uses, so a message bubble and its
+  /// conversation-list row agree. Without [context] it falls back to the locale
+  /// last applied through [setLocale]. A locale-less `DateFormat.jm()` would
+  /// format with `Intl.defaultLocale` instead, which the app never sets, so
+  /// every non-English UI showed English "9:28 AM" bubble times.
   ///
   /// Example:
   /// ```
   /// int timestamp = 1635504600; // Represents "2021-10-29 11:00:00"
-  /// String formattedTime = formatTimestampToTime(timestamp);
-  /// print(formattedTime); // Output: "11:00 AM"
+  /// String formattedTime = formatTimestampToTime(timestamp, context);
+  /// print(formattedTime); // Output: "11:00 AM" (en), "11:00" (zh)
   /// ```
-  static String formatTimestampToTime(int timestamp) {
+  static String formatTimestampToTime(int timestamp, [BuildContext? context]) {
     // Convert the timestamp (in seconds) to a DateTime object.
     final dateTime = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
 
-    // Create a DateFormat object for formatting the time.
-    final timeFormat = DateFormat.jm();
+    final locale = _formatLocale(context);
+    return _withLocaleFallback(locale, DateFormat.jm).format(dateTime);
+  }
 
-    // Format the DateTime object as a time string and return it.
+  static String? _formatLocale(BuildContext? context) {
+    final intl = TencentCloudChatIntl();
+    return (context != null ? intl.getCurrentLocale(context) : intl._currentLocale)?.toString();
+  }
 
-    return timeFormat.format(dateTime);
+  /// Date symbols for non-English locales arrive with the first
+  /// `GlobalMaterialLocalizations` load. A context-less call made before that
+  /// (or for a locale intl does not ship) would throw, so degrade to the
+  /// default pattern instead of taking the caller down.
+  static DateFormat _withLocaleFallback(String? locale, DateFormat Function(String?) build) {
+    try {
+      return build(locale);
+    } on ArgumentError {
+      return build(null);
+    }
   }
 
   /// Formats a given timestamp (in seconds) into a human-readable string based on different scenarios.

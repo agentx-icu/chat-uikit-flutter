@@ -14,6 +14,8 @@ import 'tencent_cloud_chat_localizations_ja.dart';
 import 'tencent_cloud_chat_localizations_ko.dart';
 import 'tencent_cloud_chat_localizations_zh.dart';
 
+// ignore_for_file: type=lint
+
 /// Callers can lookup localized strings with an instance of TencentCloudChatLocalizations
 /// returned by `TencentCloudChatLocalizations.of(context)`.
 ///
@@ -66,15 +68,18 @@ import 'tencent_cloud_chat_localizations_zh.dart';
 /// be consistent with the languages listed in the TencentCloudChatLocalizations.supportedLocales
 /// property.
 abstract class TencentCloudChatLocalizations {
-  TencentCloudChatLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  TencentCloudChatLocalizations(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
   static TencentCloudChatLocalizations? of(BuildContext context) {
-    return Localizations.of<TencentCloudChatLocalizations>(context, TencentCloudChatLocalizations);
+    return Localizations.of<TencentCloudChatLocalizations>(
+        context, TencentCloudChatLocalizations);
   }
 
-  static const LocalizationsDelegate<TencentCloudChatLocalizations> delegate = _TencentCloudChatLocalizationsDelegate();
+  static const LocalizationsDelegate<TencentCloudChatLocalizations> delegate =
+      _TencentCloudChatLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -86,7 +91,8 @@ abstract class TencentCloudChatLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -3367,49 +3373,101 @@ abstract class TencentCloudChatLocalizations {
   /// In en, this message translates to:
   /// **'The group you were in {groupName} has been disbanded'**
   String dismissGroupTips(Object groupName);
+
+  /// No description provided for @toxIdCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Tox ID copied'**
+  String get toxIdCopied;
+
+  /// No description provided for @openChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get openChat;
+
+  /// No description provided for @copyToxId.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Tox ID'**
+  String get copyToxId;
+
+  /// No description provided for @viewToxId.
+  ///
+  /// In en, this message translates to:
+  /// **'View Tox ID'**
+  String get viewToxId;
+
+  /// No description provided for @reject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get reject;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @noStickers.
+  ///
+  /// In en, this message translates to:
+  /// **'No stickers'**
+  String get noStickers;
 }
 
-class _TencentCloudChatLocalizationsDelegate extends LocalizationsDelegate<TencentCloudChatLocalizations> {
+class _TencentCloudChatLocalizationsDelegate
+    extends LocalizationsDelegate<TencentCloudChatLocalizations> {
   const _TencentCloudChatLocalizationsDelegate();
 
   @override
   Future<TencentCloudChatLocalizations> load(Locale locale) {
-    return SynchronousFuture<TencentCloudChatLocalizations>(lookupTencentCloudChatLocalizations(locale));
+    return SynchronousFuture<TencentCloudChatLocalizations>(
+        lookupTencentCloudChatLocalizations(locale));
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['ar', 'en', 'ja', 'ko', 'zh'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['ar', 'en', 'ja', 'ko', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_TencentCloudChatLocalizationsDelegate old) => false;
 }
 
-TencentCloudChatLocalizations lookupTencentCloudChatLocalizations(Locale locale) {
-
+TencentCloudChatLocalizations lookupTencentCloudChatLocalizations(
+    Locale locale) {
   // Lookup logic when language+script codes are specified.
   switch (locale.languageCode) {
-    case 'zh': {
-  switch (locale.scriptCode) {
-    case 'Hans': return TencentCloudChatLocalizationsZhHans();
-case 'Hant': return TencentCloudChatLocalizationsZhHant();
-   }
-  break;
-   }
+    case 'zh':
+      {
+        switch (locale.scriptCode) {
+          case 'Hans':
+            return TencentCloudChatLocalizationsZhHans();
+          case 'Hant':
+            return TencentCloudChatLocalizationsZhHant();
+        }
+        break;
+      }
   }
 
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar': return TencentCloudChatLocalizationsAr();
-    case 'en': return TencentCloudChatLocalizationsEn();
-    case 'ja': return TencentCloudChatLocalizationsJa();
-    case 'ko': return TencentCloudChatLocalizationsKo();
-    case 'zh': return TencentCloudChatLocalizationsZh();
+    case 'ar':
+      return TencentCloudChatLocalizationsAr();
+    case 'en':
+      return TencentCloudChatLocalizationsEn();
+    case 'ja':
+      return TencentCloudChatLocalizationsJa();
+    case 'ko':
+      return TencentCloudChatLocalizationsKo();
+    case 'zh':
+      return TencentCloudChatLocalizationsZh();
   }
 
   throw FlutterError(
-    'TencentCloudChatLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
-  );
+      'TencentCloudChatLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

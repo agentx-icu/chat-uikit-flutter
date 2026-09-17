@@ -55,9 +55,9 @@ class TencentCloudChatContactItemState extends TencentCloudChatState<TencentClou
     await Clipboard.setData(ClipboardData(text: widget.friend.userID));
     if (!mounted) return;
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      const SnackBar(
-        content: Text('Tox ID copied'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(tL10n.toxIdCopied),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -72,12 +72,12 @@ class TencentCloudChatContactItemState extends TencentCloudChatState<TencentClou
         overlay == null ? globalPosition.dx : overlay.size.width - globalPosition.dx,
         overlay == null ? globalPosition.dy : overlay.size.height - globalPosition.dy,
       ),
-      items: const <PopupMenuEntry<String>>[
+      items: <PopupMenuEntry<String>>[
         PopupMenuItem<String>(
           value: 'open',
           child: ListTile(
-            leading: Icon(Icons.chat_bubble_outline),
-            title: Text('Open chat'),
+            leading: const Icon(Icons.chat_bubble_outline),
+            title: Text(tL10n.openChat),
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
@@ -85,8 +85,8 @@ class TencentCloudChatContactItemState extends TencentCloudChatState<TencentClou
         PopupMenuItem<String>(
           value: 'copy',
           child: ListTile(
-            leading: Icon(Icons.copy),
-            title: Text('Copy Tox ID'),
+            leading: const Icon(Icons.copy),
+            title: Text(tL10n.copyToxId),
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
@@ -114,19 +114,19 @@ class TencentCloudChatContactItemState extends TencentCloudChatState<TencentClou
               popDialogIfCurrent(sheetContext);
               navigateToChat();
             },
-            child: const Text('Open chat'),
+            child: Text(tL10n.openChat),
           ),
           CupertinoActionSheetAction(
             onPressed: () {
               popDialogIfCurrent(sheetContext);
               _copyToxId();
             },
-            child: const Text('Copy Tox ID'),
+            child: Text(tL10n.copyToxId),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => popDialogIfCurrent(sheetContext),
-          child: const Text('Cancel'),
+          child: Text(tL10n.cancel),
         ),
       ),
     );

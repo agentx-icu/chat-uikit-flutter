@@ -268,7 +268,7 @@ class TencentCloudChatUserProfileContentState
                       IconButton(
                         key: const ValueKey('user_profile_copy_id_button'),
                         icon: const Icon(Icons.copy, size: 16),
-                        tooltip: 'Copy',
+                        tooltip: tL10n.copy,
                         padding: const EdgeInsets.only(left: 4),
                         constraints: const BoxConstraints(),
                         visualDensity: VisualDensity.compact,
@@ -281,7 +281,7 @@ class TencentCloudChatUserProfileContentState
                           );
                           if (!context.mounted) return;
                           ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                            const SnackBar(content: Text('Tox ID copied')),
+                            SnackBar(content: Text(tL10n.toxIdCopied)),
                           );
                         },
                       ),

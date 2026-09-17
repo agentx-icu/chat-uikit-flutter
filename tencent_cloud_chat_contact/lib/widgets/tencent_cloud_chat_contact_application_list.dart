@@ -159,9 +159,9 @@ class TencentCloudChatContactApplicationItemState
     await Clipboard.setData(ClipboardData(text: widget.application.userID));
     if (!mounted) return;
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      const SnackBar(
-        content: Text('Tox ID copied'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(tL10n.toxIdCopied),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -187,11 +187,11 @@ class TencentCloudChatContactApplicationItemState
             : overlay.size.height - globalPosition.dy,
       ),
       items: <PopupMenuEntry<String>>[
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'accept',
           child: ListTile(
-            leading: Icon(Icons.check, color: acceptColor),
-            title: Text('Accept'),
+            leading: const Icon(Icons.check, color: acceptColor),
+            title: Text(tL10n.accept),
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
@@ -200,16 +200,16 @@ class TencentCloudChatContactApplicationItemState
           value: 'reject',
           child: ListTile(
             leading: Icon(Icons.close, color: colorTheme.error),
-            title: const Text('Reject'),
+            title: Text(tL10n.reject),
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
         ),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'copy',
           child: ListTile(
-            leading: Icon(Icons.copy),
-            title: Text('View Tox ID'),
+            leading: const Icon(Icons.copy),
+            title: Text(tL10n.viewToxId),
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),

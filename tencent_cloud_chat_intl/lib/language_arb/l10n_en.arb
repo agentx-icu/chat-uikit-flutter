@@ -717,5 +717,12 @@
   "inviteToGroupFrom": "Invitation from {inviter}",
   "applyToJoin": "Apply to join:",
   "requestWait": "Invitation sent. Waiting for response.",
-  "dismissGroupTips": "The group you were in {groupName} has been disbanded"
+  "dismissGroupTips": "The group you were in {groupName} has been disbanded",
+  "toxIdCopied": "Tox ID copied",
+  "openChat": "Open chat",
+  "copyToxId": "Copy Tox ID",
+  "viewToxId": "View Tox ID",
+  "reject": "Reject",
+  "retry": "Retry",
+  "noStickers": "No stickers"
 }

@@ -2,9 +2,11 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'tencent_cloud_chat_localizations.dart';
+
+// ignore_for_file: type=lint
 
 /// The translations for English (`en`).
 class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
@@ -139,7 +141,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get more => 'More';
 
   @override
-  String get noConversationsContactsOrMessagesFound => 'No Conversations, Contacts or Messages found';
+  String get noConversationsContactsOrMessagesFound =>
+      'No Conversations, Contacts or Messages found';
 
   @override
   String get contactInfo => 'Contact Info';
@@ -254,7 +257,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   }
 
   @override
-  String get swipeLeftToCancelOrReleaseToSend => 'Swipe left to cancel or release to send';
+  String get swipeLeftToCancelOrReleaseToSend =>
+      'Swipe left to cancel or release to send';
 
   @override
   String get releaseToCancel => 'Release to Cancel';
@@ -367,7 +371,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get addSilencedMember => 'Add Silenced Member';
 
   @override
-  String get onlyGroupOwnerAndAdminsCanSendMessages => 'After enabling, only the group owner and admins can send messages.';
+  String get onlyGroupOwnerAndAdminsCanSendMessages =>
+      'After enabling, only the group owner and admins can send messages.';
 
   @override
   String someoneEnabledSilenceAll(String name) {
@@ -507,10 +512,12 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get contactsPermission => 'Contacts Permission';
 
   @override
-  String get allowAnyUserAddYouAsContact => 'Allow Anyone to Add You as a Contact';
+  String get allowAnyUserAddYouAsContact =>
+      'Allow Anyone to Add You as a Contact';
 
   @override
-  String get declineContactRequestFromAnyUser => 'Auto Decline Contact Requests';
+  String get declineContactRequestFromAnyUser =>
+      'Auto Decline Contact Requests';
 
   @override
   String get anyoneUponRequest => 'Accept Requests Manually';
@@ -576,7 +583,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get personalInformationCollected => 'Personal Information Collected';
 
   @override
-  String get informationSharedWithThirdParties => 'Information Shared with Third Parties';
+  String get informationSharedWithThirdParties =>
+      'Information Shared with Third Parties';
 
   @override
   String get deleteAccount => 'Delete Account';
@@ -636,13 +644,15 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get messageReadStatus => 'Message Read Status';
 
   @override
-  String get messageReadStatusDescription => 'Controls whether the read status is displayed for your messages and if others can see whether you\'ve read their messages.';
+  String get messageReadStatusDescription =>
+      'Controls whether the read status is displayed for your messages and if others can see whether you\'ve read their messages.';
 
   @override
   String get onlineStatus => 'Online Status';
 
   @override
-  String get onlineStatusDescription => 'Determines if your online status is visible to your contacts.';
+  String get onlineStatusDescription =>
+      'Determines if your online status is visible to your contacts.';
 
   @override
   String get noBio => 'No Bio';
@@ -771,7 +781,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get allowAny => 'Allow Any';
 
   @override
-  String get cannotSendApplicationToWorkGroup => 'Cannot send application to work group';
+  String get cannotSendApplicationToWorkGroup =>
+      'Cannot send application to work group';
 
   @override
   String get appearance => 'Appearance';
@@ -989,13 +1000,15 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get doNotReceiveMessages => 'Do not receive messages';
 
   @override
-  String get receiveMessagesWhenOnlineOnly => 'Receive messages when online only';
+  String get receiveMessagesWhenOnlineOnly =>
+      'Receive messages when online only';
 
   @override
   String get disallowJoinGroup => 'Disallow applying to join group';
 
   @override
-  String get joinGroupNeedApproval => 'Require admin approval for applying to join group';
+  String get joinGroupNeedApproval =>
+      'Require admin approval for applying to join group';
 
   @override
   String get joinGroupDirectly => 'Join group directly after applying';
@@ -1004,10 +1017,12 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get disallowInviting => 'Disallow inviting to join group';
 
   @override
-  String get requireApprovalForInviting => 'Require admin approval for inviting to join group';
+  String get requireApprovalForInviting =>
+      'Require admin approval for inviting to join group';
 
   @override
-  String get joinDirectlyBeenInvited => 'Join group directly after being invited';
+  String get joinDirectlyBeenInvited =>
+      'Join group directly after being invited';
 
   @override
   String get unmuted => 'Unmuted';
@@ -1072,10 +1087,12 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get changeTheme => 'Change appearance';
 
   @override
-  String get deleteAccountNotification => 'After deleted account, you will not be able to use your current account, and related data will be deleted and cannot be retrieved.';
+  String get deleteAccountNotification =>
+      'After deleted account, you will not be able to use your current account, and related data will be deleted and cannot be retrieved.';
 
   @override
-  String get restartAppForLanguage => 'Please restart the app for the language change to take effect';
+  String get restartAppForLanguage =>
+      'Please restart the app for the language change to take effect';
 
   @override
   String get deleteAllMessages => 'Clear Chat History';
@@ -1090,7 +1107,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get messageRecall => 'Message Recall';
 
   @override
-  String get messageRecallConfirmation => 'Are you sure you want to recall this message?';
+  String get messageRecallConfirmation =>
+      'Are you sure you want to recall this message?';
 
   @override
   String get quit => 'Leave';
@@ -1167,7 +1185,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   }
 
   @override
-  String get unableToSendWithFolders => 'Unable to send files because folders are included. Please select individual files only.';
+  String get unableToSendWithFolders =>
+      'Unable to send files because folders are included. Please select individual files only.';
 
   @override
   String get channelSwitch => 'Channel: ';
@@ -1179,13 +1198,15 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get tGWA => 'Telegram & WhatsApp';
 
   @override
-  String get contactUsIfQuestions => 'If there\'s anything unclear or you have more ideas, feel free to contact us!';
+  String get contactUsIfQuestions =>
+      'If there\'s anything unclear or you have more ideas, feel free to contact us!';
 
   @override
   String get chatNow => 'Chat Now';
 
   @override
-  String get onlineServiceTimeFrom10To20 => 'Online time: 10 AM to 8 PM, Mon through Fri';
+  String get onlineServiceTimeFrom10To20 =>
+      'Online time: 10 AM to 8 PM, Mon through Fri';
 
   @override
   String get officialWebsite => 'Official Website';
@@ -1197,10 +1218,12 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get sourceCode => 'Source Code';
 
   @override
-  String get personalInformationCollectionList => 'Personal information collection list';
+  String get personalInformationCollectionList =>
+      'Personal information collection list';
 
   @override
-  String get thirdPartyInformationSharingList => 'Third-party information sharing list';
+  String get thirdPartyInformationSharingList =>
+      'Third-party information sharing list';
 
   @override
   String get version => 'Version';
@@ -1334,7 +1357,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get friendLimit => 'The number of your contacts exceeds the limit.';
 
   @override
-  String get otherFriendLimit => 'The number of the other user\'s contacts exceeds the limit.';
+  String get otherFriendLimit =>
+      'The number of the other user\'s contacts exceeds the limit.';
 
   @override
   String get inBlacklist => 'You have blocked this user.';
@@ -1364,7 +1388,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get addGroupNotFound => 'The group does not exist';
 
   @override
-  String get addGroupFullMember => 'The number of group members has reached the limit';
+  String get addGroupFullMember =>
+      'The number of group members has reached the limit';
 
   @override
   String get joinedTip => 'You have joined the group: ';
@@ -1397,7 +1422,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get sendMsg => 'Send a message';
 
   @override
-  String get groupMemberMute => 'This user is blocked from posting and thus cannot send messages. Check whether the sender is blocked from posting.';
+  String get groupMemberMute =>
+      'This user is blocked from posting and thus cannot send messages. Check whether the sender is blocked from posting.';
 
   @override
   String get forwardFailedTip => 'Unable to forward failed messages.';
@@ -1418,7 +1444,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get forwardVoteFailedTip => 'Voting messages cannot be forwarded!';
 
   @override
-  String get forwardOneByOneLimitNumberTip => 'Unable to forward the messages one by one because there are too many messages.';
+  String get forwardOneByOneLimitNumberTip =>
+      'Unable to forward the messages one by one because there are too many messages.';
 
   @override
   String get modifyRemark => 'Modify remark';
@@ -1506,7 +1533,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get groupCallConfirmSwitchToAudio => ' confirm to audio call';
 
   @override
-  String get callkitInPeerBlacklist => 'The identifier is in blacklist. Failed to send this message!';
+  String get callkitInPeerBlacklist =>
+      'The identifier is in blacklist. Failed to send this message!';
 
   @override
   String get resendTips => 'Are you sure you want to resend?';
@@ -1719,7 +1747,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get createCommunity => 'Create Community';
 
   @override
-  String get communityIDEditFormatTips => 'Community ID prefix must be @TGS#_ !';
+  String get communityIDEditFormatTips =>
+      'Community ID prefix must be @TGS#_ !';
 
   @override
   String get groupIDEditFormatTips => 'Group ID prefix cannot be @TGS# !';
@@ -1758,16 +1787,20 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get groupCommunityType => 'Community(Community)';
 
   @override
-  String get groupWorkDesc => 'Friends work group (Work): Similar to ordinary WeChat groups, after creation, only friends who are already in the group can be invited to join the group, and there is no need for the approval of the invitee or the approval of the group owner.';
+  String get groupWorkDesc =>
+      'Friends work group (Work): Similar to ordinary WeChat groups, after creation, only friends who are already in the group can be invited to join the group, and there is no need for the approval of the invitee or the approval of the group owner.';
 
   @override
-  String get groupPublicDesc => 'Stranger social group (Public): Similar to QQ group, the group owner can designate the group administrator after creation. After the user searches for the group ID and initiates a group application, the group owner or administrator must approve it before joining the group.';
+  String get groupPublicDesc =>
+      'Stranger social group (Public): Similar to QQ group, the group owner can designate the group administrator after creation. After the user searches for the group ID and initiates a group application, the group owner or administrator must approve it before joining the group.';
 
   @override
-  String get groupMeetingDesc => 'Temporary meeting group (Meeting): After creation, you can enter and leave at will, and support viewing of messages before joining the group; it is suitable for audio and video conference scenarios, online education scenarios, and other scenarios that are combined with real-time audio and video products.';
+  String get groupMeetingDesc =>
+      'Temporary meeting group (Meeting): After creation, you can enter and leave at will, and support viewing of messages before joining the group; it is suitable for audio and video conference scenarios, online education scenarios, and other scenarios that are combined with real-time audio and video products.';
 
   @override
-  String get groupCommunityDesc => 'Community(Community)：After creation, you can enter and leave at will, support up to 100,000 people, support historical message storage, and after users search for group ID and initiate a group application, they can join the group without administrator approval.';
+  String get groupCommunityDesc =>
+      'Community(Community)：After creation, you can enter and leave at will, support up to 100,000 people, support historical message storage, and after users search for group ID and initiate a group application, they can join the group without administrator approval.';
 
   @override
   String get groupDetail => 'Group Chat Details';
@@ -1791,7 +1824,8 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String get serverGroupInvalidReq => 'Invalid request';
 
   @override
-  String get serverGroupReqAlreadyBeenProcessed => 'This invitation or request has been processed.';
+  String get serverGroupReqAlreadyBeenProcessed =>
+      'This invitation or request has been processed.';
 
   @override
   String inviteToGroupFrom(Object inviter) {
@@ -1808,4 +1842,25 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
   String dismissGroupTips(Object groupName) {
     return 'The group you were in $groupName has been disbanded';
   }
+
+  @override
+  String get toxIdCopied => 'Tox ID copied';
+
+  @override
+  String get openChat => 'Open chat';
+
+  @override
+  String get copyToxId => 'Copy Tox ID';
+
+  @override
+  String get viewToxId => 'View Tox ID';
+
+  @override
+  String get reject => 'Reject';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get noStickers => 'No stickers';
 }
