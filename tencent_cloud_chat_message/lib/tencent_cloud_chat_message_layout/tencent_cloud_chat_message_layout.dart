@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/components/components_definition/tencent_cloud_chat_component_builder_definitions.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_message/common/for_desktop/file_tools.dart';
+import 'package:tencent_cloud_chat_message/common/media_send_guard.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/desktop/tencent_cloud_chat_message_input_member_mention_panel.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/desktop/tencent_cloud_chat_message_input_sticker_panel.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_layout/special_case/tencent_cloud_chat_message_drop_target.dart';
@@ -74,6 +75,13 @@ class _TencentCloudChatMessageLayoutState extends TencentCloudChatState<TencentC
             setState(() {
               _dragging = false;
             });
+            if (!tencentCloudChatAllowMediaSend(context,
+                kind: 'file',
+                userID: widget.data.userID,
+                groupID: widget.data.groupID,
+                topicID: widget.data.topicID)) {
+              return;
+            }
             final filesPath = detail.files.map((e) => e.path).toList();
             TencentCloudChatDesktopFileTools.sendFileWithConfirmation(
               filesPath: filesPath,

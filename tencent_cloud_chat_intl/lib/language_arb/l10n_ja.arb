@@ -721,5 +721,16 @@
   "viewToxId": "Tox ID を表示",
   "reject": "拒否",
   "retry": "再試行",
-  "noStickers": "ステッカーがありません"
+  "noStickers": "ステッカーがありません",
+  "inviteMembersFailed": "{names} を招待できませんでした。相手がまだ友だちか確認してから、もう一度お試しください。",
+  "copyGroupMemberKey": "メンバーキーをコピー",
+  "groupMemberKeyCopied": "メンバーキーをコピーしました",
+  "groupMemberKey": "メンバーキー",
+  "groupMemberKeyHint": "このキーはこのグループ内でメンバーを識別するためのもので、相手の Tox ID ではありません。",
+  "conferenceMemberKeyHint": "これはこのメンバーの Tox 長期公開鍵で、どのグループでも同じです。友達に追加するには相手の完全な Tox ID が必要です。",
+  "inviteRequestFailed": "招待を送信できませんでした。しばらくしてからもう一度お試しください。",
+  "kickMemberFailed": "このメンバーを削除できませんでした。すでにグループを退出した可能性があります。",
+  "groupActionNoPermission": "このグループでその操作を行う権限がありません。",
+  "groupActionNotSupported": "この種類のグループではその操作はサポートされていません。",
+  "groupActionNotConnected": "まだ Tox ネットワークに接続されていません。しばらくしてからもう一度お試しください。"
 }

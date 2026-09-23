@@ -1858,4 +1858,46 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
 
   @override
   String get noStickers => 'لا توجد ملصقات';
+
+  @override
+  String inviteMembersFailed(Object names) {
+    return 'تعذّرت دعوة $names. تأكّد من أنهم ما زالوا من أصدقائك ثم أعد المحاولة.';
+  }
+
+  @override
+  String get copyGroupMemberKey => 'نسخ مفتاح العضو';
+
+  @override
+  String get groupMemberKeyCopied => 'تم نسخ مفتاح العضو';
+
+  @override
+  String get groupMemberKey => 'مفتاح العضو';
+
+  @override
+  String get groupMemberKeyHint =>
+      'هذا المفتاح يعرّف العضو داخل هذه المجموعة فقط، وليس معرّف Tox الخاص به.';
+
+  @override
+  String get conferenceMemberKeyHint =>
+      'هذا هو مفتاح Tox العام الدائم لهذا العضو، وهو نفسه في كل المجموعات. لإضافته كصديق تحتاج إلى معرّف Tox الكامل الخاص به.';
+
+  @override
+  String get inviteRequestFailed =>
+      'تعذّر إرسال الدعوات. يُرجى المحاولة لاحقًا.';
+
+  @override
+  String get kickMemberFailed =>
+      'تعذّرت إزالة هذا العضو. ربما غادر المجموعة بالفعل.';
+
+  @override
+  String get groupActionNoPermission =>
+      'ليست لديك صلاحية تنفيذ هذا الإجراء في هذه المجموعة.';
+
+  @override
+  String get groupActionNotSupported =>
+      'هذا النوع من المجموعات لا يدعم هذا الإجراء.';
+
+  @override
+  String get groupActionNotConnected =>
+      'لم يتم الاتصال بشبكة Tox بعد. يُرجى المحاولة لاحقًا.';
 }

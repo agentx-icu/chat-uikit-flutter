@@ -1863,4 +1863,46 @@ class TencentCloudChatLocalizationsEn extends TencentCloudChatLocalizations {
 
   @override
   String get noStickers => 'No stickers';
+
+  @override
+  String inviteMembersFailed(Object names) {
+    return 'Couldn\'t invite $names. Make sure they are still your friends, then try again.';
+  }
+
+  @override
+  String get copyGroupMemberKey => 'Copy member key';
+
+  @override
+  String get groupMemberKeyCopied => 'Member key copied';
+
+  @override
+  String get groupMemberKey => 'Member key';
+
+  @override
+  String get groupMemberKeyHint =>
+      'This key only identifies the member in this group. It is not their Tox ID.';
+
+  @override
+  String get conferenceMemberKeyHint =>
+      'This is the member\'s long-term Tox public key, the same in every group. To add them as a friend you need their full Tox ID.';
+
+  @override
+  String get inviteRequestFailed =>
+      'Couldn\'t send the invitations. Please try again later.';
+
+  @override
+  String get kickMemberFailed =>
+      'Couldn\'t remove this member. They may have already left the group.';
+
+  @override
+  String get groupActionNoPermission =>
+      'You don\'t have permission to do that in this group.';
+
+  @override
+  String get groupActionNotSupported =>
+      'This type of group doesn\'t support that action.';
+
+  @override
+  String get groupActionNotConnected =>
+      'Not connected to the Tox network yet. Please try again later.';
 }

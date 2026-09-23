@@ -68,6 +68,48 @@ enum TencentCloudChatMessageLoadDirection { previous, latest }
 //   });
 // }
 
+/// toxee: the ONLY msgIDs the content-based duplicate fallback may treat as
+/// "not a real id" are tim2tox's native-callback temp ids, `m<digits>-<digits>`
+/// (the same shape `BinaryReplacementHistoryHook` skips). A bare
+/// `startsWith('m')` also matched every native `msg_<inst>_<ns>_<seq>` id, so
+/// EVERY real message fell into the 10 s content window and a member sending
+/// the same "ok" twice rendered once.
+final RegExp _toxeeTempMsgIdPattern = RegExp(r'^m\d+-\d+$');
+
+bool _isToxeeTempMsgId(String? msgID) =>
+    msgID != null && _toxeeTempMsgIdPattern.hasMatch(msgID);
+
+/// toxee: the id shape of the POLL copy of an inbound message,
+/// `<millis>_<n>_<toxId>` (tim2tox's polling path). The platform dedupes the
+/// poll copy against what this list already holds, which assumes the native
+/// CALLBACK copy arrives first. When the poll copy wins the race instead, the
+/// callback copy arrives afterwards carrying a REAL msgID, and an id-only
+/// check lets it through as a second bubble. Merging those two is safe
+/// precisely because the existing row is a poll copy; two genuine messages
+/// with the same text never are.
+/// `<millis>_<seq>_<sender>` for C2C and `<millis>_<seq>_<sender>_<groupId>`
+/// for a group message (tim2tox mints the group form with a trailing group
+/// segment), so the sender is followed by either nothing or one more segment.
+final RegExp _toxeePollMsgIdPattern =
+    RegExp(r'^\d+_\d+_[0-9A-Fa-f]{64,76}(_.+)?$');
+
+bool _isToxeePollMsgId(String? msgID) =>
+    msgID != null && _toxeePollMsgIdPattern.hasMatch(msgID);
+
+/// The native CALLBACK copy's id, `msg_<instance>_<ns>_<seq>` (minted in
+/// V2TIMManagerImpl.cpp). Only this shape may be merged onto a poll copy:
+/// two poll copies are two genuine messages, and merging them dropped the
+/// second bubble when a peer sent the same text twice.
+final RegExp _toxeeCallbackMsgIdPattern = RegExp(r'^msg_\d+_\d+_\d+$');
+
+bool _isToxeeCallbackMsgId(String? msgID) =>
+    msgID != null && _toxeeCallbackMsgIdPattern.hasMatch(msgID);
+
+/// Seconds within which a callback copy may be merged onto a poll copy. The
+/// two are emitted from the same native event, so they are near-simultaneous;
+/// this stays far below the 10s window used for temp ids.
+const int _toxeePollCallbackWindowSeconds = 3;
+
 enum AudioPlayType {
   path,
   online,
@@ -1004,16 +1046,34 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
       if (message.msgID == newMessage.msgID) return true;
       // Only treat as duplicate by content when newMessage has no ID or temp ID (same message from two paths).
       // When newMessage has a real msgID, distinct messages with same content must not be merged.
-      if (newMessage.msgID != null && !newMessage.msgID!.startsWith('m')) return false;
+      //
+      // One exception, and it is narrow: an INCOMING native CALLBACK copy
+      // landing on a row that is the POLL copy of the same message. That is
+      // the reverse arrival order the platform's own dedupe cannot see, and
+      // without it the callback copy renders as a second bubble.
+      //
+      // Both id shapes are required. Accepting any incoming message here
+      // merged two GENUINE messages: a peer sending "ok" twice sends two poll
+      // copies, and the second matched the first by content.
+      final bool mergeOntoPollCopy = newMessage.isSelf != true &&
+          _isToxeePollMsgId(message.msgID) &&
+          _isToxeeCallbackMsgId(newMessage.msgID);
+      if (newMessage.msgID != null &&
+          !_isToxeeTempMsgId(newMessage.msgID) &&
+          !mergeOntoPollCopy) {
+        return false;
+      }
       // Content-based matching for messages with different IDs
       if (message.sender == newMessage.sender) {
         final timeDiff = ((message.timestamp ?? 0) - (newMessage.timestamp ?? 0)).abs();
-        if (timeDiff <= 10) {
+        final int window =
+            mergeOntoPollCopy ? _toxeePollCallbackWindowSeconds : 10;
+        if (timeDiff <= window) {
           final msgText = message.textElem?.text ?? '';
           final newText = newMessage.textElem?.text ?? '';
           if (msgText.isNotEmpty && msgText == newText) {
             // Update the existing message's msgID if the new one looks like a real ID (not m-prefix)
-            if (newMessage.msgID != null && !(newMessage.msgID!.startsWith('m'))) {
+            if (newMessage.msgID != null && !_isToxeeTempMsgId(newMessage.msgID)) {
               message.msgID = newMessage.msgID;
               message.id = newMessage.msgID;
             }
@@ -1023,7 +1083,7 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
             final msgFileName = message.fileElem?.fileName ?? '';
             final newFileName = newMessage.fileElem?.fileName ?? '';
             if (msgFileName.isNotEmpty && msgFileName == newFileName) {
-              if (newMessage.msgID != null && !(newMessage.msgID!.startsWith('m'))) {
+              if (newMessage.msgID != null && !_isToxeeTempMsgId(newMessage.msgID)) {
                 message.msgID = newMessage.msgID;
                 message.id = newMessage.msgID;
               }
@@ -1034,7 +1094,7 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
             final msgPath = message.imageElem?.path ?? '';
             final newPath = newMessage.imageElem?.path ?? '';
             if (msgPath.isNotEmpty && msgPath == newPath) {
-              if (newMessage.msgID != null && !(newMessage.msgID!.startsWith('m'))) {
+              if (newMessage.msgID != null && !_isToxeeTempMsgId(newMessage.msgID)) {
                 message.msgID = newMessage.msgID;
                 message.id = newMessage.msgID;
               }
@@ -1070,8 +1130,12 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
     } else {
       // When duplicate exists (e.g. optimistic send + SDK callback), copy faceUrl/nickName from
       // newMessage to the existing message so the row shows correct avatar (e.g. self avatar from prefs).
-      final contentMatchIndex = messageList.indexWhere((message) {
-        if (message.msgID == newMessage.msgID) return true;
+      // Exact id first: indexWhere returns the FIRST hit, and an older row
+      // with the same text inside the window would otherwise be picked (and
+      // re-stamped with this message's id below — two rows, one msgID).
+      final exactIndex = messageList.indexWhere((message) => message.msgID == newMessage.msgID);
+      final contentMatchIndex = exactIndex > -1 ? exactIndex : messageList.indexWhere((message) {
+        if (newMessage.msgID != null && !_isToxeeTempMsgId(newMessage.msgID)) return false;
         if (message.sender != newMessage.sender) return false;
         final timeDiff = ((message.timestamp ?? 0) - (newMessage.timestamp ?? 0)).abs();
         if (timeDiff > 10) return false;
@@ -1094,7 +1158,7 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
         if (TencentCloudChatUtils.checkString(newMessage.nickName) != null) {
           existingMsg.nickName = newMessage.nickName;
         }
-        if (newMessage.msgID != null && !(newMessage.msgID!.startsWith('m'))) {
+        if (newMessage.msgID != null && !_isToxeeTempMsgId(newMessage.msgID)) {
           existingMsg.msgID = newMessage.msgID;
           existingMsg.id = newMessage.msgID;
         }
@@ -1350,6 +1414,18 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
         );
         previousMessageList = previousMessageResponse.messageList;
         messageListStatus.haveMorePreviousData = !previousMessageResponse.isFinished;
+      } else if (latestMessageResponse.isFinished && TencentCloudChatUtils.checkString(msgID) != null) {
+        // toxee: nothing is newer than the target, so it IS the newest message.
+        // The anchored OLDER call above would exclude it and a search hit opens
+        // the chat through this method INSTEAD of the initial page load, so the
+        // chat stayed blank. The newest page starts at the target.
+        final newestMessageResponse = await TencentCloudChat.instance.chatSDKInstance.messageSDK.getHistoryMessageList(
+          userID: userID,
+          groupID: TencentCloudChatUtils.checkString(topicID) ?? groupID,
+          count: count,
+        );
+        previousMessageList = newestMessageResponse.messageList;
+        messageListStatus.haveMorePreviousData = !newestMessageResponse.isFinished;
       }
 
       List<V2TimMessage> finalMessageList = [...latestMessageList, ...previousMessageList];
@@ -1556,8 +1632,9 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
         // Reverse to get oldest-first, then add to end (oldest messages go to end of newest-first list)
         messageList.addAll(loadedMessages.reversed);
       } else {
-        // For latest direction, insert newest messages at the beginning
-        messageList.insertAll(0, loadedMessages);
+        // For latest direction, insert newest messages at the beginning.
+        // A NEWER page is oldest-first (V2TIM contract), so flip it.
+        messageList.insertAll(0, loadedMessages.reversed);
       }
       
       // Merge back recent messages that weren't in the loaded history
@@ -1627,8 +1704,9 @@ class TencentCloudChatMessageData<T> extends TencentCloudChatDataAB<T> {
         // Reverse to get oldest-first, then add to end (oldest messages go to end of newest-first list)
         messageList.addAll(toAdd.reversed);
       } else {
-        // For latest direction, insert newest messages at the beginning
-        messageList.insertAll(0, toAdd);
+        // For latest direction, insert newest messages at the beginning.
+        // A NEWER page is oldest-first (V2TIM contract), so flip it.
+        messageList.insertAll(0, toAdd.reversed);
       }
     }
 

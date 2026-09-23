@@ -2,11 +2,10 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:tencent_cloud_chat_common/components/component_options/tencent_cloud_chat_user_profile_options.dart';
 import 'package:tencent_cloud_chat_common/components/components_definition/tencent_cloud_chat_component_builder_definitions.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_screen_adapter.dart';
-import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_navigator.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
+import 'package:tencent_cloud_chat_message/common/message_sender_navigation.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_widgets/tencent_cloud_chat_message_item_builders.dart';
@@ -110,8 +109,11 @@ class _TencentCloudChatMessageRowState
                           if ((!(widget.data.message.isSelf ?? true)) &&
                               widget.data.showOthersAvatar)
                             GestureDetector(
+                              // toxee: a group sender's id is a per-group key;
+                              // openMessageSender resolves it first (same
+                              // handler as the avatar widget itself).
                               onTap: TencentCloudChatUtils.checkString(widget.data.message.sender) != null
-                                  ? () => navigateToUserProfile(context: context, options: TencentCloudChatUserProfileOptions(userID: widget.data.message.sender!))
+                                  ? () => openMessageSender(context, widget.data.message, groupID: widget.data.groupID)
                                   : null,
                               child: Container(
                                 margin: EdgeInsets.symmetric(

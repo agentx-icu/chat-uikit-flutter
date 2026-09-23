@@ -378,12 +378,20 @@ class TencentCloudChatContactGroupItemContentState
         child: TencentCloudChatThemeWidget(
             build: (context, color, text) => Row(
                   children: [
-                    Text(
-                      widget.group.groupName ?? widget.group.groupID,
-                      style: TextStyle(
-                        fontSize: text.fontsize_14,
-                        fontWeight: FontWeight.w400,
-                        color: color.contactItemFriendNameColor,
+                    // Flexible + ellipsis: a group whose name has not synced
+                    // yet shows its ID, which for a group joined by chat ID is
+                    // 64 hex chars — wider than a phone row; an unconstrained
+                    // Text in a Row overflowed instead of truncating.
+                    Flexible(
+                      child: Text(
+                        widget.group.groupName ?? widget.group.groupID,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: text.fontsize_14,
+                          fontWeight: FontWeight.w400,
+                          color: color.contactItemFriendNameColor,
+                        ),
                       ),
                     )
                   ],

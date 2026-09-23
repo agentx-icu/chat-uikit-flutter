@@ -4,6 +4,7 @@ import 'package:tencent_cloud_chat_common/models/tencent_cloud_chat_models.dart'
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
+import 'package:tencent_cloud_chat_message/common/media_send_guard.dart';
 import 'package:tencent_cloud_chat_message/model/tencent_cloud_chat_message_separate_data_notifier.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_builders.dart';
 
@@ -47,7 +48,9 @@ class _TencentCloudChatMessageForwardContainerState
               final messageModal = TencentCloudChatMessageDataProviderInherited.of(widget.context);
               if (widget.type == TencentCloudChatForwardType.individually) {
                 messageModal.sendForwardIndividuallyMessage(
-                    widget.messages.map((e) => e.msgID ?? "").toList(), chatList);
+                    widget.messages.map((e) => e.msgID ?? "").toList(), chatList,
+                    mediaRefusedGroupIDs: tencentCloudChatMediaRefusedGroupTargets(
+                        context, widget.messages, chatList));
               } else {
                 messageModal.sendForwardCombinedMessage(widget.messages, chatList);
               }

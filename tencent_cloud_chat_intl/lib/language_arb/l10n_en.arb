@@ -724,5 +724,16 @@
   "viewToxId": "View Tox ID",
   "reject": "Reject",
   "retry": "Retry",
-  "noStickers": "No stickers"
+  "noStickers": "No stickers",
+  "inviteMembersFailed": "Couldn't invite {names}. Make sure they are still your friends, then try again.",
+  "copyGroupMemberKey": "Copy member key",
+  "groupMemberKeyCopied": "Member key copied",
+  "groupMemberKey": "Member key",
+  "groupMemberKeyHint": "This key only identifies the member in this group. It is not their Tox ID.",
+  "conferenceMemberKeyHint": "This is the member's long-term Tox public key, the same in every group. To add them as a friend you need their full Tox ID.",
+  "inviteRequestFailed": "Couldn't send the invitations. Please try again later.",
+  "kickMemberFailed": "Couldn't remove this member. They may have already left the group.",
+  "groupActionNoPermission": "You don't have permission to do that in this group.",
+  "groupActionNotSupported": "This type of group doesn't support that action.",
+  "groupActionNotConnected": "Not connected to the Tox network yet. Please try again later."
 }

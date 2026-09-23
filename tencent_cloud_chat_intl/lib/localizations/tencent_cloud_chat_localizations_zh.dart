@@ -1830,6 +1830,42 @@ class TencentCloudChatLocalizationsZh extends TencentCloudChatLocalizations {
 
   @override
   String get noStickers => '暂无贴纸';
+
+  @override
+  String inviteMembersFailed(Object names) {
+    return '无法邀请 $names。请确认对方仍是你的好友后重试。';
+  }
+
+  @override
+  String get copyGroupMemberKey => '复制成员公钥';
+
+  @override
+  String get groupMemberKeyCopied => '成员公钥已复制';
+
+  @override
+  String get groupMemberKey => '成员公钥';
+
+  @override
+  String get groupMemberKeyHint => '该公钥仅用于在本群中标识此成员，并不是对方的 Tox ID。';
+
+  @override
+  String get conferenceMemberKeyHint =>
+      '这是该成员的 Tox 长期公钥，在所有群中都相同。添加好友需要对方完整的 Tox ID。';
+
+  @override
+  String get inviteRequestFailed => '邀请发送失败，请稍后重试。';
+
+  @override
+  String get kickMemberFailed => '无法移除该成员，对方可能已经退出群聊。';
+
+  @override
+  String get groupActionNoPermission => '你没有在本群执行此操作的权限。';
+
+  @override
+  String get groupActionNotSupported => '此类群组不支持该操作。';
+
+  @override
+  String get groupActionNotConnected => '尚未连接到 Tox 网络，请稍后重试。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -3661,4 +3697,40 @@ class TencentCloudChatLocalizationsZhHant
 
   @override
   String get noStickers => '沒有貼圖';
+
+  @override
+  String inviteMembersFailed(Object names) {
+    return '無法邀請 $names。請確認對方仍是你的好友後再試一次。';
+  }
+
+  @override
+  String get copyGroupMemberKey => '複製成員公鑰';
+
+  @override
+  String get groupMemberKeyCopied => '已複製成員公鑰';
+
+  @override
+  String get groupMemberKey => '成員公鑰';
+
+  @override
+  String get groupMemberKeyHint => '此公鑰僅用於在本群組中識別這位成員，並不是對方的 Tox ID。';
+
+  @override
+  String get conferenceMemberKeyHint =>
+      '這是該成員的 Tox 長期公鑰，在所有群組中都相同。加為好友需要對方完整的 Tox ID。';
+
+  @override
+  String get inviteRequestFailed => '邀請傳送失敗，請稍後再試。';
+
+  @override
+  String get kickMemberFailed => '無法移除這位成員，對方可能已經退出群組。';
+
+  @override
+  String get groupActionNoPermission => '你沒有在本群組執行此操作的權限。';
+
+  @override
+  String get groupActionNotSupported => '此類群組不支援該操作。';
+
+  @override
+  String get groupActionNotConnected => '尚未連線到 Tox 網路，請稍後再試。';
 }

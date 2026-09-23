@@ -1543,11 +1543,14 @@ class TencentCloudChatGroupProfileGroupMemberState
       return TencentCloudChatThemeWidget(
           build: (context, colorTheme, textStyle) => GestureDetector(
                 onTap: () {
-                  final isDesktop = TencentCloudChatPlatformAdapter().isDesktop;
-                  navigateToGroupMemberInfo(
+                  // toxee: a dialog on desktop, a page elsewhere — like the
+                  // member list — and carry the group type so the page can
+                  // explain a conference peer's key correctly.
+                  showGroupMemberInfo(
                       context: context,
                       options: TencentCloudChatGroupMemberInfoOptions(
-                          memberFullInfo: info));
+                          memberFullInfo: info,
+                          groupType: widget.groupInfo.groupType));
                 },
                 child: Container(
                   margin: EdgeInsets.only(top: getHeight(1)),

@@ -433,7 +433,10 @@ class TencentCloudChatContactManager {
         builder: (context) => TencentCloudChatGroupMemberInfo(
             memberFullInfo: TencentCloudChatRouter()
                 .getArgumentFromMap<TencentCloudChatGroupMemberInfoOptions>(context, 'options')!
-                .memberFullInfo));
+                .memberFullInfo,
+            groupType: TencentCloudChatRouter()
+                .getArgumentFromMap<TencentCloudChatGroupMemberInfoOptions>(context, 'options')!
+                .groupType));
     TencentCloudChatRouter().registerRouter(
         routeName: TencentCloudChatRouteNames.groupMemberList,
         builder: (context) => TencentCloudChat.instance.dataInstance.contact.contactBuilder

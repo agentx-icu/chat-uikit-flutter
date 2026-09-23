@@ -722,5 +722,16 @@
   "viewToxId": "Tox ID 보기",
   "reject": "거절",
   "retry": "다시 시도",
-  "noStickers": "스티커 없음"
+  "noStickers": "스티커 없음",
+  "inviteMembersFailed": "{names}님을 초대하지 못했습니다. 상대가 아직 친구인지 확인한 후 다시 시도해 주세요.",
+  "copyGroupMemberKey": "멤버 키 복사",
+  "groupMemberKeyCopied": "멤버 키를 복사했습니다",
+  "groupMemberKey": "멤버 키",
+  "groupMemberKeyHint": "이 키는 이 그룹 안에서만 멤버를 식별하며 상대방의 Tox ID가 아닙니다.",
+  "conferenceMemberKeyHint": "이 키는 이 멤버의 Tox 장기 공개 키로, 모든 그룹에서 동일합니다. 친구로 추가하려면 상대방의 전체 Tox ID가 필요합니다.",
+  "inviteRequestFailed": "초대를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "kickMemberFailed": "이 멤버를 내보내지 못했습니다. 이미 그룹을 나갔을 수 있습니다.",
+  "groupActionNoPermission": "이 그룹에서 해당 작업을 할 권한이 없습니다.",
+  "groupActionNotSupported": "이 유형의 그룹에서는 해당 작업을 지원하지 않습니다.",
+  "groupActionNotConnected": "아직 Tox 네트워크에 연결되지 않았습니다. 잠시 후 다시 시도해 주세요."
 }

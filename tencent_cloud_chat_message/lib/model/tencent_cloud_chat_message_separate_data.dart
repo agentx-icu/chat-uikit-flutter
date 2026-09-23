@@ -19,6 +19,7 @@ import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/utils/error_message_converter.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_code_info.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
+import 'package:tencent_cloud_chat_message/common/media_send_guard.dart';
 import 'package:tencent_cloud_chat_message/model/tencent_cloud_chat_message_data_tools.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_builders.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_controller.dart';
@@ -1220,11 +1221,22 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
   }
 
   // Forward Individually
+  //
+  // toxee: [mediaRefusedGroupIDs] holds `mediaRefusalKey(groupID, kind)` for
+  // every (group, media kind) the host refused (tencentCloudChatAllowMediaSend,
+  // asked by the forward picker): a message of that kind is not sent to that
+  // group, text and the kinds it allows still are. Every send is now
+  // AWAITED and a failure is reported through `onSDKFailed("sendMessage")` —
+  // it used to be fired inside a Future.delayed and dropped, so a forward that
+  // failed (e.g. media into a group, or to a target that is not the open
+  // conversation, which has no bubble to turn red) failed silently.
   sendForwardIndividuallyMessage(List<String> msgIDs,
-      List<({String? userID, String? groupID})> chats) async {
+      List<({String? userID, String? groupID})> chats,
+      {Set<String> mediaRefusedGroupIDs = const {}}) async {
     if (chats.isEmpty || msgIDs.isEmpty) {
       return null;
     }
+    final failures = <V2TimValueCallback<V2TimMessage>>[];
     for (final msg in msgIDs) {
       if (TencentCloudChatUtils.checkString(msg) == null) {
         continue;
@@ -1234,7 +1246,17 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
           .createForwardIndividuallyMessage(msgID: msg);
       final messageInfo = forwardMessageInfo?.messageInfo;
       if (messageInfo != null) {
+        final mediaKind = tencentCloudChatMediaKindOf(messageInfo);
         for (final chat in chats) {
+          // Only THIS message's kind: a group that refuses images must still
+          // receive the voice message in the same forward.
+          final groupID = chat.groupID;
+          if (mediaKind != null &&
+              groupID != null &&
+              mediaRefusedGroupIDs
+                  .contains(mediaRefusalKey(groupID, mediaKind))) {
+            continue;
+          }
           final messageInfoWithAdditionalInfo =
               TencentCloudChatMessageDataTools.setAdditionalInfoForMessage(
             messageInfo: messageInfo,
@@ -1274,18 +1296,28 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
             );
           }
 
-          await Future.delayed(const Duration(milliseconds: 100), () {
-            TencentCloudChatMessageDataTools.sendMessageFinalPhase(
-              userID: chat.userID,
-              groupID: chat.groupID,
-              id: messageInfo.id as String,
-              isCurrentConversation: isCurrentConversation,
-              offlinePushInfo: messageInfoWithAdditionalInfo.offlinePushInfo,
-            );
-          });
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          final sendRes =
+              await TencentCloudChatMessageDataTools.sendMessageFinalPhase(
+            userID: chat.userID,
+            groupID: chat.groupID,
+            id: messageInfo.id as String,
+            isCurrentConversation: isCurrentConversation,
+            offlinePushInfo: messageInfoWithAdditionalInfo.offlinePushInfo,
+          );
+          if (sendRes.code != 0) failures.add(sendRes);
         }
       }
     }
+    // One report per failure; the host dedups identical codes in a burst.
+    for (final failure in failures) {
+      TencentCloudChat.instance.callbacks.onSDKFailed(
+        "sendMessage",
+        failure.code,
+        ErrorMessageConverter.getErrorMessage(failure.code, failure.desc),
+      );
+    }
+    return failures.isEmpty;
   }
 
   // Forward Combined
@@ -1388,10 +1420,9 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
     // any more", which the Tox platform answers for an idempotent re-delete too
     // (Tim2ToxSdkPlatform.deleteMessages). A NON-zero code means the delete
     // could not be PERFORMED, and keeping the row is then the truthful UI state
-    // — the message really is still there and the user can retry. It is
-    // deliberately not surfaced as a toast: the UIKit's only error channel here
-    // is `callbacks.onUserNotificationEvent`, which toxee does not wire to any
-    // renderer, so emitting one would be another silent no-op.
+    // — the message really is still there and the user can retry. It is not
+    // surfaced as a toast here. (toxee renders `callbacks.onUserNotificationEvent`
+    // since 2026-09-17 — SendFailureNotifier — should one ever be wanted.)
     if (deleteRes?.code == 0) {
       for (final element in messages) {
         // toxee: the trailing `&& checkString(msg.msgID) != null` conjunct is

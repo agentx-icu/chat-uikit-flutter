@@ -721,5 +721,16 @@
   "viewToxId": "عرض Tox ID",
   "reject": "رفض",
   "retry": "إعادة المحاولة",
-  "noStickers": "لا توجد ملصقات"
+  "noStickers": "لا توجد ملصقات",
+  "inviteMembersFailed": "تعذّرت دعوة {names}. تأكّد من أنهم ما زالوا من أصدقائك ثم أعد المحاولة.",
+  "copyGroupMemberKey": "نسخ مفتاح العضو",
+  "groupMemberKeyCopied": "تم نسخ مفتاح العضو",
+  "groupMemberKey": "مفتاح العضو",
+  "groupMemberKeyHint": "هذا المفتاح يعرّف العضو داخل هذه المجموعة فقط، وليس معرّف Tox الخاص به.",
+  "conferenceMemberKeyHint": "هذا هو مفتاح Tox العام الدائم لهذا العضو، وهو نفسه في كل المجموعات. لإضافته كصديق تحتاج إلى معرّف Tox الكامل الخاص به.",
+  "inviteRequestFailed": "تعذّر إرسال الدعوات. يُرجى المحاولة لاحقًا.",
+  "kickMemberFailed": "تعذّرت إزالة هذا العضو. ربما غادر المجموعة بالفعل.",
+  "groupActionNoPermission": "ليست لديك صلاحية تنفيذ هذا الإجراء في هذه المجموعة.",
+  "groupActionNotSupported": "هذا النوع من المجموعات لا يدعم هذا الإجراء.",
+  "groupActionNotConnected": "لم يتم الاتصال بشبكة Tox بعد. يُرجى المحاولة لاحقًا."
 }

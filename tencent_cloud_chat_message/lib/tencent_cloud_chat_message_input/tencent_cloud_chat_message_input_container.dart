@@ -710,9 +710,11 @@ class _TencentCloudChatMessageInputContainerState
   }
 
   Future<List<V2TimGroupMemberFullInfo>> _onChooseGroupMembers() async {
-    List<V2TimGroupMemberFullInfo> memberList = await Navigator.push(
+    // The route pops with `null` on a system back / edge swipe; typed as a
+    // non-nullable list that threw a TypeError inside the void-async caller.
+    final List<V2TimGroupMemberFullInfo>? picked = await Navigator.push(
         context,
-        MaterialPageRoute(
+        MaterialPageRoute<List<V2TimGroupMemberFullInfo>>(
             builder: (context) => TencentCloudChatAtGroupMemberList(
                   groupInfo: _dataProvider.groupInfo,
                   // Parity with the desktop inline mention: gate @All on admin
@@ -726,7 +728,7 @@ class _TencentCloudChatMessageInputContainerState
                       .map((e) => e!)
                       .toList(),
                 )));
-    return memberList;
+    return picked ?? const <V2TimGroupMemberFullInfo>[];
   }
 
   String currentUserid =

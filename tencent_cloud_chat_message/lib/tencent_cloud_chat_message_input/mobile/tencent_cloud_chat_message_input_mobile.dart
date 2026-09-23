@@ -14,6 +14,7 @@ import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_permission_handlers.dart';
+import 'package:tencent_cloud_chat_message/common/media_send_guard.dart';
 import 'package:tencent_cloud_chat_message/common/text_compiler/tencent_cloud_chat_message_text_compiler.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_controller.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/tencent_cloud_chat_message_draft_coordinator.dart';
@@ -425,6 +426,14 @@ class _TencentCloudChatMessageInputMobileState
   }
 
   void _onStartRecording(PointerDownEvent event) async {
+    // Before the microphone permission prompt: a host that cannot deliver
+    // voice messages here must not make the user record one first.
+    if (!tencentCloudChatAllowMediaSend(context,
+        kind: 'voice',
+        userID: widget.inputData.userID,
+        groupID: widget.inputData.groupID)) {
+      return;
+    }
     isStarted = true;
     final bool isMobilePlatform = widget.debugIsMobile?.call() ??
         TencentCloudChatPlatformAdapter().isMobile;

@@ -713,5 +713,16 @@
   "viewToxId": "查看 Tox ID",
   "reject": "拒絕",
   "retry": "重試",
-  "noStickers": "沒有貼圖"
+  "noStickers": "沒有貼圖",
+  "inviteMembersFailed": "無法邀請 {names}。請確認對方仍是你的好友後再試一次。",
+  "copyGroupMemberKey": "複製成員公鑰",
+  "groupMemberKeyCopied": "已複製成員公鑰",
+  "groupMemberKey": "成員公鑰",
+  "groupMemberKeyHint": "此公鑰僅用於在本群組中識別這位成員，並不是對方的 Tox ID。",
+  "conferenceMemberKeyHint": "這是該成員的 Tox 長期公鑰，在所有群組中都相同。加為好友需要對方完整的 Tox ID。",
+  "inviteRequestFailed": "邀請傳送失敗，請稍後再試。",
+  "kickMemberFailed": "無法移除這位成員，對方可能已經退出群組。",
+  "groupActionNoPermission": "你沒有在本群組執行此操作的權限。",
+  "groupActionNotSupported": "此類群組不支援該操作。",
+  "groupActionNotConnected": "尚未連線到 Tox 網路，請稍後再試。"
 }

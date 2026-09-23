@@ -8,6 +8,7 @@ import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
 import 'package:tencent_cloud_chat_contact/model/contact_presenter.dart';
+import 'package:tencent_cloud_chat_contact/widgets/group_action_failure_text.dart';
 import 'package:tencent_cloud_chat_contact/widgets/tencent_cloud_chat_contact_index_bar_fit.dart';
 import 'package:tencent_cloud_chat_contact/widgets/tencent_cloud_chat_group_member_list.dart';
 
@@ -30,31 +31,79 @@ class TencentCloudChatGroupAddMemberState
     extends TencentCloudChatState<TencentCloudChatGroupAddMember> {
   ContactPresenter contactPresenter = ContactPresenter();
 
-  submitAdd() async {
-    List<String> userIDList = [];
-    for (int i = 0; i < selectedContacts.length; i++) {
-      userIDList.add(selectedContacts[i].userID);
+  /// Invite the selected friends and REPORT the per-user outcome. The result
+  /// used to be discarded except for PENDING (3), so a failed invite was
+  /// silently lost while the page closed as if it had worked. Outcomes:
+  ///   * the whole call fails / throws → one reason-bearing notice
+  ///     ([groupActionFailureText]: no permission, not connected, …);
+  ///   * per-user FAIL / INVALID / OVERLIMIT → the failed friends by name;
+  ///   * PENDING (e.g. an invite queued for an offline friend) → requestWait.
+  Future<void> submitAdd() async {
+    final invitees = List<V2TimFriendInfo>.of(selectedContacts);
+    final userIDList = invitees.map((e) => e.userID).toList();
+    if (userIDList.isEmpty) return;
+    final V2TimValueCallback<List<V2TimGroupMemberOperationResult>> result;
+    try {
+      result = await contactPresenter.inviteUserToGroup(
+          groupID: widget.groupInfo.groupID, userList: userIDList);
+    } catch (e) {
+      _notifyInvite(-1, tL10n.inviteRequestFailed);
+      return;
     }
-    var result = await contactPresenter.inviteUserToGroup(
-        groupID: widget.groupInfo.groupID, userList: userIDList);
-    if (result.code == 0) {
-      List<V2TimGroupMemberOperationResult>? operationResultList = result.data;
-      if (operationResultList != null) {
-        for (var operationResult in operationResultList!) {
-          if (operationResult.result == 3) {
-            TencentCloudChat.instance.callbacks.onUserNotificationEvent(
-                TencentCloudChatComponentsEnum.contact,
-                TencentCloudChatUserNotificationEvent(
-                  eventCode: -1,
-                  text: tL10n.requestWait,
-                ));
-          }
-        }
+    if (result.code != 0) {
+      _notifyInvite(result.code,
+          groupActionFailureText(result.code, tL10n.inviteRequestFailed));
+      return;
+    }
+    final failedIDs = <String>[];
+    var pending = false;
+    final ops = result.data ?? const <V2TimGroupMemberOperationResult>[];
+    for (var i = 0; i < userIDList.length; i++) {
+      final id = userIDList[i];
+      V2TimGroupMemberOperationResult? op;
+      for (final candidate in ops) {
+        if (candidate.memberID == id) op = candidate;
       }
+      // Positional fallback for results that carry no member id.
+      op ??= (i < ops.length && ops[i].memberID == null) ? ops[i] : null;
+      switch (op?.result) {
+        case 1: // SUCC
+        case null: // no per-user verdict: the call itself succeeded
+          break;
+        case 3: // PENDING
+          pending = true;
+          break;
+        default: // FAIL (0), INVALID (2), OVERLIMIT (4)
+          failedIDs.add(id);
+      }
+    }
+    if (pending) {
+      _notifyInvite(0, tL10n.requestWait);
+    }
+    if (failedIDs.isNotEmpty) {
+      final names = failedIDs
+          .map((id) => _inviteeName(invitees.firstWhere((f) => f.userID == id)))
+          .join(', ');
+      _notifyInvite(-1, tL10n.inviteMembersFailed(names));
     }
   }
 
+  static String _inviteeName(V2TimFriendInfo friend) {
+    final name = TencentCloudChatUtils.checkString(friend.friendRemark) ??
+        TencentCloudChatUtils.checkString(friend.userProfile?.nickName);
+    if (name != null) return name;
+    final id = friend.userID;
+    return id.length > 12 ? '${id.substring(0, 12)}…' : id;
+  }
+
+  static void _notifyInvite(int code, String text) {
+    TencentCloudChat.instance.callbacks.onUserNotificationEvent(
+        TencentCloudChatComponentsEnum.contact,
+        TencentCloudChatUserNotificationEvent(eventCode: code, text: text));
+  }
+
   List<V2TimFriendInfo> selectedContacts = [];
+  bool _submitting = false;
 
   onChanged(selected) {
     selectedContacts = selected;
@@ -90,9 +139,24 @@ class TencentCloudChatGroupAddMemberState
                 KeyedSubtree(
                   key: const ValueKey('group_member_invite_confirm_button'),
                   child: TextButton(
+                    // Await the invite so its per-user outcome is reported,
+                    // then pop. `_submitting` makes a second fire (double tap
+                    // or harness fallback) a no-op instead of a duplicate
+                    // invite; popDialogIfCurrent never pops a route above us.
                     onPressed: () async {
-                      submitAdd();
-                      Navigator.pop(context);
+                      if (_submitting) return;
+                      _submitting = true;
+                      try {
+                        await submitAdd();
+                      } catch (_) {
+                        // Never an unhandled async error from a tap: report
+                        // it like a failed invite and still close the page.
+                        _notifyInvite(-1, tL10n.inviteRequestFailed);
+                      } finally {
+                        _submitting = false;
+                      }
+                      if (!mounted) return;
+                      popDialogIfCurrent(context);
                     },
                     child: Text(
                       tL10n.confirm,
@@ -237,16 +301,46 @@ class TencentCloudChatGroupProfileAddMemberListState
                     alignment: Alignment.centerLeft,
                     padding:
                         const EdgeInsets.only(top: 10, bottom: 20, right: 28),
-                    child: Text(
-                      showName,
-                      style: TextStyle(
-                          color: colorTheme.groupProfileTextColor,
-                          fontSize: textStyle.fontsize_14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          showName,
+                          style: TextStyle(
+                              color: colorTheme.groupProfileTextColor,
+                              fontSize: textStyle.fontsize_14),
+                        ),
+                        // A Tox group invite is delivered over a live friend
+                        // connection; flag friends known to be offline so a
+                        // delayed (pending) invite is expected.
+                        if (!disabled && _isKnownOffline(item.userID))
+                          Text(
+                            tL10n.offline,
+                            key: ValueKey(
+                                'add_member_contact_offline:${item.userID}'),
+                            style: TextStyle(
+                                color: colorTheme.secondaryTextColor,
+                                fontSize: textStyle.fontsize_12),
+                          ),
+                      ],
                     ),
                   )),
                 ],
               ),
             ));
+  }
+
+  /// True only when the contact status list HAS an entry for [userID] and it
+  /// is not online (toxee publishes friend presence as 1 online / 0 offline;
+  /// upstream uses 2/3). No entry = presence unknown = not flagged. Same
+  /// "anything but 1 is not online" reading as getOnlineStatusByUserId.
+  static bool _isKnownOffline(String userID) {
+    for (final status
+        in TencentCloudChat.instance.dataInstance.contact.userStatus) {
+      if (status.userID == userID) return status.statusType != 1;
+    }
+    return false;
   }
 
   Widget _buildMemberSilencedItem(V2TimGroupMemberFullInfo item) {

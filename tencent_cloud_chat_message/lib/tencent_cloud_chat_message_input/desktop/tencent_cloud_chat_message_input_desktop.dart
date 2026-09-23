@@ -24,6 +24,7 @@ import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.d
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_message/common/for_desktop/file_tools.dart';
 import 'package:tencent_cloud_chat_message/common/for_desktop/image_tools.dart';
+import 'package:tencent_cloud_chat_message/common/media_send_guard.dart';
 import 'package:tencent_cloud_chat_message/common/for_desktop/scratch_file_store.dart';
 import 'package:tencent_cloud_chat_message/common/text_compiler/tencent_cloud_chat_message_text_compiler.dart';
 import 'package:tencent_cloud_chat_message/model/tencent_cloud_chat_message_separate_data_notifier.dart';
@@ -264,6 +265,11 @@ class _TencentCloudChatMessageInputDesktopState
 
   /// Stage [imagePath] through the production desktop send-image confirm dialog
   /// (same call the real Ctrl/Cmd+V paste handler makes).
+  ///
+  /// Test harness only, and deliberately NOT behind
+  /// [tencentCloudChatAllowMediaSend]: this drives the confirm dialog itself,
+  /// including from cases that assert what a refused target does. The real
+  /// paste path (`_handlePasteResource`) is the one that must be guarded.
   void _pasteImagePath(String imagePath) {
     TencentCloudChatDesktopImageTools.sendImageOnDesktop(
       context: context,
@@ -822,6 +828,14 @@ class _TencentCloudChatMessageInputDesktopState
   _handlePasteResource() async {
     final imageBytes = await Pasteboard.image;
     if (imageBytes != null && imageBytes.isNotEmpty) {
+      // Before the scratch file is written: a refused send must not leave one.
+      if (!mounted ||
+          !tencentCloudChatAllowMediaSend(context,
+              kind: 'image',
+              userID: widget.inputData.userID,
+              groupID: widget.inputData.groupID)) {
+        return;
+      }
       var uuid = DateTime.now().microsecondsSinceEpoch;
       final fileName = 'paste_image_$uuid.png';
       final filePath = await resolveChatScratchFileProvider().writeScratchBytes(
@@ -841,6 +855,15 @@ class _TencentCloudChatMessageInputDesktopState
       final List<String> fileList = await Pasteboard.files();
 
       if (fileList.isNotEmpty) {
+        // Same guard as the image branch and drag-drop: a group cannot take
+        // files, so refuse before the "send to <group>?" confirmation.
+        if (!mounted ||
+            !tencentCloudChatAllowMediaSend(context,
+                kind: 'file',
+                userID: widget.inputData.userID,
+                groupID: widget.inputData.groupID)) {
+          return;
+        }
         TencentCloudChatDesktopFileTools.sendFileWithConfirmation(
           filesPath: fileList,
           currentConversationShowName:

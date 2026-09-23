@@ -84,12 +84,24 @@ class TencentCloudChatMessageAttachmentConfig {
   /// Works on Desktop & Web.
   final bool enableSearch;
 
+  /// Gate for the media entry points the `enableSend*` flags cannot reach:
+  /// hold-to-record ([kind] `voice`), desktop drag & drop (`file`) and
+  /// clipboard paste (`image`). Called before any permission prompt or
+  /// confirmation; return false to abort — the host explains why.
+  final bool Function(
+    BuildContext context, {
+    required String kind,
+    String? userID,
+    String? groupID,
+  })? mediaSendGuard;
+
   TencentCloudChatMessageAttachmentConfig({
     this.enableSendMediaFromMobileGallery = true,
     this.enableSendImage = true,
     this.enableSendVideo = true,
     this.enableSendFile = true,
     this.enableSearch = true,
+    this.mediaSendGuard,
   });
 }
 

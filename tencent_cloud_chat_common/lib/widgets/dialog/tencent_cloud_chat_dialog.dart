@@ -16,10 +16,14 @@ class TencentCloudChatDialog{
     double? contentMaxHeight,
     double? contentMaxWidth,
     Color? backgroundColor,
+    // toxee: lets a registered route builder (which reads its options from
+    // ModalRoute.settings.arguments) render inside the dialog.
+    RouteSettings? routeSettings,
   }) {
      showDialog(
         context: context,
         barrierDismissible: barrierDismissible ?? true,
+        routeSettings: routeSettings,
         builder: (c) {
           return Dialog(
               shape: const RoundedRectangleBorder(

@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
+import 'package:tencent_cloud_chat_common/components/tencent_cloud_chat_components_utils.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_code_info.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
@@ -8,6 +10,7 @@ import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
 import 'package:tencent_cloud_chat_common/widgets/dialog/tencent_cloud_chat_dialog.dart';
 import 'package:tencent_cloud_chat_common/widgets/operation_bar/tencent_cloud_chat_operation_bar.dart';
 import 'package:tencent_cloud_chat_contact/model/contact_presenter.dart';
+import 'package:tencent_cloud_chat_contact/widgets/group_action_failure_text.dart';
 import 'package:tencent_cloud_chat_contact/widgets/tencent_cloud_chat_group_add_member.dart';
 
 class TencentCloudChatGroupManagement extends StatefulWidget {
@@ -176,15 +179,20 @@ class TencentCloudChatGroupProfileAddMuteMemberState
 
   submitDelete(String userID) async {
     final res = await contactPresenter.muteGroupMember(groupID: widget.groupInfo.groupID, userID: userID, seconds: 0);
-    if (res.code == 0) {
-      safeSetState(() {
-        final targetIndex = _memberList.indexWhere((i) => i.userID == userID);
-        if (targetIndex != -1) {
-          _memberList[targetIndex].muteUntil = 0;
-        }
-        silencedMember.removeWhere((item) => item.userID == userID);
-      });
+    if (res.code != 0) {
+      // Tim2Tox refuses a mute change with 10007 (only moderators may mute)
+      // or 7013 (moderators cannot be muted). Dropping the code left the row
+      // unchanged with nothing said.
+      _notifyMuteFailed(res.code, groupActionFailureText(res.code, tL10n.setFailed));
+      return;
     }
+    safeSetState(() {
+      final targetIndex = _memberList.indexWhere((i) => i.userID == userID);
+      if (targetIndex != -1) {
+        _memberList[targetIndex].muteUntil = 0;
+      }
+      silencedMember.removeWhere((item) => item.userID == userID);
+    });
   }
 
   Widget _buildSilencedMemberItem(V2TimGroupMemberFullInfo info, colorTheme, textStyle) {
@@ -307,6 +315,7 @@ class TencentCloudChatGroupProfileAddSilenceMemberListState
 
   submitAdd() async {
     List<V2TimGroupMemberFullInfo> success = [];
+    int? failureCode;
     for (int i = 0; i < selectedContacts.length; i++) {
       final res = await contactPresenter.muteGroupMember(
           groupID: widget.groupInfo.groupID, userID: selectedContacts[i].userID, seconds: 60 * 60 * 24 * 7);
@@ -314,7 +323,15 @@ class TencentCloudChatGroupProfileAddSilenceMemberListState
         final muteUntil = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
         selectedContacts[i].muteUntil = muteUntil + 60 * 60 * 24 * 7;
         success.add(selectedContacts[i]);
+      } else {
+        // 10007 = only moderators may mute, 7013 = moderators cannot be
+        // muted. Silently dropping these closed the page as if it worked.
+        failureCode ??= res.code;
       }
+    }
+    if (failureCode != null) {
+      _notifyMuteFailed(
+          failureCode, groupActionFailureText(failureCode, tL10n.setFailed));
     }
     widget.onChanged(success);
   }
@@ -387,4 +404,13 @@ class TencentCloudChatGroupProfileAddSilenceMemberListState
               ),
             ));
   }
+}
+
+/// Surface a failed mute change through the host's notification hook (the
+/// same channel the member list uses for kick / set-role failures).
+void _notifyMuteFailed(int code, String text) {
+  TencentCloudChat.instance.callbacks.onUserNotificationEvent(
+    TencentCloudChatComponentsEnum.contact,
+    TencentCloudChatUserNotificationEvent(eventCode: code, text: text),
+  );
 }

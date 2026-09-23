@@ -6,8 +6,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tencent_cloud_chat_common/components/tencent_cloud_chat_components_utils.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
 import 'package:tencent_cloud_chat_common/data/group_profile/tencent_cloud_chat_group_profile_data.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_code_info.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
@@ -16,6 +18,8 @@ import 'package:tencent_cloud_chat_common/widgets/dialog/tencent_cloud_chat_dial
 import 'package:tencent_cloud_chat_contact/model/contact_presenter.dart';
 import 'package:tencent_cloud_chat_contact/widgets/tencent_cloud_chat_contact_index_bar_fit.dart';
 import 'package:tencent_cloud_chat_contact/widgets/tencent_cloud_chat_group_member_info.dart';
+import 'package:tencent_cloud_chat_contact/widgets/group_action_failure_text.dart';
+import 'package:tencent_cloud_chat_contact/widgets/group_member_identity.dart';
 
 // toxee: keep these in sync with lib/util/responsive_layout.dart —
 // `masterDetailBreakpoint` (800) and the desktop max content width (1200).
@@ -308,6 +312,11 @@ class TencentCloudChatGroupMemberListAzListState
                   list.removeWhere(
                       (element) => element.memberInfo.userID == item.userID);
                 });
+              } else {
+                // No permission, target already gone, conference (no
+                // moderation)… the menu used to close with nothing happening.
+                _notifyGroupActionFailed(deleteRes.code,
+                    groupActionFailureText(deleteRes.code, tL10n.kickMemberFailed));
               }
             },
             memberFullInfo: item,
@@ -324,9 +333,17 @@ class TencentCloudChatGroupMemberListAzListState
           const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       susItemBuilder: (context, index) {
         ISuspensionBeanImpl tag = list[index];
-        return TencentCloudChatGroupMemberListTag(
-          tag: tag.getSuspensionTag(),
-          count: tagCount[tag.getSuspensionTag()],
+        // toxee: bound the width. AzListView also renders this builder as the
+        // sticky header, inside a Positioned that sets only left/top — i.e.
+        // UNBOUNDED width — and the tag's `width: double.infinity` Container
+        // then fails layout ("BoxConstraints forces an infinite width") as
+        // soon as the list is scrolled/laid out with positions.
+        return SizedBox(
+          width: constraints.maxWidth,
+          child: TencentCloudChatGroupMemberListTag(
+            tag: tag.getSuspensionTag(),
+            count: tagCount[tag.getSuspensionTag()],
+          ),
         );
       },
       susItemHeight: getSquareSize(30),
@@ -412,10 +429,14 @@ class TencentCloudChatGroupMemberListItemState
   }
 
   _onSetMemberRole(GroupMemberRoleTypeEnum roleType) async {
-    await contactPresenter.setGroupMemberRole(
+    final res = await contactPresenter.setGroupMemberRole(
         groupID: widget.groupInfo.groupID,
         userID: widget.memberFullInfo.userID,
         role: roleType);
+    if (res.code != 0) {
+      _notifyGroupActionFailed(
+          res.code, groupActionFailureText(res.code, tL10n.setFailed));
+    }
   }
 
   bool isSelf() {
@@ -432,12 +453,18 @@ class TencentCloudChatGroupMemberListItemState
     return pk(uid) == pk(loginID);
   }
 
+  /// toxee: an NGC member row carries a PER-GROUP key, not a Tox ID (see
+  /// group_member_identity.dart). Copy the real id when the row resolves to a
+  /// known identity; otherwise copy — and call it — the member key.
   Future<void> _copyMemberId() async {
-    await Clipboard.setData(ClipboardData(text: widget.memberFullInfo.userID));
+    final resolved = resolveGroupMemberUserID(widget.memberFullInfo.userID);
+    await Clipboard.setData(
+        ClipboardData(text: resolved ?? widget.memberFullInfo.userID));
     if (!mounted) return;
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       SnackBar(
-        content: Text(tL10n.toxIdCopied),
+        content: Text(
+            resolved != null ? tL10n.toxIdCopied : tL10n.groupMemberKeyCopied),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -470,7 +497,10 @@ class TencentCloudChatGroupMemberListItemState
           key: const ValueKey('group_member_desktop_copy_id_item'),
           child: ListTile(
             leading: const Icon(Icons.copy),
-            title: Text(tL10n.copyToxId),
+            title: Text(
+                resolveGroupMemberUserID(widget.memberFullInfo.userID) != null
+                    ? tL10n.copyToxId
+                    : tL10n.copyGroupMemberKey),
             dense: true,
             contentPadding: EdgeInsets.zero,
           ),
@@ -540,6 +570,7 @@ class TencentCloudChatGroupMemberListItemState
             context: context,
             builder: (c) => TencentCloudChatGroupMemberInfo(
               memberFullInfo: widget.memberFullInfo,
+              groupType: widget.groupInfo.groupType,
             ),
           );
         } else {
@@ -548,6 +579,7 @@ class TencentCloudChatGroupMemberListItemState
             MaterialPageRoute(
               builder: (context) => TencentCloudChatGroupMemberInfo(
                 memberFullInfo: widget.memberFullInfo,
+                groupType: widget.groupInfo.groupType,
               ),
             ),
           );
@@ -606,6 +638,7 @@ class TencentCloudChatGroupMemberListItemState
                 context: context,
                 builder: (c) => TencentCloudChatGroupMemberInfo(
                       memberFullInfo: widget.memberFullInfo,
+                      groupType: widget.groupInfo.groupType,
                     ));
           } else {
             Navigator.push(
@@ -613,6 +646,7 @@ class TencentCloudChatGroupMemberListItemState
                 MaterialPageRoute(
                     builder: (context) => TencentCloudChatGroupMemberInfo(
                           memberFullInfo: widget.memberFullInfo,
+                          groupType: widget.groupInfo.groupType,
                         )));
           }
         },
@@ -888,4 +922,13 @@ class TencentCloudChatGroupMemberListTagState
               ),
             )));
   }
+}
+
+/// Surface a failed group-member action through the host's notification hook
+/// (the same channel the contact profile uses for delete-friend failures).
+void _notifyGroupActionFailed(int code, String text) {
+  TencentCloudChat.instance.callbacks.onUserNotificationEvent(
+    TencentCloudChatComponentsEnum.contact,
+    TencentCloudChatUserNotificationEvent(eventCode: code, text: text),
+  );
 }

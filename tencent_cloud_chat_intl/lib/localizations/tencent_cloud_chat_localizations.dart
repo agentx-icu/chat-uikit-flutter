@@ -3415,6 +3415,72 @@ abstract class TencentCloudChatLocalizations {
   /// In en, this message translates to:
   /// **'No stickers'**
   String get noStickers;
+
+  /// No description provided for @inviteMembersFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t invite {names}. Make sure they are still your friends, then try again.'**
+  String inviteMembersFailed(Object names);
+
+  /// No description provided for @copyGroupMemberKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy member key'**
+  String get copyGroupMemberKey;
+
+  /// No description provided for @groupMemberKeyCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Member key copied'**
+  String get groupMemberKeyCopied;
+
+  /// No description provided for @groupMemberKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Member key'**
+  String get groupMemberKey;
+
+  /// No description provided for @groupMemberKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This key only identifies the member in this group. It is not their Tox ID.'**
+  String get groupMemberKeyHint;
+
+  /// No description provided for @conferenceMemberKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the member\'s long-term Tox public key, the same in every group. To add them as a friend you need their full Tox ID.'**
+  String get conferenceMemberKeyHint;
+
+  /// No description provided for @inviteRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the invitations. Please try again later.'**
+  String get inviteRequestFailed;
+
+  /// No description provided for @kickMemberFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t remove this member. They may have already left the group.'**
+  String get kickMemberFailed;
+
+  /// No description provided for @groupActionNoPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to do that in this group.'**
+  String get groupActionNoPermission;
+
+  /// No description provided for @groupActionNotSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This type of group doesn\'t support that action.'**
+  String get groupActionNotSupported;
+
+  /// No description provided for @groupActionNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected to the Tox network yet. Please try again later.'**
+  String get groupActionNotConnected;
 }
 
 class _TencentCloudChatLocalizationsDelegate

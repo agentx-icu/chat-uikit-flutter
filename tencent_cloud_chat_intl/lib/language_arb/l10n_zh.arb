@@ -712,5 +712,16 @@
   "viewToxId": "查看 Tox ID",
   "reject": "拒绝",
   "retry": "重试",
-  "noStickers": "暂无贴纸"
+  "noStickers": "暂无贴纸",
+  "inviteMembersFailed": "无法邀请 {names}。请确认对方仍是你的好友后重试。",
+  "copyGroupMemberKey": "复制成员公钥",
+  "groupMemberKeyCopied": "成员公钥已复制",
+  "groupMemberKey": "成员公钥",
+  "groupMemberKeyHint": "该公钥仅用于在本群中标识此成员，并不是对方的 Tox ID。",
+  "conferenceMemberKeyHint": "这是该成员的 Tox 长期公钥，在所有群中都相同。添加好友需要对方完整的 Tox ID。",
+  "inviteRequestFailed": "邀请发送失败，请稍后重试。",
+  "kickMemberFailed": "无法移除该成员，对方可能已经退出群聊。",
+  "groupActionNoPermission": "你没有在本群执行此操作的权限。",
+  "groupActionNotSupported": "此类群组不支持该操作。",
+  "groupActionNotConnected": "尚未连接到 Tox 网络，请稍后重试。"
 }

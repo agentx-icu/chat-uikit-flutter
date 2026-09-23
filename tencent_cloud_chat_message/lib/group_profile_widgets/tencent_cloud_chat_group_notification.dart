@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
+import 'package:tencent_cloud_chat_common/components/tencent_cloud_chat_components_utils.dart';
+import 'package:tencent_cloud_chat_common/utils/group_action_failure_text.dart';
+import 'package:tencent_cloud_chat_common/utils/group_announcement_permission.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_code_info.dart';
 
 class TencentCloudChatGroupNotification extends StatefulWidget {
   final V2TimGroupInfo groupInfo;
@@ -26,23 +32,15 @@ class TencentCloudChatGroupNotificationState
     notification = widget.groupInfo.notification ?? "";
   }
 
-  bool canEditNotification() {
-    String groupType = widget.groupInfo.groupType;
-    int role = widget.groupInfo.role!;
-    if (groupType == GroupType.Work) {
-      return true;
-    } else if ((groupType == GroupType.Public ||
-            groupType == GroupType.Community) &&
-        (role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_ADMIN ||
-            role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_OWNER)) {
-      return true;
-    } else if (role == GroupMemberRoleType.V2TIM_GROUP_MEMBER_ROLE_OWNER) {
-      return true;
-    }
-    return false;
-  }
+  // toxee: Tim2Tox reports every NGC group as GroupType.Work, and the stock
+  // rule let anyone edit a Work group's notification — so plain members were
+  // offered an edit that toxcore refuses under the (default) topic lock. The
+  // shared rule asks the host for the live topic permission and otherwise
+  // gates on the real self role (see group_announcement_permission.dart).
+  // Desktop and mobile builders below both use it.
+  bool canEditNotification() => canEditGroupAnnouncement(widget.groupInfo);
 
-  _onSetGroupNotification(String value) async {
+  Future<void> _onSetGroupNotification(String value) async {
     final res = await TencentCloudChat.instance.chatSDKInstance.groupSDK
         .setGroupInfo(
             groupID: widget.groupInfo.groupID,
@@ -52,7 +50,17 @@ class TencentCloudChatGroupNotificationState
       safeSetState(() {
         notification = value;
       });
+      return;
     }
+    // A refused or failed edit used to be dropped here: the dialog closed and
+    // the old announcement stayed, with no word to the user.
+    TencentCloudChat.instance.callbacks.onUserNotificationEvent(
+      TencentCloudChatComponentsEnum.message,
+      TencentCloudChatUserNotificationEvent(
+        eventCode: res.code,
+        text: groupActionFailureText(res.code, tL10n.setFailed),
+      ),
+    );
   }
 
   onEditNotification() {
@@ -72,7 +80,7 @@ class TencentCloudChatGroupNotificationState
             actions: <Widget>[
               CupertinoDialogAction(
                 onPressed: () {
-                  _onSetGroupNotification(mid);
+                  unawaited(_onSetGroupNotification(mid));
                   popDialogIfCurrent(context);
                 },
                 child: Text(tL10n.confirm),

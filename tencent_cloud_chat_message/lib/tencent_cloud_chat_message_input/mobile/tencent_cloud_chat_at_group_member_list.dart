@@ -60,20 +60,14 @@ class TencentCloudChatAtGroupMemberListState
     Navigator.pop(context, selectMembers);
   }
 
-  @override
-  Widget? desktopBuilder(BuildContext context) {
-    return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) => Container(
-            color: colorTheme.backgroundColor,
-            child: Center(
-              child: TencentCloudChatGroupProfileMemberListAzList(
-                groupInfo: widget.groupInfo,
-                memberInfoList: widget.memberInfoList,
-                isGroupAdmin: widget.isGroupAdmin,
-                onSelectGroupMember: _onSelectGroupMember,
-              ),
-            )));
-  }
+  // No desktopBuilder on purpose. This widget is only ever shown as a pushed
+  // full-screen route (the mobile composer's "@" flow), and the state base
+  // picks a builder by SCREEN TYPE, not by how the widget is presented: on an
+  // iPad or a landscape phone the screen counts as "desktop", and the bare
+  // desktop builder it used to have rendered the picker with no Scaffold, no
+  // Material ancestor and — crucially — no Back / Confirm buttons, the only
+  // callers of [_submitAtMemberList]. Members could be ticked but never
+  // committed. defaultBuilder is the one correct chrome for a route.
 
   @override
   Widget defaultBuilder(BuildContext context) {

@@ -278,6 +278,29 @@ class TencentCloudChatMessageDataTools {
         groupID: groupID,
         disableNotify: true,
       );
+    } else if (sendMsgRes.code != 0 && isCurrentConversation) {
+      // A failure that carries NO message (e.g. "message not found" from a
+      // resend). Both branches above need `data`, so the optimistic SENDING
+      // copy inserted before the call was never reconciled and the bubble
+      // spun forever. Flip that row — matched by the local id — to failed.
+      final key = TencentCloudChatUtils.checkString(groupID) ?? userID ?? "";
+      final failedList = TencentCloudChat.instance.dataInstance.messageData
+          .getMessageList(key: key)
+          .map((message) {
+        if (message.id == id &&
+            message.status == MessageStatus.V2TIM_MSG_STATUS_SENDING) {
+          // A copy, not a mutation: rows are shared with widgets that detect
+          // change by comparing against the instance they already hold.
+          return V2TimMessage.fromJson(message.toJson())
+            ..status = MessageStatus.V2TIM_MSG_STATUS_SEND_FAIL;
+        }
+        return message;
+      }).toList();
+      TencentCloudChat.instance.dataInstance.messageData.updateMessageList(
+        messageList: failedList,
+        userID: userID,
+        groupID: groupID,
+      );
     }
     return sendMsgRes;
   }

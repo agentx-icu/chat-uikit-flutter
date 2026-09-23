@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:tencent_cloud_chat_common/components/component_options/tencent_cloud_chat_user_profile_options.dart';
 import 'package:tencent_cloud_chat_common/components/components_definition/tencent_cloud_chat_component_builder_definitions.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_screen_adapter.dart';
-import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_navigator.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
+import 'package:tencent_cloud_chat_message/common/message_sender_navigation.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/builders/tencent_cloud_chat_common_builders.dart';
 import 'package:tencent_cloud_chat_common/widgets/avatar/tencent_cloud_chat_avatar.dart';
@@ -29,7 +28,11 @@ class _TencentCloudChatMessageRowMessageSenderAvatarState
   void _onTapAvatar() {
     if (TencentCloudChatUtils.checkString(widget.data.message.sender) != null) {
       if ( (!(widget.data.message.isSelf ?? true) && widget.showOthersAvatar) ) {
-        navigateToUserProfile(context: context, options: TencentCloudChatUserProfileOptions(userID: widget.data.message.sender!));
+        // toxee: resolve a group sender's per-group key before opening
+        // anything (see openMessageSender). Shared by the desktop and mobile
+        // rows: both render this avatar widget.
+        openMessageSender(context, widget.data.message,
+            groupID: widget.data.groupID);
       }
     }
   }

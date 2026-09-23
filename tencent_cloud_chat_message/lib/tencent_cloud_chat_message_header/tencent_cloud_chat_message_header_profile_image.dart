@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/components/component_options/tencent_cloud_chat_group_profile_options.dart';
 import 'package:tencent_cloud_chat_common/components/component_options/tencent_cloud_chat_user_profile_options.dart';
+import 'package:tencent_cloud_chat_common/data/conversation/tencent_cloud_chat_conversation_data.dart';
 import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_navigator.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
@@ -29,6 +32,59 @@ class TencentCloudChatMessageHeaderProfileImage extends StatefulWidget {
 
 class _TencentCloudChatMessageHeaderProfileImageState
     extends TencentCloudChatState<TencentCloudChatMessageHeaderProfileImage> {
+  /// toxee: the conversation as last seen in UIKit's conversation data. The
+  /// header is built with the conversation captured when the chat opened (a
+  /// compact shell pushes the route once and never rebuilds it with a fresh
+  /// one), so a changed avatar — e.g. a new group avatar picked on the group
+  /// profile — reached the conversation row but never this header. Mirrors
+  /// toxee's `ToxeeMessageHeaderInfo`, which fixed the same gap for the title.
+  V2TimConversation? _liveConversation;
+  StreamSubscription<TencentCloudChatConversationData<dynamic>>?
+      _conversationSub;
+
+  V2TimConversation? get _conversation =>
+      _liveConversation ?? widget.conversation;
+
+  @override
+  void initState() {
+    super.initState();
+    _conversationSub = TencentCloudChat.instance.eventBusInstance
+        .on<TencentCloudChatConversationData<dynamic>>(
+            'TencentCloudChatConversationData')
+        ?.listen(_onConversationData);
+  }
+
+  @override
+  void didUpdateWidget(
+      covariant TencentCloudChatMessageHeaderProfileImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // A parent rebuild handing in a different conversation (or a fresher
+    // avatar for the same one) wins over what the event stream delivered.
+    if (oldWidget.conversation?.conversationID !=
+            widget.conversation?.conversationID ||
+        oldWidget.conversation?.faceUrl != widget.conversation?.faceUrl) {
+      _liveConversation = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _conversationSub?.cancel();
+    super.dispose();
+  }
+
+  void _onConversationData(TencentCloudChatConversationData<dynamic> data) {
+    final id = widget.conversation?.conversationID;
+    if (id == null || id.isEmpty || !mounted) return;
+    for (final conv in data.conversationList) {
+      if (conv.conversationID != id) continue;
+      if (conv.faceUrl != _conversation?.faceUrl) {
+        setState(() => _liveConversation = conv);
+      }
+      return;
+    }
+  }
+
   List<String> getConversationFaceURL(V2TimConversation? conversation) {
     if (conversation == null) {
       return [""];
@@ -76,7 +132,7 @@ class _TencentCloudChatMessageHeaderProfileImageState
               : null,
       child: TencentCloudChatCommonBuilders.getCommonAvatarBuilder(
         scene: TencentCloudChatAvatarScene.messageHeader,
-        imageList: getConversationFaceURL(widget.conversation),
+        imageList: getConversationFaceURL(_conversation),
         width: getSquareSize(34),
         height: getSquareSize(34),
         borderRadius: getSquareSize(17),
@@ -122,7 +178,7 @@ class _TencentCloudChatMessageHeaderProfileImageState
       },
       child: TencentCloudChatCommonBuilders.getCommonAvatarBuilder(
         scene: TencentCloudChatAvatarScene.messageHeader,
-        imageList: getConversationFaceURL(widget.conversation),
+        imageList: getConversationFaceURL(_conversation),
         width: getSquareSize(34),
         height: getSquareSize(34),
         borderRadius: getSquareSize(17),

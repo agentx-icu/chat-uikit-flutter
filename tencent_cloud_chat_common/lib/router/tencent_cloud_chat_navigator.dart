@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_route_names.dart';
 import 'package:tencent_cloud_chat_common/router/tencent_cloud_chat_router.dart';
+import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
+import 'package:tencent_cloud_chat_common/widgets/dialog/tencent_cloud_chat_dialog.dart';
 
 /// Navigate to `TencentCloudChatConversation`, while options should be `TencentCloudChatConversationOptions`
 Future<T?>? navigateToConversation<T extends Object?>({
@@ -119,6 +121,32 @@ Future<T?>? navigateToGroupMemberInfo<T extends Object?>({
     context: context,
     routeName: TencentCloudChatRouteNames.groupMemberInfo,
     options: options,
+  );
+}
+
+/// toxee: show `TencentCloudChatGroupMemberInfo` the way a member-list row
+/// does — a dialog on desktop (the page has no app bar there, so a pushed
+/// route would have no way back), a pushed page elsewhere. [options] is a
+/// `TencentCloudChatGroupMemberInfoOptions`. For callers outside the contact
+/// package (a group message's sender avatar), which cannot build the page
+/// themselves; the page comes from the registered route builder.
+void showGroupMemberInfo({
+  required BuildContext context,
+  required dynamic options,
+}) {
+  final builder =
+      TencentCloudChatRouter().routes[TencentCloudChatRouteNames.groupMemberInfo];
+  if (builder == null || !TencentCloudChatPlatformAdapter().isDesktop) {
+    navigateToGroupMemberInfo(context: context, options: options);
+    return;
+  }
+  TencentCloudChatDialog.showCustomDialog(
+    context: context,
+    routeSettings: RouteSettings(
+      name: TencentCloudChatRouteNames.groupMemberInfo,
+      arguments: {'options': options},
+    ),
+    builder: builder,
   );
 }
 

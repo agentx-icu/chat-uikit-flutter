@@ -8,11 +8,17 @@ import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.d
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/builders/tencent_cloud_chat_common_builders.dart';
 import 'package:tencent_cloud_chat_common/widgets/avatar/tencent_cloud_chat_avatar.dart';
+import 'package:tencent_cloud_chat_contact/widgets/group_member_identity.dart';
+import 'package:tencent_cloud_chat_common/utils/tox_group_kind.dart';
 
 class TencentCloudChatGroupMemberInfo extends StatefulWidget {
   final V2TimGroupMemberFullInfo memberFullInfo;
 
-  const TencentCloudChatGroupMemberInfo({super.key, required this.memberFullInfo});
+  /// toxee: the member's group type when known (see
+  /// TencentCloudChatGroupMemberInfoOptions.groupType).
+  final String? groupType;
+
+  const TencentCloudChatGroupMemberInfo({super.key, required this.memberFullInfo, this.groupType});
 
   @override
   State<StatefulWidget> createState() => TencentCloudChatGroupMemberInfoState();
@@ -32,6 +38,7 @@ class TencentCloudChatGroupMemberInfoState extends TencentCloudChatState<Tencent
         build: (context, colorTheme, textStyle) => Scaffold(
                 body: TencentCloudChatGroupMemberInfoBody(
               memberFullInfo: widget.memberFullInfo,
+              groupType: widget.groupType,
             )));
   }
 
@@ -48,14 +55,16 @@ class TencentCloudChatGroupMemberInfoState extends TencentCloudChatState<Tencent
             ),
             body: TencentCloudChatGroupMemberInfoBody(
               memberFullInfo: widget.memberFullInfo,
+              groupType: widget.groupType,
             )));
   }
 }
 
 class TencentCloudChatGroupMemberInfoBody extends StatefulWidget {
   final V2TimGroupMemberFullInfo memberFullInfo;
+  final String? groupType;
 
-  const TencentCloudChatGroupMemberInfoBody({super.key, required this.memberFullInfo});
+  const TencentCloudChatGroupMemberInfoBody({super.key, required this.memberFullInfo, this.groupType});
 
   @override
   State<StatefulWidget> createState() => TencentCloudChatGroupMemberInfoBodyState();
@@ -94,6 +103,11 @@ class TencentCloudChatGroupMemberInfoBodyState extends TencentCloudChatState<Ten
 
   @override
   Widget defaultBuilder(BuildContext context) {
+    // toxee: the row's userID is a Tox identity only when it resolves (self,
+    // or a friend in a legacy conference). An NGC member row carries a
+    // PER-GROUP key: label it as such, copy it as such, and offer no profile /
+    // add-friend route for it (see group_member_identity.dart).
+    final resolvedID = resolveGroupMemberUserID(widget.memberFullInfo.userID);
     return TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => Center(
               child: ListView(
@@ -129,7 +143,9 @@ class TencentCloudChatGroupMemberInfoBodyState extends TencentCloudChatState<Ten
                           children: [
                             Flexible(
                               child: Text(
-                                "ID: ${widget.memberFullInfo.userID}",
+                                resolvedID != null
+                                    ? "ID: $resolvedID"
+                                    : "${tL10n.groupMemberKey}: ${widget.memberFullInfo.userID}",
                                 style:
                                     TextStyle(fontSize: textStyle.fontsize_12),
                               ),
@@ -149,19 +165,40 @@ class TencentCloudChatGroupMemberInfoBodyState extends TencentCloudChatState<Ten
                               onPressed: () async {
                                 await Clipboard.setData(
                                   ClipboardData(
-                                    text: widget.memberFullInfo.userID ?? '',
+                                    text: resolvedID ??
+                                        widget.memberFullInfo.userID,
                                   ),
                                 );
                                 if (!mounted) return;
                                 ScaffoldMessenger.maybeOf(context)?.showSnackBar(
                                   SnackBar(
-                                    content: Text(tL10n.toxIdCopied),
+                                    content: Text(resolvedID != null
+                                        ? tL10n.toxIdCopied
+                                        : tL10n.groupMemberKeyCopied),
                                   ),
                                 );
                               },
                             ),
                           ],
-                        )
+                        ),
+                        if (resolvedID == null)
+                          Padding(
+                            padding: EdgeInsets.only(top: getHeight(4)),
+                            child: Text(
+                              // toxee: a legacy conference names a peer by
+                              // their LONG-TERM key (the one in their Tox ID),
+                              // so "only identifies the member in this group"
+                              // is true only of an NGC per-group key.
+                              isToxConferenceGroupType(widget.groupType)
+                                  ? tL10n.conferenceMemberKeyHint
+                                  : tL10n.groupMemberKeyHint,
+                              key: const ValueKey('group_member_info_key_hint'),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: textStyle.fontsize_12,
+                                  color: colorTheme.secondaryTextColor),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -207,6 +244,7 @@ class TencentCloudChatGroupMemberInfoBodyState extends TencentCloudChatState<Ten
                       )
                     ],
                   ),
+                  if (resolvedID != null)
                   Column(
                     children: [
                       InkWell(
@@ -220,7 +258,7 @@ class TencentCloudChatGroupMemberInfoBodyState extends TencentCloudChatState<Ten
                           navigateToUserProfile(
                             context: context,
                             options: TencentCloudChatUserProfileOptions(
-                              userID: widget.memberFullInfo.userID,
+                              userID: resolvedID,
                               isNavigatedFromChat: false,
                             ),
                           );
