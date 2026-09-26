@@ -27,6 +27,22 @@ class TencentCloudChatMessageLayout extends StatefulWidget {
 class _TencentCloudChatMessageLayoutState extends TencentCloudChatState<TencentCloudChatMessageLayout> {
   bool _dragging = false;
 
+  /// Height the composer's fixed content needs below the header.
+  static const double _composerAllowance = 140;
+
+  /// Whether a soft keyboard is up. Reads the RAW view inset: in the
+  /// master-detail right pane the host shell's Scaffold has already consumed
+  /// it from this subtree's MediaQuery. Desktops have no soft keyboard.
+  bool _softKeyboardUp(BuildContext context) =>
+      View.of(context).viewInsets.bottom > 0;
+
+  /// Height left for header + body once the keyboard is accounted for. As the
+  /// master-detail right pane, [paneHeight] is already keyboard-shrunk and the
+  /// MediaQuery inset is 0; as a pushed route (a 720-800 dp landscape phone)
+  /// the inset is still in MediaQuery and is subtracted here — never twice.
+  double _availableHeight(BuildContext context, double paneHeight) =>
+      paneHeight - MediaQuery.viewInsetsOf(context).bottom;
+
   @override
   Widget defaultBuilder(BuildContext context) {
     return Scaffold(
@@ -67,9 +83,21 @@ class _TencentCloudChatMessageLayoutState extends TencentCloudChatState<TencentC
 
   @override
   Widget desktopBuilder(BuildContext context) {
-    return Scaffold(
+    // Measure the pane before the inner Scaffold: when a soft keyboard leaves
+    // it too short, drop the header (the master-detail conversation list stays
+    // visible beside it, so nothing is lost) and bound the composer to the
+    // body, so the chat never overflows.
+    return LayoutBuilder(builder: (context, pane) {
+     final keyboardUp = _softKeyboardUp(context);
+     // Drop the header only when it would not leave the composer room. The
+     // system back gesture / button still leaves a pushed chat, and the
+     // header returns as soon as the keyboard closes.
+     final compact = keyboardUp &&
+         _availableHeight(context, pane.maxHeight) <
+             widget.widgets.header.preferredSize.height + _composerAllowance;
+     return Scaffold(
       // resizeToAvoidBottomInset: false,
-      appBar: widget.widgets.header,
+      appBar: compact ? null : widget.widgets.header,
       body: DropTarget(
           onDragDone: (detail) {
             setState(() {
@@ -115,7 +143,23 @@ class _TencentCloudChatMessageLayoutState extends TencentCloudChatState<TencentC
                       },
                       child: widget.widgets.messageListView,
                   )),
-                  widget.widgets.messageInput,
+                  // Bounded (as in [defaultBuilder]) only while a soft keyboard
+                  // is up, i.e. on touch platforms, whose composer sizes to its
+                  // content and scrolls when short. The desktop composer grows
+                  // to any finite max height, so without a soft keyboard the
+                  // bound is infinite (the old unbounded slot). The ConstrainedBox
+                  // itself is ALWAYS there: swapping the composer's parent when
+                  // the keyboard opens would rebuild it and drop its focus,
+                  // closing the keyboard it just opened.
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: keyboardUp
+                          ? paneConstraints.maxHeight -
+                              (paneConstraints.maxHeight - 200).clamp(0.0, 96.0).toDouble()
+                          : double.infinity,
+                    ),
+                    child: widget.widgets.messageInput,
+                  ),
                 ],
               ),
               TencentCloudChatDesktopMemberMentionPanel(
@@ -140,5 +184,6 @@ class _TencentCloudChatMessageLayoutState extends TencentCloudChatState<TencentC
             ],
           ))),
     );
+    });
   }
 }
