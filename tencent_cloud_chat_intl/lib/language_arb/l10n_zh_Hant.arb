@@ -386,6 +386,16 @@
       }
     }
   },
+  "memberReadCountAtLeast": "{num, plural, one {至少 1 位成員已讀} other {至少 {num} 位成員已讀}}",
+  "@memberReadCountAtLeast": {
+    "description": "訊息已讀成員數量，確切人數未知，此數字僅為下限",
+    "placeholders": {
+      "num": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
   "allMembersRead": "所有成員已讀",
   "allowAny": "允許任何",
   "cannotSendApplicationToWorkGroup": "無法向工作組發送申請",

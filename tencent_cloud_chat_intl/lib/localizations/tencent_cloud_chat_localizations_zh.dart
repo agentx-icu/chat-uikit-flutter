@@ -768,6 +768,17 @@ class TencentCloudChatLocalizationsZh extends TencentCloudChatLocalizations {
   }
 
   @override
+  String memberReadCountAtLeast(int num) {
+    String _temp0 = intl.Intl.pluralLogic(
+      num,
+      locale: localeName,
+      other: '至少 $num 个成员阅读',
+      one: '至少1个成员阅读',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get allMembersRead => '所有成员已读';
 
   @override
@@ -2630,6 +2641,17 @@ class TencentCloudChatLocalizationsZhHant
       other: '$num 位成員已讀',
       one: '1 位成員已讀',
       zero: '無成員已讀',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String memberReadCountAtLeast(int num) {
+    String _temp0 = intl.Intl.pluralLogic(
+      num,
+      locale: localeName,
+      other: '至少 $num 位成員已讀',
+      one: '至少 1 位成員已讀',
     );
     return '$_temp0';
   }

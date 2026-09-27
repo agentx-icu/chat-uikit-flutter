@@ -1448,6 +1448,12 @@ abstract class TencentCloudChatLocalizations {
   /// **'{num, plural, zero {No member read} one {1 member read} other {{num} members read}}'**
   String memberReadCount(int num);
 
+  /// The number of message read members, when the exact count is not known and the number is only a lower bound
+  ///
+  /// In en, this message translates to:
+  /// **'{num, plural, one {At least 1 member read} other {At least {num} members read}}'**
+  String memberReadCountAtLeast(int num);
+
   /// No description provided for @allMembersRead.
   ///
   /// In en, this message translates to:

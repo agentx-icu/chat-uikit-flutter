@@ -375,6 +375,16 @@
       }
     }
   },
+  "memberReadCountAtLeast": "{num, plural, one {At least 1 member read} other {At least {num} members read}}",
+  "@memberReadCountAtLeast": {
+    "description": "The number of message read members, when the exact count is not known and the number is only a lower bound",
+    "placeholders": {
+      "num": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
   "allMembersRead": "All members read",
   "allowAny": "Allow Any",
   "cannotSendApplicationToWorkGroup": "Cannot send application to work group",

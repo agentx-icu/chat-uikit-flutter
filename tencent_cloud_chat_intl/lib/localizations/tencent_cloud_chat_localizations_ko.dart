@@ -770,6 +770,17 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   }
 
   @override
+  String memberReadCountAtLeast(int num) {
+    String _temp0 = intl.Intl.pluralLogic(
+      num,
+      locale: localeName,
+      other: '최소 $num 명의 회원이 읽음',
+      one: '최소 1 명의 회원이 읽음',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get allMembersRead => '모든 회원이 읽었습니다';
 
   @override

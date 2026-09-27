@@ -10,6 +10,7 @@ import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_
 import 'package:tencent_cloud_chat_common/data/message/tencent_cloud_chat_message_data.dart';
 import 'package:tencent_cloud_chat_common/models/tencent_cloud_chat_models.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
+import 'package:tencent_cloud_chat_common/utils/group_read_receipt_label.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/widgets/desktop_popup/operation_key.dart';
@@ -572,7 +573,16 @@ class _TencentCloudChatMessageItemWithMenuContainerState
         TencentCloudChatMessageGeneralOptionItem(
             icon: Icons.visibility,
             id: "_uikit_read_receipt",
-            label: isAllRead ? tL10n.allMembersRead : tL10n.memberReadCount(readCount ?? 0),
+            // toxee: `readCount` is only a FLOOR when the receipt carries no
+            // unreadCount (a restored, boolean-only group read state) — see
+            // groupReadReceiptMenuLabel. Rendering it as an exact number made a
+            // restored row say "1 member read" for two readers.
+            label: groupReadReceiptMenuLabel(
+              l10n: tL10n,
+              isAllRead: isAllRead,
+              readCount: readCount,
+              unreadCount: unreadCount,
+            ),
             onTap: ({Offset? offset}) {}),
       if (widget.isTextTranslatePluginEnabled && _message.status == MessageStatus.V2TIM_MSG_STATUS_SEND_SUCC &&
           !_hasTranslate)
