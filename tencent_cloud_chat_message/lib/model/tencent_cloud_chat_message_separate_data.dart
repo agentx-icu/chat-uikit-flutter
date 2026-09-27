@@ -24,8 +24,24 @@ import 'package:tencent_cloud_chat_message/model/tencent_cloud_chat_message_data
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_builders.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_controller.dart';
 
+/// Prepares a picked / pasted / dropped media file before its message is
+/// created: returns the path to send (the file itself, or a converted copy),
+/// or null to cancel the send (the app has told the user why).
+typedef OutgoingMediaPreparer = Future<String?> Function(String path);
+
 class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
+  /// Installed by the app, e.g. to convert formats other platforms cannot
+  /// show. Runs before the message exists, so the chat shows what is sent.
+  static OutgoingMediaPreparer? outgoingMediaPreparer;
+
   bool _disposed = false;
+
+  /// [path] after [outgoingMediaPreparer]; null cancels the send.
+  static Future<String?> _prepareOutgoing(String? path) async {
+    final preparer = outgoingMediaPreparer;
+    if (path == null || path.isEmpty || preparer == null) return path;
+    return preparer(path);
+  }
 
   final AutoScrollController desktopInputMemberSelectionPanelScroll =
       AutoScrollController(
@@ -1119,6 +1135,12 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
         (imagePath?.isEmpty ?? true)) {
       return null;
     }
+    if (!TencentCloudChatPlatformAdapter().isWeb) {
+      final prepared = await _prepareOutgoing(imagePath);
+      if (prepared == null) return null;
+      if (prepared != imagePath) imageName = null; // name follows the file
+      imagePath = prepared;
+    }
     final messageInfo = await TencentCloudChat
         .instance.chatSDKInstance.messageSDK
         .createImageMessage(
@@ -1140,6 +1162,11 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
     if (!TencentCloudChatPlatformAdapter().isWeb &&
         (videoPath?.isEmpty ?? true)) {
       return null;
+    }
+    if (!TencentCloudChatPlatformAdapter().isWeb) {
+      final prepared = await _prepareOutgoing(videoPath);
+      if (prepared == null) return null;
+      videoPath = prepared;
     }
     String? snapshotPath;
     final String fileExtension =
@@ -1185,6 +1212,12 @@ class TencentCloudChatMessageSeparateDataProvider extends ChangeNotifier {
     if (!TencentCloudChatPlatformAdapter().isWeb &&
         (filePath?.isEmpty ?? true)) {
       return null;
+    }
+    if (!TencentCloudChatPlatformAdapter().isWeb) {
+      final prepared = await _prepareOutgoing(filePath);
+      if (prepared == null) return null;
+      if (prepared != filePath) fileName = null; // name follows the file
+      filePath = prepared;
     }
     final messageInfo = await TencentCloudChat
         .instance.chatSDKInstance.messageSDK
