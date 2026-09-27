@@ -768,9 +768,12 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       num,
       locale: localeName,
-      other: '$num أعضاء قرأوا',
-      one: 'عضو واحد قرأ',
-      zero: 'لم يقرأأي عضو',
+      other: 'قرأ $num عضو',
+      many: 'قرأ $num عضوًا',
+      few: 'قرأ $num أعضاء',
+      two: 'قرأ عضوان',
+      one: 'قرأ عضو واحد',
+      zero: 'لم يقرأ أي عضو',
     );
     return '$_temp0';
   }

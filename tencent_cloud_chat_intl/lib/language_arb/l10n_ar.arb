@@ -365,7 +365,7 @@
       }
     }
   },
-  "memberReadCount": "{num, plural, zero {لم يقرأأي عضو} one {عضو واحد قرأ} other {{num} أعضاء قرأوا}}",
+  "memberReadCount": "{num, plural, zero {لم يقرأ أي عضو} one {قرأ عضو واحد} two {قرأ عضوان} few {قرأ {num} أعضاء} many {قرأ {num} عضوًا} other {قرأ {num} عضو}}",
   "@memberReadCount": {
     "description": "عدد الأعضاء الذين قرأوا الرسالة",
     "placeholders": {
