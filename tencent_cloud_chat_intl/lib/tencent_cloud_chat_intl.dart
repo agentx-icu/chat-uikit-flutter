@@ -93,7 +93,11 @@ class TencentCloudChatIntl extends ChangeNotifier {
   /// a fixed English log format — for anything a user reads.
   static String formatDateTime(DateTime dateTime, [BuildContext? context]) {
     final locale = _formatLocale(context);
-    return _withLocaleFallback(locale, (l) => DateFormat.yMMMd(l).add_jm()).format(dateTime);
+    final use24 = _use24HourFormat(context);
+    return _withLocaleFallback(
+      locale,
+      (l) => use24 ? DateFormat.yMMMd(l).add_Hm() : DateFormat.yMMMd(l).add_jm(),
+    ).format(dateTime);
   }
 
   /// Returns a formatted string representation of the current date and time.
@@ -152,8 +156,19 @@ class TencentCloudChatIntl extends ChangeNotifier {
     final dateTime = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
 
     final locale = _formatLocale(context);
-    return _withLocaleFallback(locale, DateFormat.jm).format(dateTime);
+    return _timeOfDay(locale, context).format(dateTime);
   }
+
+  /// Whether the device is set to 24-hour time (MediaQuery reads the system
+  /// setting on Android and iOS). Unknown without a [context]: the locale's
+  /// own convention applies then.
+  static bool _use24HourFormat(BuildContext? context) =>
+      context != null && (MediaQuery.maybeAlwaysUse24HourFormatOf(context) ?? false);
+
+  /// Time of day in [locale], honouring the device's 24-hour setting — the
+  /// locale's convention alone showed "9:28 PM" to users who chose 21:28.
+  static DateFormat _timeOfDay(String? locale, BuildContext? context) =>
+      _withLocaleFallback(locale, _use24HourFormat(context) ? DateFormat.Hm : DateFormat.jm);
 
   static String? _formatLocale(BuildContext? context) {
     final intl = TencentCloudChatIntl();
@@ -193,7 +208,7 @@ class TencentCloudChatIntl extends ChangeNotifier {
 
     final now = DateTime.now();
     final dateTime = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
-    final timeFormat = DateFormat.jm(locale.toString());
+    final timeFormat = _timeOfDay(locale.toString(), context);
     final dateFormat = DateFormat.yMMMMd(locale.toString());
 
     // Check if timestamp and now are on the same day
