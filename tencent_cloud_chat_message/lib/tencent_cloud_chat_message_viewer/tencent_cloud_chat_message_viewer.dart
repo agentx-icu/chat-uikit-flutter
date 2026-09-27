@@ -40,6 +40,20 @@ bool _isRemoteMediaUrl(String url) {
 
 enum MessageViewerMediaSaveResult { saved, canceled, failed }
 
+enum MessageViewerMediaKind { image, video }
+
+/// Saves a local image / video file to the system photo library. Returns
+/// [MessageViewerMediaSaveResult.saved] or `.failed`, or null when this file
+/// cannot go to the library (the save dialog then takes over). The app
+/// installs one on phones via [MessageViewerMediaSaver.defaultGallerySaver];
+/// without one, media goes through the save dialog.
+typedef MessageViewerGallerySaver = Future<MessageViewerMediaSaveResult?>
+    Function({
+  required String path,
+  required MessageViewerMediaKind kind,
+  required String fileName,
+});
+
 typedef MessageViewerSaveFile = Future<String?> Function({
   required String fileName,
   required Uint8List bytes,
@@ -50,22 +64,36 @@ class MessageViewerMediaSaver {
     this.pickDirectory,
     this.saveFile,
     this.httpGet,
+    this.gallerySaver,
   });
+
+  /// Installed by the app on phones; see [MessageViewerGallerySaver].
+  static MessageViewerGallerySaver? defaultGallerySaver;
 
   final Future<String?> Function()? pickDirectory;
   final MessageViewerSaveFile? saveFile;
   final Future<http.Response> Function(Uri uri)? httpGet;
+  final MessageViewerGallerySaver? gallerySaver;
 
+  /// [kind] is the message's media type; with it, a phone saves to the photo
+  /// library (a failure there is reported, not rerouted to the dialog).
   Future<MessageViewerMediaSaveResult> save({
     required String filePath,
     required bool useMobileSave,
+    MessageViewerMediaKind? kind,
   }) async {
+    final targetName = _targetNameFor(filePath);
+    final gallery = gallerySaver ?? defaultGallerySaver;
+    if (useMobileSave && gallery != null && kind != null) {
+      final result = await _saveToGallery(gallery, filePath, kind, targetName);
+      if (result != null) return result;
+    }
+
     final source = await _loadSource(filePath);
     if (source == null) {
       return MessageViewerMediaSaveResult.failed;
     }
 
-    final targetName = _targetNameFor(filePath);
     if (useMobileSave) {
       final savedPath = await (saveFile ?? _defaultSaveFile)(
         fileName: targetName,
@@ -83,6 +111,36 @@ class MessageViewerMediaSaver {
     final savePath = '$saveDirectory${Platform.pathSeparator}$targetName';
     await File(savePath).writeAsBytes(source);
     return MessageViewerMediaSaveResult.saved;
+  }
+
+  /// Local media goes to the library by path, never read into memory here.
+  /// Remote media is downloaded to a temporary file that is always removed.
+  Future<MessageViewerMediaSaveResult?> _saveToGallery(
+    MessageViewerGallerySaver gallery,
+    String filePath,
+    MessageViewerMediaKind kind,
+    String targetName,
+  ) async {
+    Directory? tempDirectory;
+    try {
+      var path = filePath;
+      if (_isRemoteMediaUrl(filePath)) {
+        final bytes = await _loadSource(filePath);
+        if (bytes == null) return MessageViewerMediaSaveResult.failed;
+        tempDirectory = await Directory.systemTemp.createTemp('media-save-');
+        path = '${tempDirectory.path}${Platform.pathSeparator}$targetName';
+        await File(path).writeAsBytes(bytes);
+      } else if (!File(filePath).existsSync()) {
+        return MessageViewerMediaSaveResult.failed;
+      }
+      return await gallery(path: path, kind: kind, fileName: targetName);
+    } catch (_) {
+      return MessageViewerMediaSaveResult.failed;
+    } finally {
+      try {
+        await tempDirectory?.delete(recursive: true);
+      } catch (_) {}
+    }
   }
 
   Future<Uint8List?> _loadSource(String filePath) async {
@@ -411,6 +469,17 @@ class TencentCloudChatMessageViewerState
     return null;
   }
 
+  MessageViewerMediaKind? _currentMediaKind() {
+    if (isLoading || messages.isEmpty || index >= messages.length) {
+      return null;
+    }
+    return switch (messages[index].elemType) {
+      MessageElemType.V2TIM_ELEM_TYPE_IMAGE => MessageViewerMediaKind.image,
+      MessageElemType.V2TIM_ELEM_TYPE_VIDEO => MessageViewerMediaKind.video,
+      _ => null,
+    };
+  }
+
   String? _currentSaveableMediaSource() {
     if (isLoading || messages.isEmpty || index >= messages.length) {
       return null;
@@ -494,13 +563,15 @@ class TencentCloudChatMessageViewerState
     }
   }
 
-  saveImage(String filePath) => saveMedia(filePath);
+  saveImage(String filePath) =>
+      saveMedia(filePath, kind: MessageViewerMediaKind.image);
 
-  saveMedia(String filePath) async {
+  saveMedia(String filePath, {MessageViewerMediaKind? kind}) async {
     try {
       final result = await const MessageViewerMediaSaver().save(
         filePath: filePath,
         useMobileSave: TencentCloudChatPlatformAdapter().isMobile,
+        kind: kind,
       );
       switch (result) {
         case MessageViewerMediaSaveResult.saved:
@@ -846,7 +917,10 @@ class TencentCloudChatMessageViewerState
                         child: FilledButton.icon(
                           key: const ValueKey('message_viewer_save_button'),
                           onPressed: () async {
-                            await saveMedia(saveableMediaSource);
+                            await saveMedia(
+                              saveableMediaSource,
+                              kind: _currentMediaKind(),
+                            );
                           },
                           icon: const Icon(Icons.save_alt_rounded),
                           label: Text(tL10n.saveToLocalContextMenuBtnText),

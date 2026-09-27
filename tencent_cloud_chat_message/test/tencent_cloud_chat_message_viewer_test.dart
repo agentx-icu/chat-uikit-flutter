@@ -182,6 +182,128 @@ void main() {
     expect(savedBytes, const <int>[1, 2, 3]);
   });
 
+  group('photo library (M3)', () {
+    Future<MessageViewerMediaSaveResult?> Function({
+      required String path,
+      required MessageViewerMediaKind kind,
+      required String fileName,
+    }) recordingGallery(
+      List<String> calls,
+      MessageViewerMediaSaveResult? answer, {
+      bool Function(String path)? onCall,
+    }) =>
+        ({required path, required kind, required fileName}) async {
+          calls.add('$kind|$fileName');
+          onCall?.call(path);
+          return answer;
+        };
+
+    MessageViewerMediaSaver saver(
+      MessageViewerGallerySaver gallery,
+      List<String> dialog,
+    ) =>
+        MessageViewerMediaSaver(
+          gallerySaver: gallery,
+          httpGet: (uri) async =>
+              http.Response.bytes(const <int>[7, 8, 9], 200),
+          saveFile: ({required fileName, required bytes}) async {
+            dialog.add(fileName);
+            return '/mobile/$fileName';
+          },
+        );
+
+    test('a phone saves media to the library, not the save dialog', () async {
+      final calls = <String>[], dialog = <String>[];
+      final result = await saver(
+        recordingGallery(calls, MessageViewerMediaSaveResult.saved),
+        dialog,
+      ).save(
+        filePath: videoFile.path,
+        useMobileSave: true,
+        kind: MessageViewerMediaKind.video,
+      );
+      expect(result, MessageViewerMediaSaveResult.saved);
+      expect(calls.single, startsWith('MessageViewerMediaKind.video|'));
+      expect(dialog, isEmpty);
+    });
+
+    test('a library failure is reported, not rerouted to the dialog', () async {
+      final calls = <String>[], dialog = <String>[];
+      final result = await saver(
+        recordingGallery(calls, MessageViewerMediaSaveResult.failed),
+        dialog,
+      ).save(
+        filePath: imageFile.path,
+        useMobileSave: true,
+        kind: MessageViewerMediaKind.image,
+      );
+      expect(result, MessageViewerMediaSaveResult.failed);
+      expect(dialog, isEmpty);
+    });
+
+    test('a throwing library saver is a failure', () async {
+      final dialog = <String>[];
+      final result = await saver(
+        ({required path, required kind, required fileName}) async =>
+            throw StateError('denied'),
+        dialog,
+      ).save(
+        filePath: imageFile.path,
+        useMobileSave: true,
+        kind: MessageViewerMediaKind.image,
+      );
+      expect(result, MessageViewerMediaSaveResult.failed);
+      expect(dialog, isEmpty);
+    });
+
+    test('a file the library cannot take goes to the dialog', () async {
+      final calls = <String>[], dialog = <String>[];
+      final result = await saver(recordingGallery(calls, null), dialog).save(
+        filePath: imageFile.path,
+        useMobileSave: true,
+        kind: MessageViewerMediaKind.image,
+      );
+      expect(result, MessageViewerMediaSaveResult.saved);
+      expect(calls, hasLength(1));
+      expect(dialog, hasLength(1));
+    });
+
+    test('remote media goes through a temporary file that is removed', () async {
+      final calls = <String>[], dialog = <String>[];
+      String? seenPath;
+      final result = await saver(
+        recordingGallery(
+          calls,
+          MessageViewerMediaSaveResult.saved,
+          onCall: (path) {
+            seenPath = path;
+            expect(File(path).readAsBytesSync(), const <int>[7, 8, 9]);
+            return true;
+          },
+        ),
+        dialog,
+      ).save(
+        filePath: 'https://cdn.test/path/clip.mp4',
+        useMobileSave: true,
+        kind: MessageViewerMediaKind.video,
+      );
+      expect(result, MessageViewerMediaSaveResult.saved);
+      expect(seenPath, endsWith('_clip.mp4'));
+      expect(File(seenPath!).existsSync(), isFalse);
+    });
+
+    test('without a kind, or on desktop, the library is not used', () async {
+      final calls = <String>[], dialog = <String>[];
+      final s = saver(
+        recordingGallery(calls, MessageViewerMediaSaveResult.saved),
+        dialog,
+      );
+      await s.save(filePath: imageFile.path, useMobileSave: true);
+      expect(calls, isEmpty);
+      expect(dialog, hasLength(1));
+    });
+  });
+
   test('desktop save keeps directory copy behavior', () async {
     final saveDirectory = Directory('${tempDirectory.path}/desktop-save')
       ..createSync();
