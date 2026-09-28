@@ -139,6 +139,7 @@ class TencentCloudChatConversationAppBarNameState
                       fontWeight: FontWeight.w600),
                 )),
                 IconButton(
+                  tooltip: tL10n.theme, // screen readers (I5)
                   icon: Icon(Icons.brightness_medium, color: colorTheme.appBarIconColor),
                   onPressed: () {
                     // Prefer the host's source-of-truth toggle so the Material

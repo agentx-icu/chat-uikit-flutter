@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tencent_cloud_chat_intl/localizations/tencent_cloud_chat_localizations.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -423,6 +424,7 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
         fit: BoxFit.cover,
         width: _imageWidth(),
         File(path),
+        frameBuilder: _clearErrorOnFrame,
         errorBuilder: (context, error, stackTrace) {
           console("local image render failed. please check the path is right. path: $path");
           _scheduleLocalDecodeRetry(path);
@@ -465,10 +467,19 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
 
   getErrorWidget() {
     console("render image error");
+    if (!_errorShown) {
+      _errorShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() {});
+      });
+    }
     final colorTheme = TencentCloudChat.instance.dataInstance.theme.colorTheme;
     double placeholderWidth = _imageWidth();
     double placeholderHeight = placeholderWidth * 1.33;
-    return InkWell(
+    return Semantics(
+      button: true,
+      label: TencentCloudChatLocalizations.of(context)?.retry, // I5
+      child: InkWell(
       // Automation anchor (`ForkUiKeys.messageImageError`). Its presence is the
       // machine-readable statement "this bubble is showing the DECODE-ERROR
       // placeholder", which is also why the image is untappable: this InkWell
@@ -476,20 +487,7 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
       // viewer cannot be opened from an errored bubble no matter how the tap is
       // aimed.
       key: ValueKey('message_image_error:${_imageStateKeyId}'),
-      onTap: () {
-        if (onlineRenderResult != null && onlineRenderResult == false) {
-          onlineRenderResult = true;
-          onlineRenderKey++;
-          _getImageUrl();
-        }
-        // A LOCAL decode failure has no url to re-fetch; give the user the same
-        // manual escape hatch the automatic retry uses (evict + re-resolve).
-        final localPath = currentRenderImageInfo?.path ?? '';
-        if (localPath.isNotEmpty) {
-          _localDecodeRetries = 0;
-          _scheduleLocalDecodeRetry(localPath);
-        }
-      },
+      onTap: _retryImage,
       child: Container(
         width: getWidth(placeholderWidth),
         height: getHeight(placeholderHeight),
@@ -509,7 +507,7 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
           ),
         ),
       ),
-    );
+    ));
   }
 
   bool _isLocalFilePath(String url) {
@@ -533,6 +531,7 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
           key: ValueKey('$onlineRenderKey#$url#$_localRenderNonce'),
           fit: BoxFit.cover,
           width: _imageWidth(),
+          frameBuilder: _clearErrorOnFrame,
           errorBuilder: (context, error, stackTrace) {
             console("local image render failed. path: $url");
             // Same transient-decode recovery as renderLocalImage: this branch
@@ -629,21 +628,77 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
 
   String get _imageBubbleKey => 'message_image_bubble:$_imageStateKeyId';
 
+  /// The decode-error placeholder is showing inside the bubble; set by
+  /// [getErrorWidget], which then rebuilds once so [_imageSemantics] follows.
+  bool _errorShown = false;
+
+  /// Screen readers (I5): ONE focus stop for the bubble, carrying its action
+  /// (the gesture detector inside would otherwise be a second, unnamed one).
+  /// Normally "Image" -> the viewer (not in select mode / menu preview);
+  /// while the decode-error placeholder shows, "Retry" -> retry.
+  Widget _imageSemantics(Widget child) {
+    final l10n = TencentCloudChatLocalizations.of(context);
+    final canView =
+        !widget.data.inSelectMode && !widget.data.renderOnMenuPreview;
+    return Semantics(
+      container: true,
+      button: true,
+      image: !_errorShown,
+      label: _errorShown ? l10n?.retry : l10n?.image,
+      excludeSemantics: true,
+      onTap: _errorShown ? _retryImage : (canView ? showImage : null),
+      child: child,
+    );
+  }
+
+  /// An image frame rendered: an automatic decode retry recovered it, so
+  /// the bubble reads "Image" again (not "Retry").
+  Widget _clearErrorOnFrame(
+    BuildContext context,
+    Widget child,
+    int? frame,
+    bool wasSynchronouslyLoaded,
+  ) {
+    if (frame != null && _errorShown) {
+      _errorShown = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() {});
+      });
+    }
+    return child;
+  }
+
+  void _retryImage() {
+    _errorShown = false;
+    if (onlineRenderResult != null && onlineRenderResult == false) {
+      onlineRenderResult = true;
+      onlineRenderKey++;
+      _getImageUrl();
+    }
+    // A LOCAL decode failure has no url to re-fetch; give the user the same
+    // manual escape hatch the automatic retry uses (evict + re-resolve).
+    final localPath = currentRenderImageInfo?.path ?? '';
+    if (localPath.isNotEmpty) {
+      _localDecodeRetries = 0;
+      _scheduleLocalDecodeRetry(localPath);
+    }
+  }
+
   Widget renderImage() {
     if (!TencentCloudChatPlatformAdapter().isWeb && (currentRenderImageInfo?.type == ImageCurrentRenderType.path || currentRenderImageInfo?.type == ImageCurrentRenderType.local)) {
-      return GestureDetector(
+      return _imageSemantics(GestureDetector(
         key: ValueKey(_imageBubbleKey),
         onTapDown: onTapDown,
         onTapUp: onTapUp,
         child: renderLocalImage(currentRenderImageInfo?.path ?? ""),
-      );
+      ));
     } else {
-      return GestureDetector(
+      return _imageSemantics(GestureDetector(
         key: ValueKey(_imageBubbleKey),
         onTapDown: onTapDown,
         onTapUp: onTapUp,
         child: renderOnlineImage(currentRenderImageInfo?.path ?? ""),
-      );
+      ));
     }
   }
 

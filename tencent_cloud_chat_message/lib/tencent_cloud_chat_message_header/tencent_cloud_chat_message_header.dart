@@ -49,6 +49,7 @@ class _TencentCloudChatMessageHeaderState
                       // conversation-row menu case then long-pressed the chat
                       // page instead of the row).
                       key: const ValueKey('chat_header_back_button'),
+                      tooltip: tL10n.back, // screen readers (I5)
                       color: colorTheme.primaryColor,
                       onPressed: () => popDialogIfCurrent(context),
                       icon: const Icon(Icons.arrow_back_ios_rounded)),

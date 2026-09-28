@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tencent_cloud_chat_intl/localizations/tencent_cloud_chat_localizations.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 
 class TencentCloudChatMessageHeaderActions extends StatelessWidget {
@@ -33,6 +34,7 @@ class TencentCloudChatMessageHeaderActions extends StatelessWidget {
                     // Automation anchor (toxee UiKeys.chatCallVoiceButton). The
                     // fork can't import toxee, so the key string is inlined.
                     key: const ValueKey('chat_call_voice_button'),
+                    tooltip: TencentCloudChatLocalizations.of(context)?.voiceCall, // I5
                     onPressed: voiceCallHandler,
                     icon: Icon(
                       Icons.call,
@@ -46,6 +48,7 @@ class TencentCloudChatMessageHeaderActions extends StatelessWidget {
                   IconButton(
                     // Automation anchor (toxee UiKeys.chatCallVideoButton).
                     key: const ValueKey('chat_call_video_button'),
+                    tooltip: TencentCloudChatLocalizations.of(context)?.videoCall, // I5
                     onPressed: videoCallHandler,
                     icon: Icon(
                       Icons.videocam,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tencent_cloud_chat_intl/localizations/tencent_cloud_chat_localizations.dart';
 
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/components/component_options/tencent_cloud_chat_group_profile_options.dart';
@@ -145,7 +146,12 @@ class _TencentCloudChatMessageHeaderProfileImageState
     // Direct key on the GestureDetector — see desktopBuilder (lets
     // _tryInvokeCallback guarantee the profile open even if the synthetic
     // pointer misses the small avatar; double-fire is harmless for a push).
-    return GestureDetector(
+    // Screen readers (I5): name the avatar; it opens the profile.
+    return Semantics(
+      button: true,
+      label: TencentCloudChatLocalizations.of(context)?.profile,
+      container: true,
+      child: GestureDetector(
       key: const ValueKey('message_header_profile_avatar'),
       onTap: () async {
         if (mounted) {
@@ -183,6 +189,6 @@ class _TencentCloudChatMessageHeaderProfileImageState
         height: getSquareSize(34),
         borderRadius: getSquareSize(17),
       ),
-    );
+    ));
   }
 }

@@ -403,9 +403,27 @@ class _TencentCloudChatMessageInputMobileState
     required IconData icon,
     required GestureTapDownCallback onTapDown,
     Key? iconKey,
+    String? semanticLabel,
   }) {
     return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) => Material(
+        // Screen readers (I5): the InkWell only listens to tap-DOWN (the
+        // popup is placed from its position), which exposes no tap action,
+        // so TalkBack / VoiceOver could neither name nor activate it. The
+        // semantic tap replays a tap-down at the icon's centre.
+        build: (context, colorTheme, textStyle) => Semantics(
+              button: true,
+              label: semanticLabel,
+              onTap: semanticLabel == null
+                  ? null
+                  : () {
+                      final box = context.findRenderObject() as RenderBox?;
+                      onTapDown(TapDownDetails(
+                        globalPosition: box == null || !box.hasSize
+                            ? Offset.zero
+                            : box.localToGlobal(box.size.center(Offset.zero)),
+                      ));
+                    },
+              child: Material(
               color: Colors.transparent,
               shape: const CircleBorder(),
               clipBehavior: Clip.hardEdge,
@@ -422,7 +440,7 @@ class _TencentCloudChatMessageInputMobileState
                   ),
                 ),
               ),
-            ));
+            )));
   }
 
   void _onStartRecording(PointerDownEvent event) async {
@@ -873,6 +891,7 @@ class _TencentCloudChatMessageInputMobileState
                     iconKey:
                         const ValueKey('message_attachment_options_button'),
                     icon: Icons.add_circle_outline_rounded,
+                    semanticLabel: tL10n.more,
                     onTapDown: (details) {
                       _textEditingFocusNode.unfocus();
                       if (_showStickerPanel) {
@@ -922,7 +941,10 @@ class _TencentCloudChatMessageInputMobileState
                           ),
                         ),
                         if (widget.inputData.hasStickerPlugin)
-                          GestureDetector(
+                          Semantics(
+                            button: true,
+                            label: tL10n.sticker, // screen readers (I5)
+                            child: GestureDetector(
                             key: const ValueKey('emoji_panel_button'),
                             onTap: () {
                               if (!_showStickerPanel) {
@@ -941,7 +963,7 @@ class _TencentCloudChatMessageInputMobileState
                               size: textStyle.inputAreaIcon,
                               color: colorTheme.inputAreaIconColor,
                             ),
-                          ),
+                          )),
                       ],
                     ),
                   )),
@@ -963,7 +985,10 @@ class _TencentCloudChatMessageInputMobileState
                                 // lands the arrow upright.
                                 angle: _animationController!.value * 2 * pi,
                                 child: _showSendButton
-                                    ? InkWell(
+                                    ? Semantics(
+                                        button: true,
+                                        label: tL10n.send, // screen readers (I5)
+                                        child: InkWell(
                                         // Stable key so real-UI automation can tap
                                         // the mobile send button (matches
                                         // toxee UiKeys.chatSendButton = 'chat_send_button').
@@ -988,7 +1013,7 @@ class _TencentCloudChatMessageInputMobileState
                                             color: colorTheme.backgroundColor,
                                           ),
                                         ),
-                                      )
+                                      ))
                                     : Tooltip(
                                         key: micTooltipKey,
                                         preferBelow: false,
