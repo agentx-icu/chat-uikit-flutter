@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
 import 'package:tencent_cloud_chat_common/data/message/tencent_cloud_chat_message_data.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_bounded_image.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_download_utils.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
@@ -405,6 +406,22 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
     super.deactivate();
   }
 
+  /// Hard ceiling for one bubble's decoded raster (checklist M6): 2 MP =
+  /// 8 MB RGBA. A ~600 px-wide bubble of an ordinary photo needs a fraction of
+  /// that; only extreme aspect ratios (long strips) hit it and render soft.
+  static const int kBubbleMaxDecodedPixels = 2 * 1024 * 1024;
+
+  /// Decode at the bubble's physical width instead of the photo's full
+  /// resolution (checklist M6). Height follows the aspect ratio, capped by
+  /// [kBubbleMaxDecodedPixels].
+  ImageProvider _boundedBubbleImage(String path) =>
+      TencentCloudChatBoundedImage.file(
+        path,
+        logicalWidth: _imageWidth(),
+        devicePixelRatio: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1.0,
+        maxPixels: kBubbleMaxDecodedPixels,
+      );
+
   Widget renderLocalImage(String path) {
     console("render local image. path: $path");
     return ClipRRect(
@@ -416,14 +433,14 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
       // it) — two different bugs in two different layers.
       key: ValueKey('message_image_render_path:$path'),
       borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
-      child: Image.file(
-        // Nonce-keyed so a retry after `evict()` actually re-resolves: `Image`
-        // keeps its resolved stream when the provider compares equal, and
-        // FileImage equality is (path, scale) only.
+      child: Image(
+        // Nonce-keyed so a retry actually re-resolves: `Image` keeps its
+        // resolved stream when the provider compares equal. A failed decode
+        // evicts its own cache key (TencentCloudChatBoundedImage).
         key: ValueKey('$path#$_localRenderNonce'),
         fit: BoxFit.cover,
         width: _imageWidth(),
-        File(path),
+        image: _boundedBubbleImage(path),
         frameBuilder: _clearErrorOnFrame,
         errorBuilder: (context, error, stackTrace) {
           console("local image render failed. please check the path is right. path: $path");
@@ -526,8 +543,8 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
         // See renderLocalImage: the key carries the decoded path.
         key: ValueKey('message_image_render_path:$url'),
         borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
-        child: Image.file(
-          File(url),
+        child: Image(
+          image: _boundedBubbleImage(url),
           key: ValueKey('$onlineRenderKey#$url#$_localRenderNonce'),
           fit: BoxFit.cover,
           width: _imageWidth(),

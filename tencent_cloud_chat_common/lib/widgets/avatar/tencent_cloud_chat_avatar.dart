@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -8,6 +7,7 @@ import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_screen_adapter.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_bounded_image.dart';
 
 enum TencentCloudChatAvatarScene {
   messageHeader,
@@ -174,8 +174,16 @@ class _TencentCloudChatAvatarState extends TencentCloudChatState<TencentCloudCha
           final filePath = imagePath.startsWith('file://') 
               ? imagePath.substring(7) 
               : imagePath;
-          return Image.file(
-            File(filePath),
+          // Decode at the avatar's physical size, never the file's (a peer
+          // avatar may be a 10 MiB photo; checklist M6).
+          return Image(
+            image: TencentCloudChatBoundedImage.file(
+              filePath,
+              logicalWidth: width,
+              logicalHeight: height,
+              devicePixelRatio:
+                  MediaQuery.maybeDevicePixelRatioOf(context) ?? 1.0,
+            ),
             width: width,
             height: height,
             fit: BoxFit.cover,

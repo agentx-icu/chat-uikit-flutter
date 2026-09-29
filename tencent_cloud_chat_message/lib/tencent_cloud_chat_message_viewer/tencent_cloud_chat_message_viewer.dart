@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:card_swiper/card_swiper.dart';
 import 'package:file_picker/file_picker.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_clipboard/image_clipboard.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_bounded_image.dart';
 import 'package:tencent_cloud_chat_common/components/component_config/tencent_cloud_chat_message_common_defines.dart';
 import 'package:tencent_cloud_chat_common/components/tencent_cloud_chat_components_utils.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
@@ -215,6 +217,25 @@ class TencentCloudChatMessageViewerState
     return _imageControllers.putIfAbsent(
       key,
       TransformationController.new,
+    );
+  }
+
+  /// Full-screen decode bound (checklist M6): fit inside 2x the longest
+  /// physical screen side (headroom for pinch-zoom), at most 4096 px per side
+  /// and 16 MP (64 MB RGBA) — a 48 MP photo would otherwise decode to ~190 MB
+  /// for one page of this viewer.
+  ImageProvider _boundedViewerImage(String path) {
+    final mq = MediaQuery.maybeOf(context);
+    final dpr = mq?.devicePixelRatio ?? 1.0;
+    final longest = mq == null ? 2048.0 : mq.size.longestSide;
+    final bound = math.min(4096.0, longest * dpr * 2) / dpr;
+    return TencentCloudChatBoundedImage.file(
+      path,
+      logicalWidth: bound,
+      logicalHeight: bound,
+      devicePixelRatio: dpr,
+      mode: TencentCloudChatBoundedImageMode.fit,
+      maxPixels: 16 * 1024 * 1024,
     );
   }
 
@@ -705,7 +726,7 @@ class TencentCloudChatMessageViewerState
                                     },
                                     child: _buildZoomableImage(
                                       message,
-                                      Image.file(File(lp)),
+                                      Image(image: _boundedViewerImage(lp)),
                                     ),
                                   );
                                 }
@@ -755,7 +776,7 @@ class TencentCloudChatMessageViewerState
                                   },
                                   child: _buildZoomableImage(
                                     message,
-                                    Image.file(File(local)),
+                                    Image(image: _boundedViewerImage(local)),
                                   ),
                                 );
                               } else if (TencentCloudChatUtils.checkString(
@@ -800,8 +821,9 @@ class TencentCloudChatMessageViewerState
                                   child: _buildZoomableImage(
                                     message,
                                     isLocalPath
-                                        ? Image.file(
-                                            File(originUrl),
+                                        ? Image(
+                                            image: _boundedViewerImage(
+                                                originUrl),
                                             errorBuilder:
                                                 (context, error, stackTrace) =>
                                                     const Center(

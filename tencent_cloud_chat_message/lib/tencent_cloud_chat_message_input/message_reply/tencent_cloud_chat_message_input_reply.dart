@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/components/components_definition/tencent_cloud_chat_component_builder_definitions.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_screen_adapter.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
+import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_bounded_image.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
@@ -43,8 +44,16 @@ class _TencentCloudChatMessageInputReplyState extends TencentCloudChatState<Tenc
         if (file.existsSync()) {
           return ClipRRect(
             borderRadius: BorderRadius.circular(2),
-            child: Image.file(
-              file,
+            // Thumbnail-sized decode, not the replied photo's full
+            // resolution (checklist M6).
+            child: Image(
+              image: TencentCloudChatBoundedImage.file(
+                localPath,
+                logicalWidth: size,
+                logicalHeight: size,
+                devicePixelRatio:
+                    MediaQuery.maybeDevicePixelRatioOf(context) ?? 1.0,
+              ),
               width: size,
               height: size,
               fit: BoxFit.cover,
