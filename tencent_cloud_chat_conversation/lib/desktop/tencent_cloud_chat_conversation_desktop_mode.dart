@@ -9,6 +9,7 @@ import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
+import 'package:tencent_cloud_chat_common/widgets/tencent_cloud_chat_embedded_message_pane.dart';
 import 'package:tencent_cloud_chat_conversation/widgets/tencent_cloud_chat_conversation_list.dart';
 
 class TencentCloudChatConversationDesktopMode extends StatefulWidget {
@@ -201,12 +202,16 @@ class _TencentCloudChatConversationDesktopModeState
           ),
           if (_messageWidget != null)
             Expanded(
-              child: _messageWidget!(
-                options: {
-                  "userID": TencentCloudChatUtils.checkString(_currentConversation?.userID),
-                  "groupID": TencentCloudChatUtils.checkString(_currentConversation?.groupID),
-                  "targetMessage": _currentTargetMessage,
-                },
+              // The chat lives in THIS pane, not on a route of its own: its
+              // header must not offer a back button (it would pop the host).
+              child: TencentCloudChatEmbeddedMessagePane(
+                child: _messageWidget!(
+                  options: {
+                    "userID": TencentCloudChatUtils.checkString(_currentConversation?.userID),
+                    "groupID": TencentCloudChatUtils.checkString(_currentConversation?.groupID),
+                    "targetMessage": _currentTargetMessage,
+                  },
+                ),
               ),
             ),
         ],

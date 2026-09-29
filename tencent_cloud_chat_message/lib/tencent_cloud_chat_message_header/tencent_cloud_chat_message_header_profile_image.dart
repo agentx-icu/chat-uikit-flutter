@@ -11,6 +11,7 @@ import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/builders/tencent_cloud_chat_common_builders.dart';
 import 'package:tencent_cloud_chat_common/widgets/avatar/tencent_cloud_chat_avatar.dart';
+import 'package:tencent_cloud_chat_common/widgets/tencent_cloud_chat_embedded_message_pane.dart';
 
 class TencentCloudChatMessageHeaderProfileImage extends StatefulWidget {
   final V2TimConversation? conversation;
@@ -166,7 +167,7 @@ class _TencentCloudChatMessageHeaderProfileImageState
             );
 
             if (result != null && (result is bool && result == true) && mounted) {
-              Navigator.pop(context);
+              TencentCloudChatEmbeddedMessagePane.closeChatRoute(context);
             }
           } else if (TencentCloudChatUtils.checkString(widget.conversation?.groupID) != null) {
             Object? result = await navigateToGroupProfile(
@@ -177,7 +178,7 @@ class _TencentCloudChatMessageHeaderProfileImageState
             );
 
             if (result != null && (result is bool && result == true) && mounted) {
-              Navigator.pop(context);
+              TencentCloudChatEmbeddedMessagePane.closeChatRoute(context);
             }
           }
         }
