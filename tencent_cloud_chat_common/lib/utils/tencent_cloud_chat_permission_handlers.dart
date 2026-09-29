@@ -1,4 +1,5 @@
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
@@ -115,65 +116,92 @@ class TencentCloudChatPermissionHandler {
   }
 
   static Future<bool> checkPermission(String permissionString, BuildContext context) async {
+    return (await requestPermission(permissionString, context)).granted;
+  }
+
+  /// toxee(P1b): requests [permissionString] and says whether it is usable
+  /// (`granted`) and whether the OS asked the user during this call
+  /// (`prompted`) — a press that raised a system prompt was consumed by it, so a
+  /// press-and-hold gesture must not act on it (the finger is gone).
+  ///
+  /// A refusal is explained with the go-to-Settings dialog when the OS
+  /// apparently did NOT ask (a best-effort reading, see below); a refusal the
+  /// user just gave in the system prompt needs no second dialog. This replaced a persisted "first denial per permission
+  /// string is silent" cache, which kept a tap on a blocked permission silent
+  /// whenever that string had not been denied through the app before.
+  ///
+  /// Whether the OS asked is read from the permission state, never from the
+  /// app lifecycle: Android starts GrantPermissionsActivity (pausing the app)
+  /// even for a permission it will refuse without showing anything.
+  ///  * Blocked before the request (`permanentlyDenied`, which
+  ///    permission_handler reports on both platforms — see
+  ///    PermissionUtils.determineDeniedVariant on Android — or `restricted`):
+  ///    no prompt.
+  ///  * iOS: a `denied` status means "not determined", which always shows the
+  ///    system alert.
+  ///  * Android: the rationale flag is true after exactly one refusal in a
+  ///    prompt, so a prompt is taken to have been shown when it was true
+  ///    before the request
+  ///    (it asks again once) or is true after it (the user just refused for
+  ///    the first time). Both false after a refusal: the OS refused on its own
+  ///    — or the user dismissed a first prompt without answering (tapped
+  ///    outside), which the flag cannot tell apart; explaining is the safe side
+  ///    of that ambiguity.
+  ///  * A grant from a non-granted state always came from a prompt.
+  static Future<({bool granted, bool prompted})> requestPermission(
+    String permissionString,
+    BuildContext context,
+  ) async {
     final permission = await getPermissionEnum(permissionString);
-    if (permission != null) {
-      PermissionStatus prevStatus = await permission.status;
-      PermissionStatus requestResult = await permission.request();
-      if (requestResult.isDenied || requestResult.isPermanentlyDenied) {
-        final permission = TencentCloudChat.instance.cache.getPermission();
-        final exist = permission.contains(permissionString);
-        if (!exist) {
-          TencentCloudChat.instance.cache.cachePermission(permissionString);
-          return false;
-        } else {
-          // toxee(double-pop guard): these action buttons capture the OUTER
-          // `context` (this method's param) and are handed to showAdaptiveDialog
-          // as a PREBUILT `actions:` list, so popDialogIfCurrent would test the
-          // page route, not the dialog. Use a one-shot flag shared across the
-          // two buttons (only one is reachable per dialog instance) so a
-          // double-fired onPressed cannot pop the page underneath.
-          var handled = false;
-          TencentCloudChatDialog.showAdaptiveDialog(
-            context: context,
-            title: Text(tL10n.permissionDeniedTitle),
-            content: Text(tL10n.permissionDeniedContent(permissionString)),
-            actions: [
-              TextButton(
-                child: Text(tL10n.goToSettingsButtonText),
-                onPressed: () async {
-                  if (handled) return;
-                  handled = true;
-                  Navigator.pop(context);
-                  await openAppSettings();
-                },
-              ),
-              TextButton(
-                child: Text(tL10n.cancel),
-                onPressed: () async {
-                  if (handled) return;
-                  handled = true;
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          );
-          return false;
-        }
-      }
-
-      /// Special case for `microphone`
-      if (permission == Permission.microphone && (prevStatus.isDenied || prevStatus.isPermanentlyDenied)) {
-        return false;
-      }
-
-      if (requestResult.isGranted || requestResult.isLimited || requestResult.isRestricted) {
-        return true;
-      } else {
-        PermissionStatus newStatus = await permission.request();
-        return newStatus.isGranted;
-      }
-    } else {
-      return true;
+    if (permission == null) return (granted: true, prompted: false);
+    final prevStatus = await permission.status;
+    if (_usable(prevStatus)) return (granted: true, prompted: false);
+    final blocked = prevStatus.isPermanentlyDenied || prevStatus.isRestricted;
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
+    final rationaleBefore = !blocked && isAndroid && await permission.shouldShowRequestRationale;
+    final result = await permission.request();
+    if (_usable(result)) return (granted: true, prompted: true);
+    final prompted = !blocked &&
+        (isAndroid ? rationaleBefore || await permission.shouldShowRequestRationale : prevStatus.isDenied);
+    if (!prompted && context.mounted) {
+      _showDeniedDialog(permissionString, context);
     }
+    return (granted: false, prompted: prompted);
+  }
+
+  static bool _usable(PermissionStatus status) => status.isGranted || status.isLimited || status.isProvisional;
+
+  static void _showDeniedDialog(String permissionString, BuildContext context) {
+    // toxee(double-pop guard): these action buttons capture the OUTER
+    // `context` (this method's param) and are handed to showAdaptiveDialog
+    // as a PREBUILT `actions:` list, so popDialogIfCurrent would test the
+    // page route, not the dialog. Use a one-shot flag shared across the
+    // two buttons (only one is reachable per dialog instance) so a
+    // double-fired onPressed cannot pop the page underneath.
+    var handled = false;
+    TencentCloudChatDialog.showAdaptiveDialog(
+      context: context,
+      title: Text(tL10n.permissionDeniedTitle),
+      content: Text(tL10n.permissionDeniedContent(permissionString)),
+      actions: [
+        TextButton(
+          child: Text(tL10n.goToSettingsButtonText),
+          onPressed: () async {
+            if (handled) return;
+            handled = true;
+            Navigator.pop(context);
+            await openAppSettings();
+          },
+        ),
+        TextButton(
+          child: Text(tL10n.cancel),
+          onPressed: () async {
+            if (handled) return;
+            handled = true;
+            Navigator.pop(context);
+          },
+        ),
+      ],
+    );
   }
 }

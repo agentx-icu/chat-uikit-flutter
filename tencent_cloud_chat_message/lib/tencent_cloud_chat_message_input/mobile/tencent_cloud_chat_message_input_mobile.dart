@@ -455,10 +455,18 @@ class _TencentCloudChatMessageInputMobileState
     isStarted = true;
     final bool isMobilePlatform = widget.debugIsMobile?.call() ??
         TencentCloudChatPlatformAdapter().isMobile;
-    if (isMobilePlatform &&
-        await TencentCloudChatPermissionHandler.checkPermission(
-            "microphone", context) &&
-        isStarted) {
+    if (!isMobilePlatform) return;
+    final permission = await TencentCloudChatPermissionHandler
+        .requestPermission("microphone", context);
+    if (!mounted) return;
+    if (permission.granted && permission.prompted) {
+      // toxee(P1b): the system prompt consumed this press (the finger left
+      // with it), so nothing records — say why and how to try again.
+      isStarted = false;
+      micTooltipKey.currentState?.ensureTooltipVisible();
+      return;
+    }
+    if (permission.granted && isStarted) {
       _cancelPendingRecordingStarter();
       _recordingStarter = Timer(const Duration(milliseconds: 100), () {
         _recordingStarter = null;
@@ -469,6 +477,27 @@ class _TencentCloudChatMessageInputMobileState
         _recordingWidgetKey.currentState?.startRecording();
       });
     }
+  }
+
+  /// toxee(P1b): the press ended without a release — a system alert, the
+  /// incoming-call screen or the notification shade took the pointer. Nobody
+  /// is holding the button any more, so a recording must not keep running or
+  /// be sent: discard it.
+  void _abortRecordingPress() {
+    isStarted = false;
+    _cancelPendingRecordingStarter();
+    if (!_isRecording) return;
+    safeSetState(() {
+      _isRecording = false;
+    });
+    unawaited(_recordingWidgetKey.currentState?.stopRecording(cancel: true));
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // A pointer cancel is not guaranteed when the app is interrupted.
+    if (state != AppLifecycleState.resumed) _abortRecordingPress();
   }
 
   void _onStopRecording(PointerUpEvent event) {
@@ -1044,6 +1073,8 @@ class _TencentCloudChatMessageInputMobileState
                                               'chat_voice_record_button'),
                                           onPointerDown: _onStartRecording,
                                           onPointerUp: _onStopRecording,
+                                          onPointerCancel: (_) =>
+                                              _abortRecordingPress(),
                                           child: Container(
                                             padding: EdgeInsets.all(
                                                 getSquareSize(6)),
