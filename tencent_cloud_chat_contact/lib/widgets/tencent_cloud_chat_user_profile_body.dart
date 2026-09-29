@@ -243,6 +243,8 @@ class TencentCloudChatUserProfileContentState
                         FloatingActionButton.small(
                             key: const ValueKey(
                                 'user_profile_edit_remark_button'),
+                            // toxee(I5): named for screen readers.
+                            tooltip: tL10n.modifyRemark,
                             onPressed: changeFriendRemark,
                             elevation: 0,
                             backgroundColor: colorTheme.contactBackgroundColor,
@@ -691,7 +693,9 @@ class TencentCloudChatUserProfileStateButtonState
                   color: colorTheme.groupProfileTabBackground,
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: getWidth(16)),
-                    child: Row(
+                    // toxee(I5): read as one "Mute notifications, switch".
+                    child: MergeSemantics(
+                      child: Row(
                       children: [
                         Expanded(
                           child: Text(
@@ -715,6 +719,7 @@ class TencentCloudChatUserProfileStateButtonState
                           },
                         ),
                       ],
+                    ),
                     ),
                   ),
                 ),

@@ -58,7 +58,11 @@ class _TencentCloudChatOperationBarState<T>
               color: colorTheme.groupProfileTabBackground,
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: getWidth(16)),
-                child: Row(
+                // toxee(I5): a switch / value row is one screen-reader node
+                // read with its label ("Pin, switch, off"), not an unnamed
+                // switch. The label-button row stays split: merged, it would
+                // read its label twice.
+                child: _mergeSemantics(Row(
                   children: [
                     Expanded(
                       child: Text(
@@ -100,8 +104,13 @@ class _TencentCloudChatOperationBarState<T>
                         ],
                       ),
                   ],
-                ),
+                )),
               ),
             ));
   }
+
+  Widget _mergeSemantics(Widget row) =>
+      widget.operationBarType == OperationBarType.labelButton
+          ? row
+          : MergeSemantics(child: row);
 }

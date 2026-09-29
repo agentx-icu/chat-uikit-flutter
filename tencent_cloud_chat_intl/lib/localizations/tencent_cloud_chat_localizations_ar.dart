@@ -49,7 +49,7 @@ class TencentCloudChatLocalizationsAr extends TencentCloudChatLocalizations {
   String get archive => 'أرشيف';
 
   @override
-  String get read => 'اقرأ';
+  String get read => 'تمت القراءة';
 
   @override
   String get readAll => 'اقرأ';

@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:adaptive_action_sheet/adaptive_action_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_swipe_action_cell/core/cell.dart';
 import 'package:tencent_cloud_chat_common/components/component_config/tencent_cloud_chat_message_common_defines.dart';
 import 'package:tencent_cloud_chat_common/components/component_options/tencent_cloud_chat_message_options.dart';
@@ -328,11 +330,16 @@ class TencentCloudChatConversationItemState
           ),
           child: Row(
             children: [
-              TencentCloudChat
-                  .instance.dataInstance.conversation.conversationBuilder
-                  ?.getConversationItemAvatarBuilder(
-                widget.conversation,
-                widget.isOnline,
+              // The avatar only repeats the name the row already reads; its
+              // image flag made TalkBack call the row an "image" (I5).
+              ExcludeSemantics(
+                child: TencentCloudChat
+                        .instance.dataInstance.conversation.conversationBuilder
+                        ?.getConversationItemAvatarBuilder(
+                      widget.conversation,
+                      widget.isOnline,
+                    ) ??
+                    const SizedBox(),
               ),
               TencentCloudChat
                   .instance.dataInstance.conversation.conversationBuilder
@@ -407,7 +414,23 @@ class TencentCloudChatConversationItemState
     return _isHidden()
         ? const SizedBox()
         : TencentCloudChatThemeWidget(
-            build: (ctx, colors, fontSize) => SwipeActionCell(
+            // toxee(I5): one screen-reader node per row. SwipeActionCell's
+            // RawGestureDetector always exposes a tap action (a no-op unless
+            // the row is swiped open), which made an unnamed focus stop in
+            // front of every conversation. Merged, the row's own label, tap
+            // (open) and long-press (menu) are what is announced and run —
+            // and the swipe actions, which a screen reader cannot swipe to,
+            // are offered as the row's custom actions (TalkBack's Actions
+            // menu, VoiceOver's rotor).
+            build: (ctx, colors, fontSize) => MergeSemantics(
+              child: Semantics(
+              customSemanticsActions: {
+                CustomSemanticsAction(label: isPin() ? tL10n.unpin : tL10n.pin):
+                    () => unawaited(_pinConversation()),
+                CustomSemanticsAction(label: tL10n.more): () =>
+                    unawaited(showMoreItemAction(ctx, fontSize, colors)),
+              },
+              child: SwipeActionCell(
               key: ObjectKey(widget.conversation.conversationID),
               trailingActions: <SwipeAction>[
                 SwipeAction(
@@ -445,6 +468,8 @@ class TencentCloudChatConversationItemState
               ],
               backgroundColor: Colors.transparent,
               child: conversationInner(ctx, colors, fontSize),
+            ),
+            ),
             ),
           );
   }

@@ -64,6 +64,9 @@ class _TencentCloudChatMessageLayoutState extends TencentCloudChatState<TencentC
             children: [
               Expanded(
                 child: GestureDetector(
+                  // toxee(I5): a keyboard-dismiss convenience, not a control:
+                  // exposed, it was an unnamed tap target over the list.
+                  excludeFromSemantics: true,
                   onTap: () {
                     FocusScope.of(context).unfocus();
                   },
@@ -136,6 +139,9 @@ class _TencentCloudChatMessageLayoutState extends TencentCloudChatState<TencentC
                 children: [
                   Expanded(
                     child: GestureDetector(
+                      // toxee(I5): keyboard / sticker dismissal, not a
+                      // control — no unnamed tap target over the list.
+                      excludeFromSemantics: true,
                       onTap: () {
                         FocusScope.of(context).unfocus();
                         widget.methods.closeSticker();

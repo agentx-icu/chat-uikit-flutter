@@ -10,6 +10,7 @@ import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_state_widget.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/widgets/dialog/tencent_cloud_chat_dialog.dart';
+import 'package:tencent_cloud_chat_intl/localizations/tencent_cloud_chat_localizations.dart';
 
 // This widget represents a single chat message in Tencent Cloud Chat.
 abstract class TencentCloudChatMessageItemBase extends StatefulWidget {
@@ -174,7 +175,20 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
   }
 
   Widget messageStatusIndicator() {
-    return GestureDetector(
+    // toxee(I5): what a screen reader gets for the status tick. A failed
+    // message keeps the "Retry" button of _renderFailedStatus, which this
+    // detector's tap / long-press act on. Otherwise the detector does
+    // nothing, so it is not exposed: a sent / read message says so, anything
+    // else is silent — it was an unnamed tap target on every message.
+    final status = widget.data.message.status;
+    final failed = status == MessageStatus.V2TIM_MSG_STATUS_SEND_FAIL;
+    final l10n = TencentCloudChatLocalizations.of(context);
+    final String? stateLabel = !widget.data.showMessageStatusIndicator ||
+            status != MessageStatus.V2TIM_MSG_STATUS_SEND_SUCC
+        ? null
+        : (showReadByOthersStatus ? l10n?.read : l10n?.delivered);
+    final indicator = GestureDetector(
+      excludeFromSemantics: !failed,
       // One-tap retry on SEND_FAIL; long-press still surfaces the confirm
       // dialog as a safety net for accidental taps. Both paths route to the
       // same onResendMessage callback (see _resendMessage in the row
@@ -238,6 +252,13 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
             },
           )
         : Container(),
+    );
+    if (failed) return indicator;
+    if (stateLabel == null) return ExcludeSemantics(child: indicator);
+    return Semantics(
+      label: stateLabel,
+      excludeSemantics: true,
+      child: indicator,
     );
   }
 
