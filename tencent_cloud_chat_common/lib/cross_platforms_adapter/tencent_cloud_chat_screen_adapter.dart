@@ -1,10 +1,11 @@
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:universal_html/html.dart' as html;
+
+import 'tencent_cloud_chat_platform_adapter.dart';
 
 /// TencentCloudChatUIKitScreenAdapter is a utility class that helps to adapt the UI
 /// for different screen sizes and device types (such as mobile and desktop).
@@ -187,7 +188,7 @@ class TencentCloudChatScreenAdapter {
         return DeviceScreenType.desktop;
       }
     }
-    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    if (TencentCloudChatPlatformAdapter().isDesktop) {
       final win = WidgetsBinding.instance.platformDispatcher.views.first;
       final size = win.physicalSize;
       final screenWidth = size.width / win.devicePixelRatio;
@@ -200,16 +201,40 @@ class TencentCloudChatScreenAdapter {
           ? DeviceScreenType.mobile
           : DeviceScreenType.desktop;
     } else {
-      double deviceWidth = MediaQuery.of(context).size.width;
-      double deviceHeight = MediaQuery.of(context).size.height;
+      return resolveMobileScreenType(context);
+    }
+  }
 
-      if (deviceWidth > 900 || deviceWidth > deviceHeight * 1.1) {
-        return DeviceScreenType.desktop;
-      } else if (deviceWidth > 300) {
-        return DeviceScreenType.mobile;
-      }
+  /// Host override for the iOS / Android screen type. Return null to fall back
+  /// to the built-in heuristic below.
+  ///
+  /// The heuristic calls every window that is wider than tall "desktop", while
+  /// a host app may still lay that window out as a phone: a short split-screen
+  /// pane, a freeform / pop-up window, or a landscape phone narrower than the
+  /// host's two-pane breakpoint. The fork then picks its desktop builders
+  /// inside a phone shell (no back button on a pushed chat, no title row or
+  /// "+" in the conversation app bar). A host that decides its own layout
+  /// installs this so both decisions come from one place.
+  static DeviceScreenType? Function(BuildContext context)?
+      mobileScreenTypeResolver;
+
+  /// The iOS / Android decision: [mobileScreenTypeResolver] first, then the
+  /// size heuristic. Separate from [_getDeviceType] so it can be exercised on
+  /// a desktop test host.
+  @visibleForTesting
+  static DeviceScreenType resolveMobileScreenType(BuildContext context) {
+    final resolved = mobileScreenTypeResolver?.call(context);
+    if (resolved != null) return resolved;
+
+    double deviceWidth = MediaQuery.of(context).size.width;
+    double deviceHeight = MediaQuery.of(context).size.height;
+
+    if (deviceWidth > 900 || deviceWidth > deviceHeight * 1.1) {
+      return DeviceScreenType.desktop;
+    } else if (deviceWidth > 300) {
       return DeviceScreenType.mobile;
     }
+    return DeviceScreenType.mobile;
   }
 }
 

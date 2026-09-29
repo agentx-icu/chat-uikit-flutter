@@ -57,10 +57,21 @@ class TencentCloudChatPlatformAdapter {
   bool get isMacOS => _isMacOS;
 
   /// Getter for checking if the current platform is mobile (Android or iOS).
-  bool get isMobile => _isMobile;
+  bool get isMobile => _debugIsMobile ?? _isMobile;
 
   /// Getter for checking if the current platform is desktop (macOS, Windows, or Linux).
-  bool get isDesktop => _isDesktop;
+  bool get isDesktop =>
+      _debugIsMobile == null ? _isDesktop : !_debugIsMobile!;
+
+  static bool? _debugIsMobile;
+
+  /// Test seam: make [isMobile] / [isDesktop] report a phone (true) or a
+  /// desktop (false) on the test host; null restores the real platform. Lets a
+  /// widget test on a desktop host render the fork's phone / tablet builders.
+  @visibleForTesting
+  static void debugOverrideIsMobile(bool? isMobile) {
+    _debugIsMobile = isMobile;
+  }
 
   /// Getter for checking if the current platform is Linux.
   bool get isLinux => _isLinux;

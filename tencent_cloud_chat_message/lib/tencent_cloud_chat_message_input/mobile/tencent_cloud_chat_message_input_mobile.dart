@@ -117,6 +117,15 @@ class _TencentCloudChatMessageInputMobileState
   final TextEditingController _textEditingController = TextEditingController();
   final FocusNode _textEditingFocusNode = FocusNode();
 
+  // Reaches the field's EditableText so a programmatic text change can drop
+  // the selection toolbar + handles (see _dismissSelectionUiIfTextChanged).
+  final GlobalKey<ExtendedTextFieldState> _textFieldKey =
+      GlobalKey<ExtendedTextFieldState>();
+  // The text the selection UI was last reconciled against.
+  String _selectionUiText = "";
+  // Bumped by the field's onChanged (its own edits: IME, toolbar Cut/Paste).
+  int _fieldEditCount = 0;
+
   bool isStarted = false;
 
   Widget stickerWidget = Container();
@@ -576,8 +585,39 @@ class _TencentCloudChatMessageInputMobileState
     }
   }
 
+  /// Drops the text-selection toolbar and handles when the composer's text is
+  /// REPLACED BY CODE. EditableText hides them only for edits it makes itself
+  /// (IME typing, the toolbar's own Cut/Paste); a programmatic replacement —
+  /// send and clear, a draft restore or conversation switch, a mention insert
+  /// or delete — only re-lays the overlay out for the new value. After
+  /// "long-press the text, then tap send" that left a lone "Paste" bubble and a
+  /// caret handle floating over the emptied field, which system BACK did not
+  /// close. Selection-only changes (dragging a handle, Select all) keep the
+  /// text and so keep the toolbar.
+  ///
+  /// Telling the two apart: for the field's own edits EditableText notifies
+  /// the controller's listeners and then, synchronously, calls `onChanged`
+  /// (which bumps [_fieldEditCount]); code writes never reach `onChanged`.
+  /// So the decision waits for a microtask: a bump since THIS change was
+  /// seen marks it as the field's own. That also moves the overlay removal
+  /// out of the build phase when the write came from didUpdateWidget.
+  void _dismissSelectionUiIfTextChanged(String newText) {
+    if (newText == _selectionUiText) return;
+    _selectionUiText = newText;
+    final fieldEditsBefore = _fieldEditCount;
+    scheduleMicrotask(() {
+      if (!mounted) return;
+      // The field's own edit: EditableText already did what it does.
+      if (_fieldEditCount != fieldEditsBefore) return;
+      // Superseded by a later change, which makes its own decision.
+      if (_textEditingController.text != newText) return;
+      _textFieldKey.currentState?.editableTextKey.currentState?.hideToolbar();
+    });
+  }
+
   void _onTextChanged() async {
     final newText = _textEditingController.text;
+    _dismissSelectionUiIfTextChanged(newText);
 
     if (!_suppressDraftSave) {
       _draftCoordinator.markEdited();
@@ -865,6 +905,8 @@ class _TencentCloudChatMessageInputMobileState
 
   Widget _buildInputTextField() {
     return ExtendedTextField(
+      key: _textFieldKey,
+      onChanged: (_) => _fieldEditCount++,
       onTap: () {
         (widget.inputMethods.controller as TencentCloudChatMessageController)
             .scrollToBottom();
