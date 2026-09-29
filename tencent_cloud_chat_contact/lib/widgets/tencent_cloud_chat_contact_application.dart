@@ -19,7 +19,7 @@ class TencentCloudChatContactApplicationState extends TencentCloudChatState<Tenc
     return TencentCloudChatThemeWidget(
       build: (context, colorTheme, textStyle) => Scaffold(
         appBar: AppBar(
-          leadingWidth: getWidth(100),
+          leadingWidth: TencentCloudChatContactLeading.width(context),
           leading: const TencentCloudChatContactLeading(),
           title: Text(
             tL10n.numNewApplications(widget.applicationList.length),

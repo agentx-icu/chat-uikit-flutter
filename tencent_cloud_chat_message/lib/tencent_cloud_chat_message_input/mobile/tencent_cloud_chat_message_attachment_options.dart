@@ -262,6 +262,13 @@ class _TencentCloudChatMessageAttachmentOptionsWidgetState
   Widget _buildAttachmentOptionsItem(
       TencentCloudChatMessageGeneralOptionItem item) {
     return TencentCloudChatThemeWidget(build: (context, colorTheme, textStyle) {
+      // toxee(L11): the cell grows with the label's font. A fixed 62 broke a
+      // single word mid-way at large system font sizes ("Cam" / "era"). The
+      // ratio is taken at the label's own size: Android 14+ scales fonts
+      // non-linearly.
+      final labelSize = textStyle.standardSmallText;
+      final labelScale =
+          MediaQuery.textScalerOf(context).scale(labelSize) / labelSize;
       return InkWell(
         key: _attachmentOptionKey(item),
         onTap: () {
@@ -269,7 +276,7 @@ class _TencentCloudChatMessageAttachmentOptionsWidgetState
           item.onTap();
         },
         child: SizedBox(
-          width: 62,
+          width: 62 * (labelScale < 1 ? 1 : labelScale),
           child: Column(
             children: [
               Container(

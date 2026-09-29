@@ -6,6 +6,7 @@ import 'package:tencent_cloud_chat_common/builders/tencent_cloud_chat_common_bui
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
 import 'package:tencent_cloud_chat_contact/widgets/tencent_cloud_chat_contact_add_group_info.dart';
 import 'dart:ui';
+import 'package:tencent_cloud_chat_contact/widgets/tencent_cloud_chat_contact_leading.dart';
 
 class TencentCloudChatContactAddGroup extends StatefulWidget {
   const TencentCloudChatContactAddGroup({super.key});
@@ -72,7 +73,7 @@ class TencentCloudChatContactAddGroupAppBarState extends TencentCloudChatState<T
                   color: colorTheme.contactItemFriendNameColor),
             ),
             centerTitle: true,
-            leadingWidth: getWidth(100),
+            leadingWidth: TencentCloudChatContactLeading.width(context),
             leading: GestureDetector(
                 onTap: () => popDialogIfCurrent(context),
                 child: Row(

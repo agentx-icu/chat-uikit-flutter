@@ -50,7 +50,7 @@ class TencentCloudChatContactBlockListState extends TencentCloudChatState<Tencen
       build: (context, colorTheme, textStyle) {
         return Scaffold(
           appBar: AppBar(
-            leadingWidth: getWidth(100),
+            leadingWidth: TencentCloudChatContactLeading.width(context),
             leading: const TencentCloudChatContactLeading(),
             title: Text(
               tL10n.blockList,

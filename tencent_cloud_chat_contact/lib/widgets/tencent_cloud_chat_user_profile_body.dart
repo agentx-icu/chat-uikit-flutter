@@ -318,6 +318,7 @@ class TencentCloudChatUserProfileChatButtonState
     required String label,
     required VoidCallback? onTap,
     Key? tileKey,
+    bool horizontal = false,
   }) {
     final isEnabled = onTap != null;
     return TencentCloudChatThemeWidget(
@@ -326,7 +327,7 @@ class TencentCloudChatUserProfileChatButtonState
               child: Opacity(
                 opacity: isEnabled ? 1 : 0.45,
                 child: Container(
-                  width: getWidth(110),
+                  width: horizontal ? double.infinity : getWidth(110),
                   decoration: BoxDecoration(
                     color: colorTheme.profileChatButtonBackground,
                     boxShadow: [
@@ -346,7 +347,24 @@ class TencentCloudChatUserProfileChatButtonState
                         onTap: onTap,
                         child: Container(
                             padding: EdgeInsets.all(getSquareSize(16)),
-                            child: Column(
+                            child: horizontal
+                                ? Row(children: [
+                                    Icon(
+                                      icon,
+                                      size: getSquareSize(30),
+                                      color: colorTheme.primaryColor,
+                                    ),
+                                    SizedBox(width: getWidth(12)),
+                                    Flexible(
+                                      child: Text(
+                                        label,
+                                        style: TextStyle(
+                                            color: colorTheme.primaryTextColor,
+                                            fontSize: textStyle.fontsize_16),
+                                      ),
+                                    ),
+                                  ])
+                                : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Container(
@@ -438,70 +456,113 @@ class TencentCloudChatUserProfileChatButtonState
       },
     );
 
+    final actions = <({Key key, IconData icon, String label, VoidCallback? onTap})>[
+      // Per-tile automation anchors so each tile can be key-tapped directly.
+      // The toxee builder wraps the whole [Send, Voice, Video] row in one
+      // outer key (friend_profile_send_message_button), whose center is the
+      // MIDDLE (Voice) tile — so a group-key tap hits Voice, not Send.
+      (
+        key: const ValueKey('friend_profile_send_message_tile'),
+        icon: Icons.message_rounded,
+        label: tL10n.sendMsg,
+        onTap: _navigateToChat,
+      ),
+      (
+        key: const ValueKey('friend_profile_voice_call_tile'),
+        icon: Icons.call,
+        label: tL10n.voiceCall,
+        onTap: callActionsEnabled
+            ? () {
+                if (widget.startVoiceCall != null) {
+                  widget.startVoiceCall!();
+                } else {
+                  _startVoiceCall();
+                }
+              }
+            : null,
+      ),
+      // Video is additionally gated on useVideoCall: platforms without a
+      // camera capture backend (Windows/Linux) keep voice calling but must
+      // not offer video.
+      if (TencentCloudChat.instance.dataInstance.basic.useVideoCall)
+        (
+          key: const ValueKey('friend_profile_video_call_tile'),
+          icon: Icons.videocam_outlined,
+          label: tL10n.videoCall,
+          onTap: callActionsEnabled
+              ? () {
+                  if (widget.startVideoCall != null) {
+                    widget.startVideoCall!();
+                  } else {
+                    _startVideoCall();
+                  }
+                }
+              : null,
+        ),
+    ];
+
     return TencentCloudChatThemeWidget(
         build: (context, colorTheme, textStyle) => Container(
             margin: EdgeInsets.only(top: getHeight(14), bottom: getHeight(40)),
             padding: EdgeInsets.symmetric(horizontal: getSquareSize(16)),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Expanded(
-                    child: _buildClickableItem(
-                        // Per-tile automation anchor so the Send tile can be
-                        // key-tapped directly. The toxee builder wraps the whole
-                        // [Send, Voice, Video] row in one outer key
-                        // (friend_profile_send_message_button), whose center is
-                        // the MIDDLE (Voice) tile — so a group-key tap hits Voice,
-                        // not Send. This keys the leftmost tile itself.
-                        tileKey: const ValueKey('friend_profile_send_message_tile'),
-                        icon: Icons.message_rounded,
-                        label: tL10n.sendMsg,
-                        onTap: () {
-                          _navigateToChat();
-                        })),
-                const SizedBox(width: 18),
-                Expanded(
-                  child: _buildClickableItem(
-                      // Per-tile automation anchor (sibling of the Send tile
-                      // key above) so voice can be key-tapped directly too.
-                      tileKey: const ValueKey('friend_profile_voice_call_tile'),
-                      icon: Icons.call,
-                      label: tL10n.voiceCall,
-                      onTap: callActionsEnabled
-                          ? () {
-                              if (widget.startVoiceCall != null) {
-                                widget.startVoiceCall!();
-                              } else {
-                                _startVoiceCall();
-                              }
-                            }
-                          : null),
-                ),
-                // Video tile is additionally gated on useVideoCall: platforms
-                // without a camera capture backend (Windows/Linux) keep voice
-                // calling but must not offer video.
-                if (TencentCloudChat.instance.dataInstance.basic.useVideoCall) ...[
-                  const SizedBox(width: 18),
-                  Expanded(
+            child: LayoutBuilder(builder: (context, constraints) {
+              // toxee(L11): side-by-side tiles only while every label's
+              // longest word fits a tile; with large system text "message"
+              // broke mid-word ("mes" / "sage"). Otherwise one full-width
+              // row per action, icon beside the label.
+              const gap = 18.0;
+              final tileText = (constraints.maxWidth - gap * (actions.length - 1)) /
+                      actions.length -
+                  2 * getSquareSize(16);
+              final style = TextStyle(fontSize: textStyle.fontsize_16);
+              final scaler = MediaQuery.textScalerOf(context);
+              final fits = actions.every((action) => action.label
+                  .split(RegExp(r'\s+'))
+                  .every((word) => _wordWidth(word, style, scaler) <= tileText));
+              if (!fits) {
+                return Column(children: [
+                  for (final (i, action) in actions.indexed) ...[
+                    if (i > 0) SizedBox(height: getHeight(12)),
+                    _buildClickableItem(
+                      tileKey: action.key,
+                      icon: action.icon,
+                      label: action.label,
+                      onTap: action.onTap,
+                      horizontal: true,
+                    ),
+                  ],
+                ]);
+              }
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  for (final (i, action) in actions.indexed) ...[
+                    if (i > 0) const SizedBox(width: gap),
+                    Expanded(
                       child: _buildClickableItem(
-                          // Per-tile automation anchor (sibling of the Send tile
-                          // key above) so video can be key-tapped directly too.
-                          tileKey: const ValueKey('friend_profile_video_call_tile'),
-                          icon: Icons.videocam_outlined,
-                          label: tL10n.videoCall,
-                          onTap: callActionsEnabled
-                              ? () {
-                                  if (widget.startVideoCall != null) {
-                                    widget.startVideoCall!();
-                                  } else {
-                                    _startVideoCall();
-                                  }
-                                }
-                              : null)),
+                        tileKey: action.key,
+                        icon: action.icon,
+                        label: action.label,
+                        onTap: action.onTap,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
-            )));
+              );
+            })));
+  }
+
+  static double _wordWidth(String word, TextStyle style, TextScaler scaler) {
+    final painter = TextPainter(
+      text: TextSpan(text: word, style: style),
+      textScaler: scaler,
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    return width;
   }
 }
 

@@ -8,6 +8,7 @@ import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.d
 import 'package:tencent_cloud_chat_common/builders/tencent_cloud_chat_common_builders.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
+import 'package:tencent_cloud_chat_contact/widgets/tencent_cloud_chat_contact_leading.dart';
 
 class TencentCloudChatContactAddContactsInfo extends StatefulWidget {
   final V2TimUserFullInfo userFullInfo;
@@ -66,7 +67,7 @@ class TencentCloudChatContactAddContactsInfoAppBarState
                   color: colorTheme.contactItemFriendNameColor),
             ),
             centerTitle: true,
-            leadingWidth: getWidth(100),
+            leadingWidth: TencentCloudChatContactLeading.width(context),
             leading: GestureDetector(
                 onTap: () => popDialogIfCurrent(context),
                 child: Row(

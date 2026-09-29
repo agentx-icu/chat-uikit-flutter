@@ -11,6 +11,7 @@ import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_code_info.dar
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_contact/model/contact_presenter.dart';
 import 'package:tencent_cloud_chat_contact/widgets/group_types_selector.dart';
+import 'package:tencent_cloud_chat_contact/widgets/tencent_cloud_chat_contact_leading.dart';
 
 class CreateGroupChat extends StatefulWidget {
   final List<V2TimFriendInfo> selectedMembers;
@@ -330,7 +331,7 @@ class _CreateGroupChatState extends TencentCloudChatState<CreateGroupChat> {
                 // Widen the leading slot so the "Cancel" text button fits on
                 // one line (the 56px default wraps it to "Can/cel", and is also
                 // tight for longer locales like JA "キャンセル").
-                leadingWidth: getWidth(100),
+                leadingWidth: TencentCloudChatContactLeading.width(context),
                 backgroundColor: colorTheme.backgroundColor,
                 leading: TextButton(
                   onPressed: () => popDialogIfCurrent(context),
