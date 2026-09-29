@@ -51,7 +51,17 @@ class TencentCloudChatConversationState
   StreamSubscription<TencentCloudChatConversationData<dynamic>>?
       _conversationDataSubscription;
 
-  late bool _useDesktopMode;
+  // toxee(L4a): the layout mode is read from the config at build time, never
+  // cached: the config changes synchronously (toxee flips it in the frame a
+  // rotation crosses its breakpoint), but the data stream announcing the
+  // change is delivered asynchronously. A cached copy kept the master-detail
+  // split for one frame at phone width, overflowing the right pane.
+  bool get _useDesktopMode => TencentCloudChat
+      .instance.dataInstance.conversation.conversationConfig.useDesktopMode;
+
+  /// The layout inputs of the last build, to rebuild when a data event
+  /// changed either of them.
+  ({bool useDesktopMode, bool forceDesktopLayout})? _builtLayout;
   late TextEditingController _textEditingController;
   TencentCloudChatWidgetBuilder? _globalSearchWidget;
   String _searchText = "";
@@ -72,8 +82,6 @@ class TencentCloudChatConversationState
     super.initState();
     _addConversationDataListener();
     _updateGlobalData();
-    _useDesktopMode = TencentCloudChat
-        .instance.dataInstance.conversation.conversationConfig.useDesktopMode;
 
     TencentCloudChat.instance.logInstance.console(
         componentName: 'TencentCloudChatConversation',
@@ -144,10 +152,13 @@ class TencentCloudChatConversationState
 
   _conversationDataHandler(TencentCloudChatConversationData data) {
     /// === useDesktopMode ===
-    if (data.conversationConfig.useDesktopMode != _useDesktopMode) {
-      setState(() {
-        _useDesktopMode = data.conversationConfig.useDesktopMode;
-      });
+    final config = data.conversationConfig;
+    if (_builtLayout !=
+        (
+          useDesktopMode: config.useDesktopMode,
+          forceDesktopLayout: config.forceDesktopLayout,
+        )) {
+      safeSetState(() {});
     }
 
     if (data.currentUpdatedFields ==
@@ -194,6 +205,10 @@ class TencentCloudChatConversationState
   Widget mobileBuilder(BuildContext context) {
     final config =
         TencentCloudChat.instance.dataInstance.conversation.conversationConfig;
+    _builtLayout = (
+      useDesktopMode: config.useDesktopMode,
+      forceDesktopLayout: config.forceDesktopLayout,
+    );
     if (_useDesktopMode && config.forceDesktopLayout) {
       return _buildDesktopMode();
     }
@@ -271,6 +286,12 @@ class TencentCloudChatConversationState
 
   @override
   Widget desktopBuilder(BuildContext context) {
+    final config =
+        TencentCloudChat.instance.dataInstance.conversation.conversationConfig;
+    _builtLayout = (
+      useDesktopMode: config.useDesktopMode,
+      forceDesktopLayout: config.forceDesktopLayout,
+    );
     if (_useDesktopMode) {
       return _buildDesktopMode();
     }
