@@ -4,6 +4,7 @@ import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
+import 'package:tencent_cloud_chat_common/widgets/tencent_cloud_chat_embedded_message_pane.dart';
 
 class TencentCloudChatMessageHeader extends StatefulWidget {
   final MessageHeaderBuilderWidgets widgets;
@@ -39,7 +40,13 @@ class _TencentCloudChatMessageHeaderState
           Expanded(
             child: Row(
               children: [
-                if (!isDesktop)
+                // A navigation question, not a device-class one: offer "back"
+                // exactly when this chat is on a route of its own. An embedded
+                // chat (split layout detail pane) has nothing to pop but the
+                // host — on iPad portrait / Split View that blanked the app —
+                // and a pushed chat on a desktop-classified narrow window had
+                // no way back at all. See TencentCloudChatEmbeddedMessagePane.
+                if (!TencentCloudChatEmbeddedMessagePane.isIn(context))
                   IconButton(
                       // Automation anchor: the ONLY real affordance that pops
                       // the pushed mobile/tablet chat route back to the

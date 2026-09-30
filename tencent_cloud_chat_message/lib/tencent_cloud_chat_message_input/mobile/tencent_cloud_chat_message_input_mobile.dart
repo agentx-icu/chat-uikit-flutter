@@ -20,6 +20,7 @@ import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_controller
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/tencent_cloud_chat_message_draft_coordinator.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/message_reply/tencent_cloud_chat_message_input_reply_container.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/mobile/tencent_cloud_chat_message_attachment_options.dart';
+import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/mobile/hardware_enter_to_send.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/mobile/tencent_cloud_chat_message_input_recording.dart';
 import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/select_mode/tencent_cloud_chat_message_input_select_mode_container.dart';
 
@@ -140,6 +141,13 @@ class _TencentCloudChatMessageInputMobileState
   int _byteCount = 0;
   String listenerUUID = "";
   late final TencentCloudChatMessageDraftCoordinator _draftCoordinator;
+  // Hardware Enter: plain sends, Shift inserts a newline — decided when the
+  // platform's `\n` arrives, not at key time (see HardwareEnterToSend).
+  late final HardwareEnterToSend _hardwareEnter = HardwareEnterToSend(
+    canSend: (text) =>
+        text.isNotEmpty && utf8.encode(text).length <= _kToxMaxMessageBytes,
+    send: (text) => unawaited(_sendHardwareEnterText(text)),
+  );
   bool _suppressDraftSave = false;
 
   /// The composer State currently mounted for each conversation.
@@ -796,12 +804,62 @@ class _TencentCloudChatMessageInputMobileState
     }
   }
 
-  bool _submitTextMessage() {
-    final text = _textEditingController.text;
+  /// Hardware Enter's send (HardwareEnterToSend.send): the text was accepted
+  /// and may already be gone from the field, so it must not be refused because
+  /// the previous message is still being sent — wait for that one instead
+  /// (typing `a`⏎`b`⏎ quickly used to drop `b`'s Enter). Waiters resume in
+  /// order, so queued messages keep their order.
+  Future<void> _sendHardwareEnterText(String text) async {
+    // Mentions are captured NOW, for this text only: `_mentionedUsers` is
+    // composer-wide and only cleared once a send completes with the field
+    // unchanged, so a message typed while the previous one is still sending
+    // would otherwise inherit the previous message's mentions.
+    final mentions = _mentionsIn(text);
+    while (_draftCoordinator.isSending) {
+      await _draftCoordinator.whenIdle();
+      if (!mounted) return;
+    }
+    _submitTextMessage(text, mentions);
+  }
+
+  /// The recorded mentions whose `@label` is in [text]. `_mentionedUsers` is
+  /// composer-wide and outlives a hardware-Enter send that was rebased out of
+  /// the field (it is cleared only when a send completes with the field
+  /// unchanged), so a send addresses only the members its own text names.
+  List<({String userID, String label})> _mentionsIn(String text) =>
+      _mentionedUsers.where((m) => _hasMentionToken(text, m.label)).toList();
+
+  /// `@label` as a whole token — not continued by a letter, digit or `_` —
+  /// so a recorded `@Ann` does not match `@Anna` in a later message, while
+  /// `@Bob,` still addresses Bob.
+  static bool _hasMentionToken(String text, String label) {
+    final token = '@$label';
+    var from = 0;
+    while (true) {
+      final at = text.indexOf(token, from);
+      if (at < 0) return false;
+      final end = at + token.length;
+      if (end == text.length || !_mentionWordChar.hasMatch(text[end])) {
+        return true;
+      }
+      from = at + 1;
+    }
+  }
+
+  static final RegExp _mentionWordChar = RegExp(r'[\p{L}\p{N}_]', unicode: true);
+
+  /// Send [override] (hardware Enter: the text captured when its newline
+  /// arrived; see HardwareEnterToSend.send) or the composer's current text.
+  bool _submitTextMessage([
+    String? override,
+    List<({String userID, String label})>? mentions,
+  ]) {
+    final text = override ?? _textEditingController.text;
     if (text.isEmpty || utf8.encode(text).length > _kToxMaxMessageBytes) {
       return false;
     }
-    final mentionedUsers = _mentionedUsers.map((e) => e.userID).toList();
+    final mentionedUsers =
+        (mentions ?? _mentionsIn(text)).map((e) => e.userID).toList();
     return _draftCoordinator.sendAndClear(
       text: text,
       sendMessage: () => widget.inputMethods.sendTextMessage(
@@ -879,28 +937,12 @@ class _TencentCloudChatMessageInputMobileState
   }
 
   KeyEventResult _onComposerKeyEvent(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent ||
-        (event.logicalKey != LogicalKeyboardKey.enter &&
-            event.logicalKey != LogicalKeyboardKey.numpadEnter)) {
-      return KeyEventResult.ignored;
-    }
-
     final composing = _textEditingController.value.composing;
-    if (composing.isValid && !composing.isCollapsed) {
-      return KeyEventResult.ignored;
-    }
-
-    final keyboard = HardwareKeyboard.instance;
-    if (keyboard.isShiftPressed ||
-        keyboard.isControlPressed ||
-        keyboard.isAltPressed ||
-        keyboard.isMetaPressed) {
-      _insertComposerNewline();
-      return KeyEventResult.handled;
-    }
-
-    _submitTextMessage();
-    return KeyEventResult.handled;
+    return _hardwareEnter.handleKeyEvent(
+      event,
+      composing: composing.isValid && !composing.isCollapsed,
+      insertNewline: _insertComposerNewline,
+    );
   }
 
   Widget _buildInputTextField() {
@@ -918,6 +960,7 @@ class _TencentCloudChatMessageInputMobileState
       },
       focusNode: _textEditingFocusNode,
       controller: _textEditingController,
+      inputFormatters: [_hardwareEnter.formatter],
       minLines: 1,
       maxLines: 4,
       style: TextStyle(
