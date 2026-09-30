@@ -365,9 +365,19 @@
       }
     }
   },
-  "memberReadCount": "{num, plural, zero {لم يقرأأي عضو} one {عضو واحد قرأ} other {{num} أعضاء قرأوا}}",
+  "memberReadCount": "{num, plural, zero {لم يقرأ أي عضو} one {قرأ عضو واحد} two {قرأ عضوان} few {قرأ {num} أعضاء} many {قرأ {num} عضوًا} other {قرأ {num} عضو}}",
   "@memberReadCount": {
     "description": "عدد الأعضاء الذين قرأوا الرسالة",
+    "placeholders": {
+      "num": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "memberReadCountAtLeast": "{num, plural, one {قرأ عضو واحد على الأقل} two {قرأ عضوان على الأقل} few {قرأ {num} أعضاء على الأقل} many {قرأ {num} عضوًا على الأقل} other {قرأ {num} عضو على الأقل}}",
+  "@memberReadCountAtLeast": {
+    "description": "عدد الأعضاء الذين قرأوا الرسالة عندما يكون العدد الدقيق غير معروف وهذا الرقم هو الحد الأدنى فقط",
     "placeholders": {
       "num": {
         "type": "int",

@@ -375,6 +375,16 @@
       }
     }
   },
+  "memberReadCountAtLeast": "{num, plural, one {최소 1 명의 회원이 읽음} other {최소 {num} 명의 회원이 읽음}}",
+  "@memberReadCountAtLeast": {
+    "description": "메시지를 읽은 회원 수. 정확한 수를 알 수 없어 이 숫자는 최소값일 뿐입니다",
+    "placeholders": {
+      "num": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
   "allMembersRead": "모든 회원이 읽었습니다",
   "allowAny": "모두 허용",
   "cannotSendApplicationToWorkGroup": "작업 그룹에 신청서를 보낼 수 없습니다",

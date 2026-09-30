@@ -1,20 +1,4 @@
 {
-  "ar": [
-    "reactionList"
-  ],
-
-  "ja": [
-    "reactionList"
-  ],
-
-  "ko": [
-    "reactionList"
-  ],
-
-  "zh": [
-    "reactionList"
-  ],
-
   "zh_Hans": [
     "album",
     "chat",
@@ -239,6 +223,7 @@
     "askDeleteThisMessage",
     "deleteMessageCount",
     "memberReadCount",
+    "memberReadCountAtLeast",
     "allMembersRead",
     "allowAny",
     "cannotSendApplicationToWorkGroup",
@@ -559,11 +544,24 @@
     "inviteToGroupFrom",
     "applyToJoin",
     "requestWait",
-    "dismissGroupTips"
-  ],
-
-  "zh_Hant": [
-    "dissolve",
-    "reactionList"
+    "dismissGroupTips",
+    "toxIdCopied",
+    "openChat",
+    "copyToxId",
+    "viewToxId",
+    "reject",
+    "retry",
+    "noStickers",
+    "inviteMembersFailed",
+    "copyGroupMemberKey",
+    "groupMemberKeyCopied",
+    "groupMemberKey",
+    "groupMemberKeyHint",
+    "conferenceMemberKeyHint",
+    "inviteRequestFailed",
+    "kickMemberFailed",
+    "groupActionNoPermission",
+    "groupActionNotSupported",
+    "groupActionNotConnected"
   ]
 }

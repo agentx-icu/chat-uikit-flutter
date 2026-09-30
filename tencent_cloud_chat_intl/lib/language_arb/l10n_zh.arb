@@ -375,6 +375,16 @@
       }
     }
   },
+  "memberReadCountAtLeast": "{num, plural, one {至少1个成员阅读} other {至少 {num} 个成员阅读}}",
+  "@memberReadCountAtLeast": {
+    "description": "消息阅读成员数量，确切人数未知，该数字只是下限",
+    "placeholders": {
+      "num": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
   "allMembersRead": "所有成员已读",
   "allowAny": "允许任何",
   "cannotSendApplicationToWorkGroup": "无法发送申请至工作群",

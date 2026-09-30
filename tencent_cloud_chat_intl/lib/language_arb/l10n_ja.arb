@@ -375,6 +375,16 @@
       }
     }
   },
+  "memberReadCountAtLeast": "{num, plural, one {少なくとも1人のメンバーが読んだ} other {少なくとも{num}人のメンバーが読んだ}}",
+  "@memberReadCountAtLeast": {
+    "description": "メッセージを読んだメンバーの数。正確な人数は不明で、この数は下限にすぎない",
+    "placeholders": {
+      "num": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
   "allMembersRead": "全メンバーが読んだ",
   "allowAny": "すべて許可",
   "cannotSendApplicationToWorkGroup": "作業グループにアプリケーションを送信できません",
