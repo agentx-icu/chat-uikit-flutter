@@ -36,6 +36,16 @@ class TencentCloudChatMessageDraftCoordinator {
       })> _draftSaveQueue = [];
   bool _drainingDraftSaves = false;
   bool _isSending = false;
+
+  /// A [sendAndClear] is in flight; another one would be refused.
+  bool get isSending => _isSending;
+  Completer<void>? _idle;
+
+  /// Completes when no [sendAndClear] is in flight (at once if none is).
+  Future<void> whenIdle() {
+    if (!_isSending) return Future<void>.value();
+    return (_idle ??= Completer<void>()).future;
+  }
   _DraftIdentity? _identity;
   int _contextGeneration = 0;
   int _editGeneration = 0;
@@ -194,6 +204,9 @@ class TencentCloudChatMessageDraftCoordinator {
       onError?.call(error);
     } finally {
       _isSending = false;
+      final idle = _idle;
+      _idle = null;
+      idle?.complete();
     }
   }
 
