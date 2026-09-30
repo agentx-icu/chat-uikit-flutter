@@ -37,6 +37,10 @@ class TencentCloudChatMessageDraftCoordinator {
   bool _drainingDraftSaves = false;
   bool _isSending = false;
 
+  /// The current draft identity (account + conversation), comparable with
+  /// `==`; null without an account or conversation.
+  Object? get identity => _identity;
+
   /// A [sendAndClear] is in flight; another one would be refused.
   bool get isSending => _isSending;
   Completer<void>? _idle;
@@ -105,6 +109,8 @@ class TencentCloudChatMessageDraftCoordinator {
     final editGeneration = _editGeneration;
     try {
       await _latestDraftSave;
+      await _lastSaves[identity];
+      await _pendingRestores[identity];
       final draft = await provider.loadDraft(
         conversationID: identity.conversationID,
         accountToxId: identity.accountToxId,
@@ -121,6 +127,57 @@ class TencentCloudChatMessageDraftCoordinator {
     } catch (error) {
       debugPrint('Failed to load message draft: $error');
     }
+  }
+
+  /// Restores into a stored draft still running, per draft identity, across
+  /// coordinators: a composer mounted meanwhile for that conversation waits
+  /// for them before loading its draft ([loadDraft]).
+  static final Map<_DraftIdentity, Future<void>> _pendingRestores = {};
+
+  /// The last queued save per draft identity, across coordinators: a
+  /// composer mounted right after another one for the same conversation was
+  /// disposed must not load the draft before that one's last save landed
+  /// (it would show — and a restore would merge into — a stale draft).
+  static final Map<_DraftIdentity, Future<void>> _lastSaves = {};
+
+  /// Put [texts] (hardware-Enter sends that were taken out of the composer
+  /// and then not sent) in front of the stored draft of [identity] (a value
+  /// of [identity] captured at send time), one per line.
+  Future<void> restoreIntoDraft(Object? identity, List<String> texts) {
+    if (identity is! _DraftIdentity || texts.isEmpty) {
+      return Future<void>.value();
+    }
+    final previous = _pendingRestores[identity] ?? Future<void>.value();
+    final provider = _draftProvider;
+    late final Future<void> run;
+    run = previous.then((_) async {
+      try {
+        await _latestDraftSave;
+        await _lastSaves[identity];
+        final stored = await provider.loadDraft(
+          conversationID: identity.conversationID,
+          accountToxId: identity.accountToxId,
+        );
+        final draft = [
+          ...texts,
+          if (stored != null && stored.isNotEmpty) stored,
+        ].join('\n');
+        _writeConversationPreview(provider, identity, draft);
+        await _enqueueDraftSave(
+          provider: provider,
+          identity: identity,
+          draft: draft,
+        );
+      } catch (error) {
+        debugPrint('Failed to restore unsent text into the draft: $error');
+      }
+    }).whenComplete(() {
+      if (identical(_pendingRestores[identity], run)) {
+        _pendingRestores.remove(identity);
+      }
+    });
+    _pendingRestores[identity] = run;
+    return run;
   }
 
   bool sendAndClear({
@@ -223,6 +280,11 @@ class TencentCloudChatMessageDraftCoordinator {
       completer: completer,
     ));
     _latestDraftSave = completer.future;
+    final saved = completer.future;
+    _lastSaves[identity] = saved;
+    unawaited(saved.whenComplete(() {
+      if (identical(_lastSaves[identity], saved)) _lastSaves.remove(identity);
+    }));
     if (!_drainingDraftSaves) {
       unawaited(_drainDraftSaves());
     }

@@ -27,6 +27,16 @@ import 'package:tencent_cloud_chat_message/tencent_cloud_chat_message_input/sele
 // Tox protocol max payload for tox_friend_send_message() is 1372 UTF-8 bytes;
 // the warning threshold (~80%) gives the user breathing room before the cap.
 const int _kToxMaxMessageBytes = 1372;
+
+typedef _Mention = ({String userID, String label});
+
+/// A hardware-Enter send that did not go out, with the mentions and the
+/// draft identity (account + conversation) it was sent under.
+typedef _FailedSend = ({
+  HardwareEnterSend sent,
+  List<_Mention> mentions,
+  Object? identity,
+});
 const int _kToxByteCounterThreshold = 1097;
 
 /// L3 real-UI test seam (debug builds only). The mobile composer is an
@@ -146,8 +156,17 @@ class _TencentCloudChatMessageInputMobileState
   late final HardwareEnterToSend _hardwareEnter = HardwareEnterToSend(
     canSend: (text) =>
         text.isNotEmpty && utf8.encode(text).length <= _kToxMaxMessageBytes,
-    send: (text) => unawaited(_sendHardwareEnterText(text)),
+    send: (sent) => unawaited(_sendHardwareEnterText(sent)),
   );
+  // Hardware-Enter sends not finished yet; the failed ones; and failed texts
+  // (with their mentions) waiting to be put back into THIS composer — see
+  // [_sendHardwareEnterText].
+  int _hardwareSendsOutstanding = 0;
+  final List<_FailedSend> _failedHardwareSends = [];
+  final List<_FailedSend> _textsToRestore = [];
+  // The draft of the current conversation has been loaded (restoring before
+  // that would make the load skip — and the next save erase — the draft).
+  bool _draftLoaded = false;
   bool _suppressDraftSave = false;
 
   /// The composer State currently mounted for each conversation.
@@ -244,6 +263,17 @@ class _TencentCloudChatMessageInputMobileState
     if (identical(_liveInputs[_composerIdentityKey], this)) {
       _liveInputs.remove(_composerIdentityKey);
     }
+    // Failed sends handed to this composer and not yet put back (its draft
+    // was still loading): on to the composer now live for the conversation,
+    // else into their draft. With sends still outstanding, their completion
+    // hands everything over instead.
+    if (_hardwareSendsOutstanding == 0) {
+      final pending = [..._textsToRestore];
+      _textsToRestore.clear();
+      for (final failed in pending) {
+        _handOverFailedSend(failed, disposing: true);
+      }
+    }
     WidgetsBinding.instance.removeObserver(this);
     isStarted = false;
     _cancelPendingRecordingStarter();
@@ -258,6 +288,8 @@ class _TencentCloudChatMessageInputMobileState
 
     final draftContextChanged = _setDraftContext();
     if (draftContextChanged) {
+      // The last send's echo belongs to the previous conversation.
+      _hardwareEnter.forgetEcho();
       _mentionedUsers.clear();
       _replaceComposerText(widget.inputData.specifiedMessageText ?? "");
       unawaited(_loadDraft());
@@ -809,17 +841,141 @@ class _TencentCloudChatMessageInputMobileState
   /// the previous message is still being sent — wait for that one instead
   /// (typing `a`⏎`b`⏎ quickly used to drop `b`'s Enter). Waiters resume in
   /// order, so queued messages keep their order.
-  Future<void> _sendHardwareEnterText(String text) async {
+  ///
+  /// A send that does not go out (the send fails, or this composer is
+  /// disposed while it waits) must not lose its text. If the field still
+  /// shows it (nothing was typed within the echo window), it stays there like
+  /// the send button's text. If the field was rebased past it
+  /// ([HardwareEnterSend.removedFromField]), it is put back in front of what
+  /// the user has typed since — but only once no hardware send is
+  /// outstanding, so a later queued send finishes (and its own success clear
+  /// compares against the field it left) before the field changes under it.
+  Future<void> _sendHardwareEnterText(HardwareEnterSend sent) async {
     // Mentions are captured NOW, for this text only: `_mentionedUsers` is
     // composer-wide and only cleared once a send completes with the field
     // unchanged, so a message typed while the previous one is still sending
     // would otherwise inherit the previous message's mentions.
-    final mentions = _mentionsIn(text);
-    while (_draftCoordinator.isSending) {
+    final mentions = _mentionsIn(sent.text);
+    final identity = _draftCoordinator.identity;
+    _hardwareSendsOutstanding++;
+    var failed = false;
+    try {
+      while (_draftCoordinator.isSending) {
+        await _draftCoordinator.whenIdle();
+        if (!mounted || _draftCoordinator.identity != identity) {
+          failed = true;
+          return;
+        }
+      }
+      if (!_submitTextMessage(sent.text, mentions, () => failed = true)) {
+        failed = true;
+        return;
+      }
+      // This send's own completion (onError runs before idle completes).
       await _draftCoordinator.whenIdle();
-      if (!mounted) return;
+    } finally {
+      if (failed) {
+        // Still in the field: from now on keep whatever the platform still
+        // echoes (it holds this text) instead of rebasing it away, so it
+        // stays there. Already rebased away: it is put back below.
+        if (!sent.removedFromField) _hardwareEnter.stopEcho(sent);
+        _failedHardwareSends
+            .add((sent: sent, mentions: mentions, identity: identity));
+      }
+      if (--_hardwareSendsOutstanding == 0) _onHardwareSendsDrained();
     }
-    _submitTextMessage(text, mentions);
+  }
+
+  void _onHardwareSendsDrained() {
+    final restore = [
+      // Handed over while this composer still had sends outstanding.
+      ..._textsToRestore,
+      ..._failedHardwareSends.where((f) => f.sent.removedFromField),
+    ];
+    _textsToRestore.clear();
+    _failedHardwareSends.clear();
+    for (final failed in restore) {
+      _handOverFailedSend(failed);
+    }
+  }
+
+  /// Give [failed] to the composer that is live for ITS conversation and
+  /// account — this one, or (same hand-off as the mention picker) the one
+  /// mounted after this was disposed — or else to that conversation's stored
+  /// draft.
+  void _handOverFailedSend(_FailedSend failed, {bool disposing = false}) {
+    _TencentCloudChatMessageInputMobileState? target =
+        mounted && !disposing ? this : _liveInputs[_composerIdentityKey];
+    if (target != null &&
+        ((identical(target, this) && disposing) ||
+            !target.mounted ||
+            target._draftCoordinator.identity != failed.identity)) {
+      target = null;
+    }
+    if (target == null) {
+      unawaited(_draftCoordinator
+          .restoreIntoDraft(failed.identity, [failed.sent.text]));
+      return;
+    }
+    target._textsToRestore.add(failed);
+    if (target._hardwareSendsOutstanding == 0) target._restoreFailedTexts();
+  }
+
+  /// Put [_textsToRestore] back in front of the field's text, keeping the
+  /// user's caret, and save the result as the draft. Waits for the draft
+  /// load and for this composer's outstanding hardware sends.
+  void _restoreFailedTexts() {
+    if (!mounted ||
+        !_draftLoaded ||
+        _hardwareSendsOutstanding > 0 ||
+        _textsToRestore.isEmpty) {
+      return;
+    }
+    final identity = _draftCoordinator.identity;
+    final restore = [..._textsToRestore];
+    _textsToRestore.clear();
+    // The conversation changed while these waited: they belong to its draft.
+    for (final failed in restore.where((f) => f.identity != identity)) {
+      unawaited(_draftCoordinator
+          .restoreIntoDraft(failed.identity, [failed.sent.text]));
+    }
+    restore.removeWhere((f) => f.identity != identity);
+    if (restore.isEmpty) return;
+    for (final failed in restore) {
+      for (final member in failed.mentions) {
+        if (!_mentionedUsers.any((e) => e.userID == member.userID)) {
+          _mentionedUsers.add(member);
+        }
+      }
+    }
+    final texts = [for (final failed in restore) failed.sent.text];
+    final value = _textEditingController.value;
+    final restored = HardwareEnterToSend.mergeRestored(texts, value.text);
+    final shift = restored.length - value.text.length;
+    final selection = value.selection;
+    final composing = value.composing;
+    // While the platform still echoes the last send, its stale updates must
+    // keep what is put back here (see restoredInFront).
+    _hardwareEnter.restoredInFront(texts);
+    // Set first so `_onTextChanged` sees no edit to interpret (a restored
+    // "@" would open the mention picker); the draft is saved explicitly.
+    _inputText = restored;
+    _textEditingController.value = TextEditingValue(
+      text: restored,
+      selection: selection.isValid
+          ? TextSelection(
+              baseOffset: selection.baseOffset + shift,
+              extentOffset: selection.extentOffset + shift,
+            )
+          : TextSelection.collapsed(offset: restored.length),
+      composing: composing.isValid
+          ? TextRange(start: composing.start + shift, end: composing.end + shift)
+          : TextRange.empty,
+    );
+    safeSetState(() {
+      _byteCount = utf8.encode(restored).length;
+    });
+    _updateDraft(restored);
   }
 
   /// The recorded mentions whose `@label` is in [text]. `_mentionedUsers` is
@@ -852,7 +1008,8 @@ class _TencentCloudChatMessageInputMobileState
   /// arrived; see HardwareEnterToSend.send) or the composer's current text.
   bool _submitTextMessage([
     String? override,
-    List<({String userID, String label})>? mentions,
+    List<_Mention>? mentions,
+    VoidCallback? onFailed,
   ]) {
     final text = override ?? _textEditingController.text;
     if (text.isEmpty || utf8.encode(text).length > _kToxMaxMessageBytes) {
@@ -874,6 +1031,7 @@ class _TencentCloudChatMessageInputMobileState
       },
       onError: (error) {
         debugPrint('Failed to send text message: $error');
+        onFailed?.call();
       },
     );
   }
@@ -886,14 +1044,24 @@ class _TencentCloudChatMessageInputMobileState
     );
   }
 
-  Future<void> _loadDraft() {
+  Future<void> _loadDraft() async {
+    _draftLoaded = false;
+    final identity = _draftCoordinator.identity;
     final initialText = _textEditingController.text;
-    return _draftCoordinator.loadDraft(
-      initialText: initialText,
-      currentText: () => _textEditingController.text,
-      isActive: () => mounted,
-      applyText: _replaceComposerText,
-    );
+    try {
+      await _draftCoordinator.loadDraft(
+        initialText: initialText,
+        currentText: () => _textEditingController.text,
+        isActive: () => mounted,
+        applyText: _replaceComposerText,
+      );
+    } finally {
+      // A newer load (the conversation changed again) owns the flag.
+      if (identity == _draftCoordinator.identity) {
+        _draftLoaded = true;
+        _restoreFailedTexts();
+      }
+    }
   }
 
   void _replaceComposerText(String text) {

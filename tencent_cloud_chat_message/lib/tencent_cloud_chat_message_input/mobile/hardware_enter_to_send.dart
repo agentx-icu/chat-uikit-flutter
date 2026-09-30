@@ -8,6 +8,22 @@ import 'package:flutter/widgets.dart';
 /// What a hardware Enter press asked for, waiting for its `\n` to arrive.
 enum HardwareEnterIntent { send, newline }
 
+/// One hardware-Enter send, handed to [HardwareEnterToSend.send].
+class HardwareEnterSend {
+  HardwareEnterSend(this.text);
+
+  /// The message text, captured when the Enter's newline arrived.
+  final String text;
+
+  /// Set when the formatter rebased the field past this text (a key typed
+  /// while the platform still echoed it): the text is then no longer in the
+  /// composer, so if the send fails the composer must put it back. Otherwise
+  /// the text is still in the field (the composer clears it only after a
+  /// successful send), exactly like the send button's text.
+  bool get removedFromField => _removedFromField;
+  bool _removedFromField = false;
+}
+
 /// Hardware-keyboard Enter for the MOBILE composer (iPad / Android tablets):
 /// plain Enter sends, Enter with a modifier inserts a newline.
 ///
@@ -61,18 +77,17 @@ class HardwareEnterToSend {
   /// a send already in flight instead of refusing).
   final bool Function(String text) canSend;
 
-  /// Sends [text] — the field's text without the Enter's `\n`, CAPTURED when
-  /// that newline arrived. (If that send then fails after the user already
-  /// typed past it, the text is not put back into the field: restoring it
-  /// raced later queued sends and the draft; the button path's behaviour —
-  /// the text stays while it is unchanged — holds when nothing was typed.) Runs in a microtask, after the formatted value is
-  /// stored (sending from inside the formatter let a synchronous composer
+  /// Sends the handle's text — the field's text without the Enter's `\n`,
+  /// CAPTURED when that newline arrived. If the send fails after the field
+  /// was rebased past it ([HardwareEnterSend.removedFromField]), the caller
+  /// puts it back (see [mergeRestored]). Runs in a microtask, after the
+  /// formatted value is stored (sending from inside the formatter let a synchronous composer
   /// clear be overwritten by the formatter's own result). It must not re-read
   /// the controller: the text-input channel's handler continues in
   /// microtasks, so the platform's NEXT update (a key typed right after Enter)
   /// is applied before this runs — a controller read sent `abc\nh` (measured
   /// on the iPad simulator).
-  final void Function(String text) send;
+  final void Function(HardwareEnterSend sent) send;
 
   /// Alt(Option)+Enter is inserted by the platform (iOS) rather than by the
   /// framework (Android).
@@ -87,11 +102,17 @@ class HardwareEnterToSend {
   final DateTime Function() _clock;
   final Queue<(HardwareEnterIntent, DateTime)> _pending = Queue();
 
-  /// Platform text (with the Enter's `\n`) that was just sent, while the
-  /// platform may still echo it; see the class doc.
-  String? _sentBase;
-  String? _sentText;
+  /// The platform text (with the Enter's `\n`) of the send that was just
+  /// made, split at the platform caret, while the platform may still echo it;
+  /// see the class doc and [_rebaseAfterSend].
+  String? _echoPrefix;
+  String _echoSuffix = '';
+  HardwareEnterSend? _sent;
   DateTime? _sentAt;
+
+  /// Failed sends the composer put back in front of the field while the
+  /// echo was still live ([restoredInFront]); a rebased update keeps them.
+  final List<String> _restoredHead = [];
 
   late final TextInputFormatter formatter =
       TextInputFormatter.withFunction(_format);
@@ -142,18 +163,52 @@ class HardwareEnterToSend {
     }
   }
 
+  /// Stop treating updates as the echo of the last send (the platform caught
+  /// up, the echo expired, or the composer switched conversation).
+  void forgetEcho() {
+    _echoPrefix = null;
+    _echoSuffix = '';
+    _sent = null;
+    _sentAt = null;
+    _restoredHead.clear();
+  }
+
+  /// The composer put [texts] (failed sends) back in front of the field
+  /// ([mergeRestored]). While the platform may still echo, a stale update
+  /// maps to `mergeRestored(texts, <typed since>)` — the value the field now
+  /// derives from — instead of dropping them again (after `a` failed and a
+  /// queued `b` went out, the platform's `a\nb\nx` must give `a\nx`), and a
+  /// genuine edit of the restored text that still starts with the echo's
+  /// prefix (`abc\nh` → `abc\nhi`) maps to itself.
+  void restoredInFront(List<String> texts) {
+    if (_echoPrefix != null) _restoredHead.addAll(texts);
+  }
+
+  /// [sent] did not go out: if the platform may still echo it, stop
+  /// rebasing — its stale updates hold the text, so they are kept as they
+  /// are, and the field can no longer be moved past it.
+  void stopEcho(HardwareEnterSend sent) {
+    if (identical(_sent, sent)) forgetEcho();
+  }
+
+  /// The composer text after putting back failed sends: [texts] (in send
+  /// order) in front of what the user has now, one per line.
+  static String mergeRestored(Iterable<String> texts, String current) =>
+      [...texts, current].where((t) => t.isNotEmpty).join('\n');
+
   TextEditingValue _format(TextEditingValue oldValue, TextEditingValue value) {
     // Rebase first, then look for the NEXT Enter in what remains: a second
     // quick Enter can arrive while the platform still echoes the first send's
     // text (`abc\nh\n`).
-    final platformText = value.text;
+    final platformValue = value;
     final rebased = _rebaseAfterSend(value);
     if (rebased != null) {
       value = rebased;
       // In the rebased coordinates the sent text is gone: while the field
       // still shows it (the composer clears after the send completes), the
       // previous value to compare with is empty.
-      if (oldValue.text == _sentText) oldValue = TextEditingValue.empty;
+      if (oldValue.text == _sent?.text) oldValue = TextEditingValue.empty;
+      _sent?._removedFromField = true;
     }
     _dropExpired();
     if (_pending.isEmpty || !_insertedNewlineAtCaret(oldValue, value)) {
@@ -174,11 +229,21 @@ class HardwareEnterToSend {
         ? oldValue.text
         : value.text.replaceRange(caret - 1, caret, '');
     if (canSend(text)) {
-      // In PLATFORM coordinates: what the platform will keep echoing.
-      _sentBase = platformText;
-      _sentText = text;
+      // In PLATFORM coordinates: what the platform will keep echoing, split
+      // at its caret, where the next key lands (Enter in the middle of a
+      // draft: `ab\ncd`, a key gives `ab\nhcd`).
+      final platformText = platformValue.text;
+      final platformCaret = platformValue.selection.isValid &&
+              platformValue.selection.isCollapsed
+          ? platformValue.selection.baseOffset.clamp(0, platformText.length)
+          : platformText.length;
+      _echoPrefix = platformText.substring(0, platformCaret);
+      _echoSuffix = platformText.substring(platformCaret);
+      // Anything restored in front is part of this message now.
+      _restoredHead.clear();
+      final sent = _sent = HardwareEnterSend(text);
       _sentAt = _clock();
-      scheduleMicrotask(() => send(text));
+      scheduleMicrotask(() => send(sent));
     }
     if (overSelection) return oldValue;
     return TextEditingValue(
@@ -217,31 +282,57 @@ class HardwareEnterToSend {
 
   static int _newlines(String text) => '\n'.allMatches(text).length;
 
-  /// While the platform still echoes the text that was sent (plus whatever
-  /// was typed after the Enter), keep only what follows it. The first update
-  /// that no longer starts with it — the platform has caught up — ends this.
+  /// While the platform still echoes the text that was sent, keep only what
+  /// the user typed since: an update that still starts with the echo's prefix
+  /// (up to and including the Enter's `\n`) is the echo (`prefix` + `suffix`,
+  /// the suffix being what followed the caret — empty unless Enter was
+  /// pressed in the middle of the draft) with one edit after the prefix
+  /// (`ab\ncd` → `ab\nhcd`, or `ab\nchd` after a quick caret move); the
+  /// inserted text is what was typed. The first update that does not start
+  /// with the prefix — the platform has caught up — ends this.
   TextEditingValue? _rebaseAfterSend(TextEditingValue value) {
-    final base = _sentBase;
+    final prefix = _echoPrefix;
     final sentAt = _sentAt;
-    if (base == null || sentAt == null) return null;
-    if (_clock().difference(sentAt) > maxAge || !value.text.startsWith(base)) {
-      _sentBase = null;
-      _sentText = null;
-      _sentAt = null;
+    if (prefix == null || sentAt == null) return null;
+    final text = value.text;
+    if (_clock().difference(sentAt) > maxAge || !text.startsWith(prefix)) {
+      forgetEcho();
       return null;
     }
-    int shift(int offset) => (offset - base.length).clamp(0, 1 << 30);
+    final base = prefix + _echoSuffix;
+    // The edit's span: common suffix first (so an insertion is placed at the
+    // caret side), never reaching into the prefix; then the common prefix.
+    final limit =
+        (text.length < base.length ? text.length : base.length) - prefix.length;
+    var tail = 0;
+    while (tail < limit &&
+        text.codeUnitAt(text.length - 1 - tail) ==
+            base.codeUnitAt(base.length - 1 - tail)) {
+      tail++;
+    }
+    var head = prefix.length;
+    while (head < text.length - tail &&
+        head < base.length - tail &&
+        text.codeUnitAt(head) == base.codeUnitAt(head)) {
+      head++;
+    }
+    final typed = text.substring(head, text.length - tail);
+    final merged = mergeRestored(_restoredHead, typed);
+    final lead = merged.length - typed.length;
+    int shift(int offset) => (offset - head).clamp(0, typed.length) + lead;
     final selection = value.selection;
     final composing = value.composing;
     return TextEditingValue(
-      text: value.text.substring(base.length),
+      text: merged,
       selection: selection.isValid
           ? selection.copyWith(
               baseOffset: shift(selection.baseOffset),
               extentOffset: shift(selection.extentOffset),
             )
           : selection,
-      composing: composing.isValid && composing.start >= base.length
+      composing: composing.isValid &&
+              composing.start >= head &&
+              composing.end <= head + typed.length
           ? TextRange(
               start: shift(composing.start),
               end: shift(composing.end),
@@ -249,4 +340,5 @@ class HardwareEnterToSend {
           : TextRange.empty,
     );
   }
+
 }
