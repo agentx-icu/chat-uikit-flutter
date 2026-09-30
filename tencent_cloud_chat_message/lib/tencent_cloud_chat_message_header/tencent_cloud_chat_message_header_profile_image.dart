@@ -109,7 +109,13 @@ class _TencentCloudChatMessageHeaderProfileImageState
     // _tryInvokeCallback GUARANTEE the navigation fires even if the synthetic
     // pointer misses this small (34px) avatar; a KeyedSubtree wrapper would
     // suppress that fallback and the open became unreliable.
-    return GestureDetector(
+    // Screen readers (I5): named like defaultBuilder's — this header is also
+    // the right pane of a phone in landscape / a tablet (master-detail).
+    return Semantics(
+      button: true,
+      label: TencentCloudChatLocalizations.of(context)?.profile,
+      container: true,
+      child: GestureDetector(
       key: const ValueKey('message_header_profile_avatar'),
       onTap: TencentCloudChatUtils.checkString(widget.conversation?.userID) !=
               null
@@ -139,7 +145,7 @@ class _TencentCloudChatMessageHeaderProfileImageState
         height: getSquareSize(34),
         borderRadius: getSquareSize(17),
       ),
-    );
+    ));
   }
 
   @override

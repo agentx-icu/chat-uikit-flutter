@@ -136,7 +136,12 @@ class TencentCloudChatContactItemState extends TencentCloudChatState<TencentClou
   Widget defaultBuilder(BuildContext context) {
     final platformIsDesktop = TencentCloudChatPlatformAdapter().isDesktop;
     return TencentCloudChatThemeWidget(
-      build: (context, color, textStyle) => Material(
+      // toxee(I5): the row is its own screen-reader node — otherwise its
+      // label absorbed the section header above it ("#, Alice") — and the
+      // avatar, which only repeats the name, no longer makes it an "image".
+      build: (context, color, textStyle) => Semantics(
+        container: true,
+        child: Material(
         color: color.backgroundColor,
         child: InkWell(
           // Stable automation handle for the contact list item.
@@ -155,12 +160,18 @@ class TencentCloudChatContactItemState extends TencentCloudChatState<TencentClou
               horizontal: getWidth(3),
             ),
             child: Row(children: [
-              TencentCloudChat.instance.dataInstance.contact.contactBuilder?.getContactItemAvatarBuilder(widget.friend),
+              ExcludeSemantics(
+                child: TencentCloudChat.instance.dataInstance.contact
+                        .contactBuilder
+                        ?.getContactItemAvatarBuilder(widget.friend) ??
+                    const SizedBox(),
+              ),
               TencentCloudChat.instance.dataInstance.contact.contactBuilder?.getContactItemContentBuilder(widget.friend),
               TencentCloudChat.instance.dataInstance.contact.contactBuilder?.getContactItemElseBuilder(widget.friend),
             ]),
           ),
         ),
+      ),
       ),
     );
   }

@@ -155,38 +155,75 @@ class TencentCloudChatContactAzlistState
           indexTags.length >= 6 ? indexTags : const <String>[],
           constraints.maxHeight,
           textScale: MediaQuery.textScalerOf(context).scale(1.0));
-      return Scrollbar(
-          child: AzListView(
-        // Shared with the component controller so the host app can scroll this
-        // list back to the top (bottom-nav re-tap convention).
-        itemScrollController: _itemScrollController,
-        physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics()),
-        data: showFriendList,
-        itemCount: showFriendList.length,
-        indexBarData: indexBar.tags,
-        indexBarItemHeight: indexBar.itemHeight,
-        indexBarOptions: indexBar.options,
-          itemBuilder: (context, index) {
-          if (showFriendList[index].friendInfo is TTabItem) {
-            return TencentCloudChat.instance.dataInstance.contact.contactBuilder
-                ?.getContactListTabItemBuilder(
-                    showFriendList[index].friendInfo);
-          } else {
-            final friend = showFriendList[index].friendInfo;
-            return TencentCloudChatContactItem(friend: friend);
-          }
-        },
-        susItemBuilder: (context, index) {
-          ISuspensionBeanImpl tag = showFriendList[index];
-          if (tag.getSuspensionTag() == "@") {
-            return Container();
-          }
+      Widget itemBuilder(BuildContext context, int index) {
+        if (showFriendList[index].friendInfo is TTabItem) {
           return TencentCloudChat.instance.dataInstance.contact.contactBuilder
-              ?.getContactListTagBuilder(tag.getSuspensionTag());
-        },
-        susItemHeight: getSquareSize(30),
-      ));
+                  ?.getContactListTabItemBuilder(
+                      showFriendList[index].friendInfo) ??
+              const SizedBox();
+        }
+        final friend = showFriendList[index].friendInfo;
+        return TencentCloudChatContactItem(friend: friend);
+      }
+
+      Widget susItemBuilder(BuildContext context, int index) {
+        ISuspensionBeanImpl tag = showFriendList[index];
+        if (tag.getSuspensionTag() == "@") {
+          return Container();
+        }
+        // Bounded: SuspensionView pins the sticky header with only left/top,
+        // and the tag stretches to double.infinity — an infinite-width layout
+        // error whenever a letter heads the list (no tab rows above it).
+        return SizedBox(
+          width: constraints.maxWidth,
+          child: TencentCloudChat.instance.dataInstance.contact.contactBuilder
+                  ?.getContactListTagBuilder(tag.getSuspensionTag()) ??
+              const SizedBox(),
+        );
+      }
+
+      const physics =
+          BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+      // toxee(I5): AzListView always builds its A-Z bar — a GestureDetector
+      // (vertical drag + tap) that screen readers see as tap/scroll actions
+      // on whatever node encloses the list, i.e. an unnamed focus stop. With
+      // no letters to show there is no bar to keep: use the list alone
+      // (AzListView is exactly SuspensionView + IndexBar).
+      if (indexBar.tags.isEmpty) {
+        return Scrollbar(
+          child: SuspensionView(
+            itemScrollController: _itemScrollController,
+            physics: physics,
+            data: showFriendList,
+            itemCount: showFriendList.length,
+            itemBuilder: itemBuilder,
+            susItemBuilder: susItemBuilder,
+            susItemHeight: getSquareSize(30),
+          ),
+        );
+      }
+      // A visible bar keeps its jump-to-letter gestures; the node they land
+      // on is named after the list instead of being anonymous.
+      return Semantics(
+        container: true,
+        label: tL10n.contacts,
+        child: Scrollbar(
+          child: AzListView(
+            // Shared with the component controller so the host app can scroll
+            // this list back to the top (bottom-nav re-tap convention).
+            itemScrollController: _itemScrollController,
+            physics: physics,
+            data: showFriendList,
+            itemCount: showFriendList.length,
+            indexBarData: indexBar.tags,
+            indexBarItemHeight: indexBar.itemHeight,
+            indexBarOptions: indexBar.options,
+            itemBuilder: itemBuilder,
+            susItemBuilder: susItemBuilder,
+            susItemHeight: getSquareSize(30),
+          ),
+        ),
+      );
     });
   }
 }
