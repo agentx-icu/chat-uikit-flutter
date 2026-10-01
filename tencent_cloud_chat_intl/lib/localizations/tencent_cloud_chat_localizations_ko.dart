@@ -1885,4 +1885,7 @@ class TencentCloudChatLocalizationsKo extends TencentCloudChatLocalizations {
   @override
   String get groupActionNotConnected =>
       '아직 Tox 네트워크에 연결되지 않았습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get operationFailed => '작업에 실패했습니다. 다시 시도해 주세요.';
 }

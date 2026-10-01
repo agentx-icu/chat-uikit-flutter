@@ -1877,12 +1877,18 @@ class TencentCloudChatLocalizationsZh extends TencentCloudChatLocalizations {
 
   @override
   String get groupActionNotConnected => '尚未连接到 Tox 网络，请稍后重试。';
+
+  @override
+  String get operationFailed => '操作失败，请重试';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
 class TencentCloudChatLocalizationsZhHans
     extends TencentCloudChatLocalizationsZh {
   TencentCloudChatLocalizationsZhHans() : super('zh_Hans');
+
+  @override
+  String get operationFailed => '操作失败，请重试';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -3755,4 +3761,7 @@ class TencentCloudChatLocalizationsZhHant
 
   @override
   String get groupActionNotConnected => '尚未連線到 Tox 網路，請稍後再試。';
+
+  @override
+  String get operationFailed => '操作失敗，請重試';
 }

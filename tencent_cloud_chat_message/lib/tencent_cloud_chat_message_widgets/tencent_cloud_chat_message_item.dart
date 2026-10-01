@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/components/components_definition/tencent_cloud_chat_component_builder_definitions.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_screen_adapter.dart';
 import 'package:tencent_cloud_chat_common/data/theme/color/color_base.dart';
+import 'package:tencent_cloud_chat_common/data/theme/tencent_cloud_chat_theme_model.dart';
 import 'package:tencent_cloud_chat_common/data/theme/text_style/text_style.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
@@ -30,6 +31,8 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
   final String _tag = "TencentCloudChatMessageState";
   // A flag indicating whether the message was sent by the current user.
   bool sentFromSelf = false;
+
+  TencentCloudChatVisualStyle get visualStyle => TencentCloudChat.instance.dataInstance.theme.themeModel.visualStyle;
 
   // A flag indicating whether the message is currently highlighted.
   bool showHighlightStatus = false;
@@ -270,12 +273,8 @@ abstract class TencentCloudChatMessageState<T extends TencentCloudChatMessageIte
     return widget.data.showMessageTimeIndicator
         ? TencentCloudChatThemeWidget(
             build: (context, colorTheme, textStyle) {
-              final isSelf = widget.data.message.isSelf ?? false;
-              // Self: timestamp lighter than body (same hue, lower opacity). Others: secondary gray.
-              final timeColor = textColor ??
-                  (isSelf
-                      ? colorTheme.selfMessageTextColor.withOpacity(0.25)
-                      : colorTheme.secondaryTextColor.withOpacity(0.5));
+              // Required metadata uses the readable secondary tone at full opacity.
+              final timeColor = textColor ?? colorTheme.secondaryTextColor;
               return Text(
                 TencentCloudChatIntl.formatTimestampToTime(widget.data.message.timestamp ?? 0, context),
                 style: TextStyle(

@@ -742,5 +742,6 @@
   "kickMemberFailed": "تعذّرت إزالة هذا العضو. ربما غادر المجموعة بالفعل.",
   "groupActionNoPermission": "ليست لديك صلاحية تنفيذ هذا الإجراء في هذه المجموعة.",
   "groupActionNotSupported": "هذا النوع من المجموعات لا يدعم هذا الإجراء.",
-  "groupActionNotConnected": "لم يتم الاتصال بشبكة Tox بعد. يُرجى المحاولة لاحقًا."
+  "groupActionNotConnected": "لم يتم الاتصال بشبكة Tox بعد. يُرجى المحاولة لاحقًا.",
+  "operationFailed": "فشلت العملية. يرجى المحاولة مجددًا."
 }

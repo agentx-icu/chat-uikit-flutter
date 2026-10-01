@@ -745,5 +745,6 @@
   "kickMemberFailed": "Couldn't remove this member. They may have already left the group.",
   "groupActionNoPermission": "You don't have permission to do that in this group.",
   "groupActionNotSupported": "This type of group doesn't support that action.",
-  "groupActionNotConnected": "Not connected to the Tox network yet. Please try again later."
+  "groupActionNotConnected": "Not connected to the Tox network yet. Please try again later.",
+  "operationFailed": "Operation failed. Please try again."
 }

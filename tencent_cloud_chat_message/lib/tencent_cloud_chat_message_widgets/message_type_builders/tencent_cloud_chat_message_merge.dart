@@ -84,9 +84,10 @@ class _TencentCloudChatMessageMergeState extends TencentCloudChatMessageState<Te
           decoration: BoxDecoration(
             color: showHighlightStatus ? colorTheme.info : (sentFromSelf ? colorTheme.selfMessageBubbleColor : colorTheme.othersMessageBubbleColor),
             border: Border.all(
-              color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
+              width: visualStyle.outlineWidth > 0 ? visualStyle.outlineWidth : 1,
+            color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
             ),
-            borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+            borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

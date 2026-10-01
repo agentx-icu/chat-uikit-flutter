@@ -84,10 +84,11 @@ class _TencentCloudChatMessageCustomC2CCallState extends TencentCloudChatMessage
                 ? colorTheme.info
                 : (sentFromSelf ? colorTheme.selfMessageBubbleColor : colorTheme.othersMessageBubbleColor),
             border: Border.all(
-              color:
+              width: visualStyle.outlineWidth > 0 ? visualStyle.outlineWidth : 1,
+            color:
               sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
             ),
-            borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12)))),
+            borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -734,5 +734,6 @@
   "kickMemberFailed": "無法移除這位成員，對方可能已經退出群組。",
   "groupActionNoPermission": "你沒有在本群組執行此操作的權限。",
   "groupActionNotSupported": "此類群組不支援該操作。",
-  "groupActionNotConnected": "尚未連線到 Tox 網路，請稍後再試。"
+  "groupActionNotConnected": "尚未連線到 Tox 網路，請稍後再試。",
+  "operationFailed": "操作失敗，請重試"
 }

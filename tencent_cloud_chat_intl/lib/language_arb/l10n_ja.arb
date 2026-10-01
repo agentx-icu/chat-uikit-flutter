@@ -742,5 +742,6 @@
   "kickMemberFailed": "このメンバーを削除できませんでした。すでにグループを退出した可能性があります。",
   "groupActionNoPermission": "このグループでその操作を行う権限がありません。",
   "groupActionNotSupported": "この種類のグループではその操作はサポートされていません。",
-  "groupActionNotConnected": "まだ Tox ネットワークに接続されていません。しばらくしてからもう一度お試しください。"
+  "groupActionNotConnected": "まだ Tox ネットワークに接続されていません。しばらくしてからもう一度お試しください。",
+  "operationFailed": "操作に失敗しました。もう一度お試しください。"
 }

@@ -733,5 +733,6 @@
   "kickMemberFailed": "无法移除该成员，对方可能已经退出群聊。",
   "groupActionNoPermission": "你没有在本群执行此操作的权限。",
   "groupActionNotSupported": "此类群组不支持该操作。",
-  "groupActionNotConnected": "尚未连接到 Tox 网络，请稍后重试。"
+  "groupActionNotConnected": "尚未连接到 Tox 网络，请稍后重试。",
+  "operationFailed": "操作失败，请重试"
 }

@@ -16,21 +16,26 @@ class TencentCloudChatConversationDesktopMode extends StatefulWidget {
   const TencentCloudChatConversationDesktopMode({super.key});
 
   @override
-  State<TencentCloudChatConversationDesktopMode> createState() => _TencentCloudChatConversationDesktopModeState();
+  State<TencentCloudChatConversationDesktopMode> createState() =>
+      _TencentCloudChatConversationDesktopModeState();
 }
 
 class _TencentCloudChatConversationDesktopModeState
     extends TencentCloudChatState<TencentCloudChatConversationDesktopMode> {
   late TextEditingController _textEditingController;
 
-  final Stream<TencentCloudChatConversationData<dynamic>>? _conversationDataStream = TencentCloudChat
-      .instance.eventBusInstance
-      .on<TencentCloudChatConversationData<dynamic>>("TencentCloudChatConversationData");
-  StreamSubscription<TencentCloudChatConversationData<dynamic>>? _conversationDataSubscription;
+  final Stream<TencentCloudChatConversationData<dynamic>>?
+      _conversationDataStream = TencentCloudChat.instance.eventBusInstance
+          .on<TencentCloudChatConversationData<dynamic>>(
+              "TencentCloudChatConversationData");
+  StreamSubscription<TencentCloudChatConversationData<dynamic>>?
+      _conversationDataSubscription;
 
   final Stream<TencentCloudChatBasicData<dynamic>>? _basicDataStream =
-      TencentCloudChat.instance.eventBusInstance.on<TencentCloudChatBasicData<dynamic>>("TencentCloudChatBasicData");
-  StreamSubscription<TencentCloudChatBasicData<dynamic>>? _basicDataSubscription;
+      TencentCloudChat.instance.eventBusInstance
+          .on<TencentCloudChatBasicData<dynamic>>("TencentCloudChatBasicData");
+  StreamSubscription<TencentCloudChatBasicData<dynamic>>?
+      _basicDataSubscription;
 
   V2TimConversation? _currentConversation;
   V2TimMessage? _currentTargetMessage;
@@ -51,10 +56,12 @@ class _TencentCloudChatConversationDesktopModeState
 
   _conversationDataHandler(TencentCloudChatConversationData data) {
     bool needUpdate = false;
-    if (data.currentTargetMessage != _currentTargetMessage && data.currentTargetMessage != null) {
+    if (data.currentTargetMessage != _currentTargetMessage &&
+        data.currentTargetMessage != null) {
       _currentTargetMessage = data.currentTargetMessage;
       data.currentTargetMessage = null;
-      TencentCloudChat.instance.dataInstance.conversation.currentTargetMessage = null;
+      TencentCloudChat.instance.dataInstance.conversation.currentTargetMessage =
+          null;
       _searchText = "";
       _textEditingController.clear();
       needUpdate = true;
@@ -64,27 +71,30 @@ class _TencentCloudChatConversationDesktopModeState
 
     /// === Current Conversation ===
     /// === Current Conversation ===
-    if (data.currentConversation?.conversationID != _currentConversation?.conversationID) {
+    if (data.currentConversation?.conversationID !=
+        _currentConversation?.conversationID) {
       needUpdate = true;
       _currentConversation = data.currentConversation;
     }
 
-    if(needUpdate){
+    if (needUpdate) {
       safeSetState(() {});
     }
   }
 
   _addConversationDataListener() {
-    _conversationDataSubscription = _conversationDataStream?.listen(_conversationDataHandler);
+    _conversationDataSubscription =
+        _conversationDataStream?.listen(_conversationDataHandler);
   }
 
   void _addBasicEventListener() {
     _basicDataSubscription = _basicDataStream?.listen((event) {
-      if (event.currentUpdatedFields == TencentCloudChatBasicDataKeys.addUsedComponent) {
-        final messageWidget =
-            TencentCloudChat.instance.dataInstance.basic.componentsMap[TencentCloudChatComponentsEnum.message];
-        final searchWidget =
-            TencentCloudChat.instance.dataInstance.basic.componentsMap[TencentCloudChatComponentsEnum.search];
+      if (event.currentUpdatedFields ==
+          TencentCloudChatBasicDataKeys.addUsedComponent) {
+        final messageWidget = TencentCloudChat.instance.dataInstance.basic
+            .componentsMap[TencentCloudChatComponentsEnum.message];
+        final searchWidget = TencentCloudChat.instance.dataInstance.basic
+            .componentsMap[TencentCloudChatComponentsEnum.search];
         if (messageWidget != _messageWidget) {
           safeSetState(() {
             _messageWidget = messageWidget;
@@ -110,9 +120,10 @@ class _TencentCloudChatConversationDesktopModeState
     _searchFocusNode = FocusNode();
     _addBasicEventListener();
     _addConversationDataListener();
-    _messageWidget = TencentCloudChat.instance.dataInstance.basic.componentsMap[TencentCloudChatComponentsEnum.message];
-    _globalSearchWidget =
-        TencentCloudChat.instance.dataInstance.basic.componentsMap[TencentCloudChatComponentsEnum.search];
+    _messageWidget = TencentCloudChat.instance.dataInstance.basic
+        .componentsMap[TencentCloudChatComponentsEnum.message];
+    _globalSearchWidget = TencentCloudChat.instance.dataInstance.basic
+        .componentsMap[TencentCloudChatComponentsEnum.search];
     _textEditingController = TextEditingController();
     if (_globalSearchWidget != null) {
       _textEditingController.addListener(_searchTextListenerHandler);
@@ -156,65 +167,84 @@ class _TencentCloudChatConversationDesktopModeState
 
   Widget _buildSplitLayout() {
     return TencentCloudChatThemeWidget(
-      build: (context, colorTheme, textStyle) => Row(
-        children: [
-          SizedBox(
-            width: getWidth(330),
-            child: Column(
-              children: [
-                Row(
+      build: (context, colorTheme, textStyle) => LayoutBuilder(
+        builder: (context, constraints) {
+          // Size the list from the actual pane, after the host navigation rail.
+          // Reserve 360 logical pixels for chat whenever the pane can support
+          // a 280px list; smaller embedded panes shrink the list gracefully.
+          final availableWidth = constraints.maxWidth;
+          final preferredListWidth = (availableWidth * 0.4).clamp(280.0, 330.0);
+          final listWidth = preferredListWidth.clamp(
+            0.0,
+            (availableWidth - 361).clamp(0.0, 330.0),
+          );
+          return Row(
+            children: [
+              SizedBox(
+                width: listWidth,
+                child: Column(
                   children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TencentCloudChat.instance.dataInstance
+                                  .conversation.conversationBuilder
+                                  ?.getConversationHeaderBuilder(
+                                    textEditingController:
+                                        _textEditingController,
+                                    focusNode: _searchFocusNode,
+                                  )
+                                  .$1 ??
+                              Container(),
+                        ),
+                      ],
+                    ),
+                    // const TencentCloudChatConversationDesktopSearchAndAdd(),
                     Expanded(
-                      child: TencentCloudChat.instance.dataInstance.conversation.conversationBuilder
-                              ?.getConversationHeaderBuilder(
-                                textEditingController: _textEditingController,
-                                focusNode: _searchFocusNode,
-                              )
-                              .$1 ??
-                          Container(),
+                      child: (TencentCloudChatUtils.checkString(_searchText) !=
+                                  null &&
+                              _globalSearchWidget != null)
+                          ? _globalSearchWidget!(
+                              options: {
+                                "keyWord": _searchText,
+                                "closeFunc": () {
+                                  _textEditingController.clear();
+                                  setState(() {});
+                                },
+                              },
+                            )
+                          : TencentCloudChatConversationList(
+                              currentConversation: _currentConversation,
+                            ),
                     ),
                   ],
                 ),
-                // const TencentCloudChatConversationDesktopSearchAndAdd(),
-                Expanded(
-                  child: (TencentCloudChatUtils.checkString(_searchText) != null && _globalSearchWidget != null)
-                      ? _globalSearchWidget!(
-                          options: {
-                            "keyWord": _searchText,
-                            "closeFunc": () {
-                              _textEditingController.clear();
-                              setState(() {});
-                            },
-                          },
-                        )
-                      : TencentCloudChatConversationList(
-                          currentConversation: _currentConversation,
-                        ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            width: 1,
-            child: Container(
-              color: colorTheme.dividerColor,
-            ),
-          ),
-          if (_messageWidget != null)
-            Expanded(
-              // The chat lives in THIS pane, not on a route of its own: its
-              // header must not offer a back button (it would pop the host).
-              child: TencentCloudChatEmbeddedMessagePane(
-                child: _messageWidget!(
-                  options: {
-                    "userID": TencentCloudChatUtils.checkString(_currentConversation?.userID),
-                    "groupID": TencentCloudChatUtils.checkString(_currentConversation?.groupID),
-                    "targetMessage": _currentTargetMessage,
-                  },
+              ),
+              SizedBox(
+                width: 1,
+                child: Container(
+                  color: colorTheme.dividerColor,
                 ),
               ),
-            ),
-        ],
+              if (_messageWidget != null)
+                Expanded(
+                  // The chat lives in THIS pane, not on a route of its own: its
+                  // header must not offer a back button (it would pop the host).
+                  child: TencentCloudChatEmbeddedMessagePane(
+                    child: _messageWidget!(
+                      options: {
+                        "userID": TencentCloudChatUtils.checkString(
+                            _currentConversation?.userID),
+                        "groupID": TencentCloudChatUtils.checkString(
+                            _currentConversation?.groupID),
+                        "targetMessage": _currentTargetMessage,
+                      },
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -264,11 +264,12 @@ class _TencentCloudChatMessageCustomState
                   ? colorTheme.selfMessageBubbleColor
                   : colorTheme.othersMessageBubbleColor),
           border: Border.all(
+            width: visualStyle.outlineWidth > 0 ? visualStyle.outlineWidth : 1,
             color: sentFromSelf
                 ? colorTheme.selfMessageBubbleBorderColor
                 : colorTheme.othersMessageBubbleBorderColor,
           ),
-          borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+          borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
         ),
         // LayoutBuilder: the width formula ignores what the row really left
         // after avatars / selection checkbox (174 px on a 320-px phone vs a

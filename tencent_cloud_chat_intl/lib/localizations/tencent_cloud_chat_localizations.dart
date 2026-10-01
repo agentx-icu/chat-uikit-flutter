@@ -3487,6 +3487,12 @@ abstract class TencentCloudChatLocalizations {
   /// In en, this message translates to:
   /// **'Not connected to the Tox network yet. Please try again later.'**
   String get groupActionNotConnected;
+
+  /// No description provided for @operationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation failed. Please try again.'**
+  String get operationFailed;
 }
 
 class _TencentCloudChatLocalizationsDelegate

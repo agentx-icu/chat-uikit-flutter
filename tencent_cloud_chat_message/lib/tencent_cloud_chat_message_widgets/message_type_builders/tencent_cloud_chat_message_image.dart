@@ -432,7 +432,7 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
       // STALE path (the receive-side temp file, deleted once the transfer moved
       // it) — two different bugs in two different layers.
       key: ValueKey('message_image_render_path:$path'),
-      borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+      borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
       child: Image(
         // Nonce-keyed so a retry actually re-resolves: `Image` keeps its
         // resolved stream when the provider compares equal. A failed decode
@@ -466,7 +466,7 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
       width: getWidth(placeholderWidth),
       height: getHeight(placeholderHeight),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+        borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
         color: Colors.transparent,
       ),
       child: Center(
@@ -509,7 +509,7 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
         width: getWidth(placeholderWidth),
         height: getHeight(placeholderHeight),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+          borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
           // Theme-driven neutral placeholder fill (secondary text @ ~20%).
           color: colorTheme.secondaryTextColor.withOpacity(0.2),
         ),
@@ -542,7 +542,7 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
       return ClipRRect(
         // See renderLocalImage: the key carries the decoded path.
         key: ValueKey('message_image_render_path:$url'),
-        borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+        borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
         child: Image(
           image: _boundedBubbleImage(url),
           key: ValueKey('$onlineRenderKey#$url#$_localRenderNonce'),
@@ -561,7 +561,7 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
       );
     }
     return ClipRRect(
-      borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+      borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
       child: CachedNetworkImage(
           key: ValueKey(onlineRenderKey),
           imageUrl: url,
@@ -978,9 +978,10 @@ class _TencentCloudChatMessageImageState extends TencentCloudChatMessageState<Te
         decoration: BoxDecoration(
           color: showHighlightStatus ? colorTheme.info : (sentFromSelf ? colorTheme.selfMessageBubbleColor : colorTheme.othersMessageBubbleColor),
           border: Border.all(
+            width: visualStyle.outlineWidth > 0 ? visualStyle.outlineWidth : 1,
             color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
           ),
-          borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+          borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

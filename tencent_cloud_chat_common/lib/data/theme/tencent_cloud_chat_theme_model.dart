@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 // ignore_for_file: unnecessary_getters_setters
 
 import 'package:tencent_cloud_chat_common/data/theme/color/color_base.dart';
@@ -10,12 +11,14 @@ class TencentCloudChatThemeModel {
   TencentCloudChatThemeColors _lightTheme;
   TencentCloudChatThemeColors _darkTheme;
   TencentCloudChatTextStyle _textStyle;
+  final TencentCloudChatVisualStyle visualStyle;
 
   /// Creates a new TencentCloudChatThemeModel with the given light and dark theme colors, and text styles.
   TencentCloudChatThemeModel({
     TencentCloudChatThemeColors? lightTheme,
     TencentCloudChatThemeColors? darkTheme,
     TencentCloudChatTextStyle? textStyle,
+    this.visualStyle = const TencentCloudChatVisualStyle(),
   })  : _textStyle = textStyle ?? TencentCloudChatTextStyle(),
         _darkTheme = darkTheme ?? DarkTencentCloudChatColors(),
         _lightTheme = lightTheme ?? LightTencentCloudChatColors();
@@ -43,4 +46,27 @@ class TencentCloudChatThemeModel {
   set textStyle(TencentCloudChatTextStyle value) {
     _textStyle = value;
   }
+}
+
+/// Geometry shared by native UIKit widgets; defaults preserve host compatibility.
+@immutable
+class TencentCloudChatVisualStyle {
+  final double panelRadius, controlRadius, bubbleRadius, bubbleTailRadius;
+  final double outlineWidth, shadowOffset;
+  const TencentCloudChatVisualStyle(
+      {this.panelRadius = 12,
+      this.controlRadius = 8,
+      this.bubbleRadius = 12,
+      this.bubbleTailRadius = 12,
+      this.outlineWidth = 0,
+      this.shadowOffset = 0});
+
+  BorderRadius bubbleBorderRadius(bool sentFromSelf) => BorderRadius.only(
+        topLeft: Radius.circular(bubbleRadius),
+        topRight: Radius.circular(bubbleRadius),
+        bottomLeft:
+            Radius.circular(sentFromSelf ? bubbleRadius : bubbleTailRadius),
+        bottomRight:
+            Radius.circular(sentFromSelf ? bubbleTailRadius : bubbleRadius),
+      );
 }

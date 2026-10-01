@@ -539,9 +539,10 @@ class _TencentCloudChatMessageVideoState extends TencentCloudChatMessageState<Te
             decoration: BoxDecoration(
               color: showHighlightStatus ? colorTheme.info : (sentFromSelf ? colorTheme.selfMessageBubbleColor : colorTheme.othersMessageBubbleColor),
               border: Border.all(
-                color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
+                width: visualStyle.outlineWidth > 0 ? visualStyle.outlineWidth : 1,
+            color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
               ),
-              borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+              borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -549,7 +550,7 @@ class _TencentCloudChatMessageVideoState extends TencentCloudChatMessageState<Te
                 Stack(
                   children:[
                     ClipRRect(
-                      borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+                      borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
                       child: TencentCloudChatCacheImage(
                         width: getWidth(localDefaultWidth),
                         height: getHeight(localDefaultHeight),
@@ -605,12 +606,13 @@ class _TencentCloudChatMessageVideoState extends TencentCloudChatMessageState<Te
               decoration: BoxDecoration(
                 color: showHighlightStatus ? colorTheme.info : (sentFromSelf ? colorTheme.selfMessageBubbleColor : colorTheme.othersMessageBubbleColor),
                 border: Border.all(
-                  color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
+                  width: visualStyle.outlineWidth > 0 ? visualStyle.outlineWidth : 1,
+            color: sentFromSelf ? colorTheme.selfMessageBubbleBorderColor : colorTheme.othersMessageBubbleBorderColor,
                 ),
-                borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+                borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+                borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -689,7 +691,7 @@ class _TencentCloudChatMessageVideoState extends TencentCloudChatMessageState<Te
       width: getWidth(w),
       height: getHeight(h),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+        borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
         color: Colors.transparent,
       ),
       child: Center(
@@ -714,7 +716,7 @@ class _TencentCloudChatMessageVideoState extends TencentCloudChatMessageState<Te
       width: getWidth(w),
       height: getHeight(h),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(getSquareSize(12))),
+        borderRadius: visualStyle.bubbleBorderRadius(sentFromSelf),
         // Theme-driven neutral placeholder fill (secondary text @ ~20%).
         color: colorTheme.secondaryTextColor.withOpacity(0.2),
       ),

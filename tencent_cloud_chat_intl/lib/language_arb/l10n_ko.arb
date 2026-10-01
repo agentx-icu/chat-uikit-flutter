@@ -743,5 +743,6 @@
   "kickMemberFailed": "이 멤버를 내보내지 못했습니다. 이미 그룹을 나갔을 수 있습니다.",
   "groupActionNoPermission": "이 그룹에서 해당 작업을 할 권한이 없습니다.",
   "groupActionNotSupported": "이 유형의 그룹에서는 해당 작업을 지원하지 않습니다.",
-  "groupActionNotConnected": "아직 Tox 네트워크에 연결되지 않았습니다. 잠시 후 다시 시도해 주세요."
+  "groupActionNotConnected": "아직 Tox 네트워크에 연결되지 않았습니다. 잠시 후 다시 시도해 주세요.",
+  "operationFailed": "작업에 실패했습니다. 다시 시도해 주세요."
 }

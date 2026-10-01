@@ -1,18 +1,15 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first, unused_import
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:tencent_cloud_chat_common/chat_sdk/components/tencent_cloud_chat_contact_sdk.dart';
-import 'package:tencent_cloud_chat_common/components/tencent_cloud_chat_components_utils.dart';
 import 'package:tencent_cloud_chat_common/cross_platforms_adapter/tencent_cloud_chat_platform_adapter.dart';
 import 'package:tencent_cloud_chat_common/data/theme/color/color_base.dart';
 import 'package:tencent_cloud_chat_common/data/theme/text_style/text_style.dart';
 import 'package:tencent_cloud_chat_common/models/tencent_cloud_chat_models.dart';
-import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_code_info.dart';
-import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_utils.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
 import 'package:tencent_cloud_chat_common/builders/tencent_cloud_chat_common_builders.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
 import 'package:tencent_cloud_chat_contact/widgets/tencent_cloud_chat_contact_application_info.dart';
+import 'package:tencent_cloud_chat_contact/widgets/tencent_cloud_chat_friend_application_operation.dart';
 
 class TencentCloudChatContactApplicationList extends StatefulWidget {
   final List<V2TimFriendApplication> applicationList;
@@ -68,7 +65,13 @@ class TencentCloudChatContactApplicationItem extends StatefulWidget {
 }
 
 class TencentCloudChatContactApplicationItemState
-    extends TencentCloudChatState<TencentCloudChatContactApplicationItem> {
+    extends TencentCloudChatState<TencentCloudChatContactApplicationItem>
+    with
+        TencentCloudChatFriendApplicationOperation<
+            TencentCloudChatContactApplicationItem> {
+  @override
+  V2TimFriendApplication get friendApplication => widget.application;
+
   ContactApplicationResult applicationResult =
       ContactApplicationResult(result: "", userID: "");
 
@@ -81,79 +84,27 @@ class TencentCloudChatContactApplicationItemState
   gotoApplicationInfoPage() async {
     // ApplicationResult applicationResult2 = (await navigateToNewContactApplicationDetail<ApplicationResult>(
     //     context: context, options: TencentCloudChatContactApplicationInfoData(application: widget.application, applicationResult: applicationResult)))!;
-    ContactApplicationResult applicationResult2 = await Navigator.push(
+    final applicationResult2 = await Navigator.push<ContactApplicationResult>(
         context,
         MaterialPageRoute(
             builder: (context) => TencentCloudChatContactApplicationInfo(
                   application: widget.application,
                   applicationResult: applicationResult,
                 )));
+    if (!mounted || applicationResult2 == null) return;
     safeSetState(() {
       applicationResult = applicationResult2;
     });
   }
 
-  Future<void> _acceptFromMenu() async {
-    final res = await TencentCloudChat.instance.chatSDKInstance.contactSDK
-        .acceptFriendApplication(
-      widget.application.userID,
-      FriendResponseTypeEnum.V2TIM_FRIEND_ACCEPT_AGREE_AND_ADD,
-      FriendApplicationTypeEnum.values[widget.application.type],
-    );
-    final id = res.userID ?? '';
-    final code = res.resultCode ?? -1;
-    if (id == widget.application.userID && code == 0) {
-      safeSetState(() {
-        applicationResult = ContactApplicationResult(
-          result: tL10n.accepted,
-          userID: widget.application.userID,
-        );
-      });
-      TencentCloudChat.instance.dataInstance.contact.deleteApplicationList(
-          [widget.application.userID], 'onFriendApplicationListDeleted');
-    } else {
-      // toxee: drop the row ONLY on a real accept. The delete used to be
-      // unconditional, which removed the application locally after a FAILED
-      // accept — the user saw the failure notification and then had nothing
-      // left to retry until a later refresh happened to restore it. A failure
-      // is now reported and the request stays put.
-      TencentCloudChat.instance.callbacks.onUserNotificationEvent(
-        TencentCloudChatComponentsEnum.contact,
-        TencentCloudChatUserNotificationEvent(
-          eventCode: code,
-          text: tL10n.invalidApplication,
-        ),
-      );
-    }
-  }
+  Future<void> _acceptFromMenu() => _respondFromMenu(true);
 
-  Future<void> _refuseFromMenu() async {
-    final res = await TencentCloudChat.instance.chatSDKInstance.contactSDK
-        .refuseFriendApplication(
-      widget.application.userID,
-      FriendApplicationTypeEnum.values[widget.application.type],
-    );
-    final id = res.userID ?? '';
-    final code = res.resultCode ?? -1;
-    if (id == widget.application.userID && code == 0) {
-      safeSetState(() {
-        applicationResult = ContactApplicationResult(
-          result: tL10n.declined,
-          userID: widget.application.userID,
-        );
-      });
-    } else {
-      TencentCloudChat.instance.callbacks.onUserNotificationEvent(
-        TencentCloudChatComponentsEnum.contact,
-        TencentCloudChatUserNotificationEvent(
-          eventCode: code,
-          text: tL10n.invalidApplication,
-        ),
+  Future<void> _refuseFromMenu() => _respondFromMenu(false);
+
+  Future<void> _respondFromMenu(bool accept) => respondToFriendApplication(
+        accept: accept,
+        onSuccess: getApplicationResultFromButton,
       );
-    }
-    TencentCloudChat.instance.dataInstance.contact.deleteApplicationList(
-        [widget.application.userID], 'onFriendApplicationListDeleted');
-  }
 
   Future<void> _copyApplicantId() async {
     await Clipboard.setData(ClipboardData(text: widget.application.userID));
@@ -167,6 +118,7 @@ class TencentCloudChatContactApplicationItemState
   }
 
   Future<void> _showDesktopContextMenu(Offset globalPosition) async {
+    if (applicationOperationPending) return;
     final overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox?;
     final colorTheme = TencentCloudChat.instance.dataInstance.theme.colorTheme;
@@ -235,8 +187,8 @@ class TencentCloudChatContactApplicationItemState
     final platformIsDesktop = TencentCloudChatPlatformAdapter().isDesktop;
     return GestureDetector(
         key: ValueKey('contact_application_item:${widget.application.userID}'),
-        onTap: gotoApplicationInfoPage,
-        onSecondaryTapDown: platformIsDesktop
+        onTap: applicationOperationPending ? null : gotoApplicationInfoPage,
+        onSecondaryTapDown: platformIsDesktop && !applicationOperationPending
             ? (TapDownDetails details) {
                 _showDesktopContextMenu(details.globalPosition);
               }
@@ -263,7 +215,7 @@ class TencentCloudChatContactApplicationItemState
                         // Bounded to half the row (not Flexible: a loose flex
                         // child would still take a fixed 50% share away from
                         // the Expanded name column). The pair keeps its
-                        // natural width and only shrinks past this cap.
+                        // natural width and wraps when the cap is reached.
                         ConstrainedBox(
                           constraints: BoxConstraints(
                               maxWidth: constraints.maxWidth / 2),
@@ -392,77 +344,42 @@ class TencentCloudChatApplicationItemButton extends StatefulWidget {
 }
 
 class TencentCloudChatApplicationItemButtonState
-    extends TencentCloudChatState<TencentCloudChatApplicationItemButton> {
-  String userID = "";
-  bool showButton = true;
-  String showName = "";
+    extends TencentCloudChatState<TencentCloudChatApplicationItemButton>
+    with
+        TencentCloudChatFriendApplicationOperation<
+            TencentCloudChatApplicationItemButton> {
+  @override
+  V2TimFriendApplication get friendApplication => widget.application;
 
-  onAcceptApplication() async {
-    V2TimFriendOperationResult res = await TencentCloudChat
-        .instance.chatSDKInstance.contactSDK
-        .acceptFriendApplication(
-            widget.application.userID,
-            FriendResponseTypeEnum.V2TIM_FRIEND_ACCEPT_AGREE_AND_ADD,
-            FriendApplicationTypeEnum.values[widget.application.type]);
-    String id = res.userID ?? "";
-    int code = res.resultCode ?? -1;
-    if (id == widget.application.userID && code == 0) {
-      widget.sendApplicationResult!(ContactApplicationResult(
-          result: tL10n.accepted, userID: widget.application.userID));
-      safeSetState(() {
-        widget.applicationResult?.result = tL10n.accepted;
-        widget.applicationResult?.userID = widget.application.userID;
-      });
-    } else {
-      TencentCloudChat.instance.callbacks.onUserNotificationEvent(
-          TencentCloudChatComponentsEnum.contact,
-          TencentCloudChatUserNotificationEvent(
-            eventCode: code,
-            text: tL10n.invalidApplication,
-          ));
-    }
+  ContactApplicationResult? _result;
 
-    // After operation, delete the application proactively (IMSDK does not give notification of application deletion in such case)
-    TencentCloudChat.instance.dataInstance.contact.deleteApplicationList(
-        [widget.application.userID], 'onFriendApplicationListDeleted');
-  }
+  Future<void> onAcceptApplication() => _respond(true);
 
-  onRefuseApplication() async {
-    V2TimFriendOperationResult res = await TencentCloudChat
-        .instance.chatSDKInstance.contactSDK
-        .refuseFriendApplication(widget.application.userID,
-            FriendApplicationTypeEnum.values[widget.application.type]);
-    String id = res.userID ?? "";
-    int code = res.resultCode ?? -1;
-    if (id == widget.application.userID && code == 0) {
-      widget.sendApplicationResult!(ContactApplicationResult(
-          result: tL10n.declined, userID: widget.application.userID));
-      safeSetState(() {
-        widget.applicationResult?.result = tL10n.declined;
-        widget.applicationResult?.userID = widget.application.userID;
-      });
-    } else {
-      TencentCloudChat.instance.callbacks.onUserNotificationEvent(
-          TencentCloudChatComponentsEnum.contact,
-          TencentCloudChatUserNotificationEvent(
-            eventCode: code,
-            text: tL10n.invalidApplication,
-          ));
+  Future<void> onRefuseApplication() => _respond(false);
 
-      TencentCloudChat.instance.dataInstance.contact.deleteApplicationList(
-          [widget.application.userID], 'onFriendApplicationListDeleted');
-    }
-  }
+  Future<void> _respond(bool accept) => respondToFriendApplication(
+        accept: accept,
+        onSuccess: (result) {
+          safeSetState(() {
+            _result = result;
+            widget.applicationResult?.result = result.result;
+            widget.applicationResult?.userID = result.userID;
+          });
+          widget.sendApplicationResult?.call(result);
+        },
+      );
 
   @override
   Widget defaultBuilder(BuildContext context) {
-    if (widget.applicationResult!.userID == widget.application.userID) {
+    final result = _result ?? widget.applicationResult;
+    if (result?.userID == widget.application.userID &&
+        (result?.result.isNotEmpty ?? false)) {
       return TencentCloudChatThemeWidget(
           build: (context, colorTheme, textStyle) => Container(
                 padding: EdgeInsets.symmetric(
                     horizontal: getWidth(16), vertical: getHeight(5)),
                 child: Text(
-                  widget.applicationResult!.result,
+                  result!.result,
                   style: TextStyle(
                       color: colorTheme.contactItemTabItemNameColor,
                       fontSize: textStyle.fontsize_12,
@@ -472,68 +389,48 @@ class TencentCloudChatApplicationItemButtonState
     }
 
     return TencentCloudChatThemeWidget(
-        build: (context, colorTheme, textStyle) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Flexible + FittedBox(scaleDown): the parent item Row bounds
-                // this pair, so the labels scale down at large text sizes
-                // instead of overflowing.
-                Flexible(
-                  child: Container(
-                    margin: EdgeInsets.symmetric(horizontal: getWidth(10)),
-                    padding: EdgeInsets.symmetric(
-                        horizontal: getWidth(12), vertical: getHeight(5)),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(getSquareSize(8)),
-                      color: colorTheme.contactAgreeButtonColor,
-                    ),
-                    child: GestureDetector(
-                      key: ValueKey(
-                        'contact_application_accept_button:${widget.application.userID}',
-                      ),
-                      onTap: onAcceptApplication,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          tL10n.accept,
-                          style: TextStyle(
-                              color: colorTheme.contactBackgroundColor,
-                              fontSize: textStyle.fontsize_14,
-                              fontWeight: FontWeight.w400),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Flexible(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: getWidth(12), vertical: getHeight(5)),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(getSquareSize(8)),
-                      border:
-                          Border.all(color: colorTheme.contactTabItemIconColor),
-                      color: colorTheme.contactBackgroundColor,
-                    ),
-                    child: GestureDetector(
-                      key: ValueKey(
-                        'contact_application_decline_button:${widget.application.userID}',
-                      ),
-                      onTap: onRefuseApplication,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          tL10n.refuse,
-                          style: TextStyle(
-                              color: colorTheme.contactRefuseButtonColor,
-                              fontSize: textStyle.fontsize_14,
-                              fontWeight: FontWeight.w400),
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-              ],
-            ));
+      build: (context, colorTheme, textStyle) => Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        alignment: WrapAlignment.end,
+        children: [
+          FilledButton(
+            key: ValueKey(
+                'contact_application_accept_button:${widget.application.userID}'),
+            onPressed: applicationOperationPending ? null : onAcceptApplication,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(44, 44),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              backgroundColor: colorTheme.contactAgreeButtonColor,
+              foregroundColor: colorTheme.onPrimary,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(TencentCloudChat.instance.dataInstance.theme.themeModel.visualStyle.controlRadius)),
+              textStyle: TextStyle(
+                  fontSize: textStyle.fontsize_14, fontWeight: FontWeight.w400),
+            ),
+            child: Text(tL10n.accept),
+          ),
+          OutlinedButton(
+            key: ValueKey(
+                'contact_application_decline_button:${widget.application.userID}'),
+            onPressed: applicationOperationPending ? null : onRefuseApplication,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(44, 44),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              foregroundColor: colorTheme.contactRefuseButtonColor,
+              backgroundColor: colorTheme.contactBackgroundColor,
+              side: BorderSide(color: colorTheme.contactTabItemIconColor),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(TencentCloudChat.instance.dataInstance.theme.themeModel.visualStyle.controlRadius)),
+              textStyle: TextStyle(
+                  fontSize: textStyle.fontsize_14, fontWeight: FontWeight.w400),
+            ),
+            child: Text(tL10n.refuse),
+          ),
+        ],
+      ),
+    );
   }
 }

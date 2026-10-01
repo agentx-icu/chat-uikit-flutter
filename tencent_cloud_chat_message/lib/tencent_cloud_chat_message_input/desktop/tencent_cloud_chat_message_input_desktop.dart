@@ -209,8 +209,8 @@ class _TencentCloudChatMessageInputDesktopState
     if (identical(debugRealUiDesktopComposerSetText, _desktopSetTextTearoff)) {
       debugRealUiDesktopComposerSetText = null;
     }
-    if (identical(debugRealUiDesktopComposerMentionSend,
-        _desktopMentionSendTearoff)) {
+    if (identical(
+        debugRealUiDesktopComposerMentionSend, _desktopMentionSendTearoff)) {
       debugRealUiDesktopComposerMentionSend = null;
     }
     if (identical(
@@ -274,8 +274,7 @@ class _TencentCloudChatMessageInputDesktopState
     TencentCloudChatDesktopImageTools.sendImageOnDesktop(
       context: context,
       imagePath: imagePath,
-      currentConversationShowName:
-          widget.inputData.currentConversationShowName,
+      currentConversationShowName: widget.inputData.currentConversationShowName,
       sendImageMessage: widget.inputMethods.sendImageMessage,
     );
   }
@@ -336,7 +335,7 @@ class _TencentCloudChatMessageInputDesktopState
     }
     if (!draftContextChanged &&
         widget.inputData.specifiedMessageText !=
-        oldWidget.inputData.specifiedMessageText) {
+            oldWidget.inputData.specifiedMessageText) {
       _draftCoordinator.invalidateLoad();
       _replaceComposerText(widget.inputData.specifiedMessageText ?? "");
       _mentionedUsers.clear();
@@ -634,8 +633,7 @@ class _TencentCloudChatMessageInputDesktopState
             final RenderObject? inputRoot = context.findRenderObject();
             final double paneX = inputRoot is RenderBox
                 ? inputRoot
-                    .globalToLocal(
-                        toolBarRenderBox.localToGlobal(Offset.zero))
+                    .globalToLocal(toolBarRenderBox.localToGlobal(Offset.zero))
                     .dx
                 : offset.dx;
 
@@ -1025,7 +1023,8 @@ class _TencentCloudChatMessageInputDesktopState
                                   child: Container(
                                 // minHeight: a wrapped status text must grow
                                 // the bar, not clip.
-                                constraints: const BoxConstraints(minHeight: 35),
+                                constraints:
+                                    const BoxConstraints(minHeight: 35),
                                 color: colorTheme.backgroundColor,
                                 alignment: Alignment.center,
                                 child: Text(
@@ -1051,7 +1050,9 @@ class _TencentCloudChatMessageInputDesktopState
                                   // focused-border ring).
                                   decoration: BoxDecoration(
                                     color: colorTheme.inputAreaBackground,
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(TencentCloudChat.instance.dataInstance.theme.themeModel.visualStyle.controlRadius),
+                                    border: TencentCloudChat.instance.dataInstance.theme.themeModel.visualStyle.outlineWidth > 0
+                                        ? Border.all(color: colorTheme.inputFieldBorderColor, width: TencentCloudChat.instance.dataInstance.theme.themeModel.visualStyle.outlineWidth) : null,
                                   ),
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 2),
@@ -1064,7 +1065,10 @@ class _TencentCloudChatMessageInputDesktopState
                                         autofocus: true,
                                         onChanged: _onTextChanged,
                                         maxLines: maxLines,
-                                        minLines: maxLines,
+                                        // Short drafts leave room for history;
+                                        // multiline drafts grow up to the
+                                        // configured cap and then scroll.
+                                        minLines: min(2, maxLines),
                                         focusNode: _textEditingFocusNode,
                                         keyboardType: TextInputType.multiline,
                                         onEditingComplete: () {
