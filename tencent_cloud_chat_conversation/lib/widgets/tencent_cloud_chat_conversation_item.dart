@@ -160,14 +160,16 @@ class TencentCloudChatConversationItemState
         label: tL10n.markAsRead,
         onTap: _markAsRead,
       ),
-      TencentCloudChatMessageGeneralOptionItem(
-        label: tL10n.hide,
-        onTap: _hideConversation,
-      ),
-      TencentCloudChatMessageGeneralOptionItem(
-        label: tL10n.delete,
-        onTap: _deleteConversation,
-      ),
+      if (!_isSelfConversation) ...[
+        TencentCloudChatMessageGeneralOptionItem(
+          label: tL10n.hide,
+          onTap: _hideConversation,
+        ),
+        TencentCloudChatMessageGeneralOptionItem(
+          label: tL10n.delete,
+          onTap: _deleteConversation,
+        ),
+      ],
     ];
 
     final tapDetails = details;
@@ -226,6 +228,7 @@ class TencentCloudChatConversationItemState
     // call site is the right tool rather than `popDialogIfCurrent`.
     var handled = false;
     final actions = <BottomSheetAction>[
+      if (!_isSelfConversation) ...[
       BottomSheetAction(
           title: Text(
             tL10n.hide,
@@ -248,6 +251,7 @@ class TencentCloudChatConversationItemState
             await _deleteConversation();
             hideMoreItemAction();
           }),
+      ],
     ];
 
     if (widget.conversation.unreadCount! > 0) {
@@ -265,6 +269,8 @@ class TencentCloudChatConversationItemState
                 hideMoreItemAction();
               }));
     }
+
+    if (actions.isEmpty) return; // the self conversation with nothing unread
 
     await showAdaptiveActionSheet(
       context: context,
@@ -371,12 +377,41 @@ class TencentCloudChatConversationItemState
             conversationIDList: [widget.conversation.conversationID]);
   }
 
-  _deleteConversation({Offset? offset}) async {
-    var result = await conversationPresenter.cleanConversation(
-        conversationIDList: [widget.conversation.conversationID],
-        clearMessage: true);
+  /// The conversation with the signed-in user's own ID: a notebook that is
+  /// never hidden or deleted (the SDK refuses it too), so its menus offer
+  /// neither. IDs compare case-insensitively on the 64-char public key, since
+  /// a Tox address (76 chars) carries the same key.
+  bool get _isSelfConversation {
+    final groupID = widget.conversation.groupID;
+    if (groupID != null && groupID.isNotEmpty) return false;
+    String key(String? id) {
+      final trimmed = (id ?? '').trim();
+      return (trimmed.length > 64 ? trimmed.substring(0, 64) : trimmed)
+          .toUpperCase();
+    }
 
-    if (result.code == 0) {
+    final me = key(TencentCloudChat.instance.dataInstance.basic.currentUser?.userID);
+    return me.isNotEmpty && key(widget.conversation.userID) == me;
+  }
+
+  /// Whether the More sheet has anything to offer: always for an ordinary
+  /// conversation; for the self conversation only Mark as read, so only while
+  /// it has unread messages.
+  bool get _hasMoreActions =>
+      !_isSelfConversation || (widget.conversation.unreadCount ?? 0) > 0;
+
+  _deleteConversation({Offset? offset}) async {
+    final conversationID = widget.conversation.conversationID;
+    var result = await conversationPresenter.cleanConversation(
+        conversationIDList: [conversationID], clearMessage: true);
+
+    // The batch call reports per-conversation results under a top-level
+    // success; only a success for THIS conversation may drop its cached
+    // messages (a refused delete must not empty the visible history).
+    final deleted = result.code == 0 &&
+        (result.data ?? const <V2TimConversationOperationResult>[]).any(
+            (r) => r.conversationID == conversationID && r.resultCode == 0);
+    if (deleted) {
       TencentCloudChat.instance.dataInstance.messageData.clearMessageList(
           userID: widget.conversation.userID,
           groupID: widget.conversation.groupID);
@@ -427,8 +462,9 @@ class TencentCloudChatConversationItemState
               customSemanticsActions: {
                 CustomSemanticsAction(label: isPin() ? tL10n.unpin : tL10n.pin):
                     () => unawaited(_pinConversation()),
-                CustomSemanticsAction(label: tL10n.more): () =>
-                    unawaited(showMoreItemAction(ctx, fontSize, colors)),
+                if (_hasMoreActions)
+                  CustomSemanticsAction(label: tL10n.more): () =>
+                      unawaited(showMoreItemAction(ctx, fontSize, colors)),
               },
               child: SwipeActionCell(
               key: ObjectKey(widget.conversation.conversationID),
@@ -450,6 +486,7 @@ class TencentCloudChatConversationItemState
                     color: colors.conversationItemSwipeActionOneTextColor,
                   ),
                 ),
+                if (_hasMoreActions)
                 SwipeAction(
                   title: tL10n.more,
                   onTap: (CompletionHandler handler) async {
