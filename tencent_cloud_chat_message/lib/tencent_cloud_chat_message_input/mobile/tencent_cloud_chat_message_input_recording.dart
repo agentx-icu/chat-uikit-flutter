@@ -200,6 +200,19 @@ class TencentCloudChatMessageInputRecordingState
     }
   }
 
+  // toxee: the discarded-recording delete used to be fire-and-forget on
+  // `File(recordedFile ?? "")`: a cancel with no file deleted "" and a file
+  // already gone raised PathNotFoundException, both as UNHANDLED async errors
+  // (on device every no-file cancel; in tests a race with teardown cleanup that
+  // failed whichever test was running). Awaited, and a missing file is fine.
+  Future<void> _deleteDiscardedRecording(String path) async {
+    try {
+      await File(path).delete();
+    } on FileSystemException catch (e) {
+      debugPrint('Discarded recording delete skipped: $e');
+    }
+  }
+
   Future<void> _disposeRecorderQuietly(AudioRecorder recorder) async {
     try {
       await recorder.dispose();
@@ -290,9 +303,8 @@ class TencentCloudChatMessageInputRecordingState
       if (!cancel && TencentCloudChatUtils.checkString(recordedFile) != null) {
         widget.onRecordFinish(RecordInfo(
             duration: (_recordingDuration / 1000).ceil(), path: recordedFile!));
-      } else {
-        File recordedFileInstance = File(recordedFile ?? "");
-        recordedFileInstance.delete();
+      } else if (TencentCloudChatUtils.checkString(recordedFile) != null) {
+        await _deleteDiscardedRecording(recordedFile!);
       }
       if (recorder != null) {
         await _disposeRecorderQuietly(recorder);
