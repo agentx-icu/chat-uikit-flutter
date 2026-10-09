@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat.dart';
 import 'package:tencent_cloud_chat_common/base/tencent_cloud_chat_theme_widget.dart';
+import 'package:tencent_cloud_chat_common/data/group_profile/tencent_cloud_chat_group_profile_data.dart';
 import 'package:tencent_cloud_chat_common/tencent_cloud_chat_common.dart';
 import 'package:tencent_cloud_chat_common/utils/tencent_cloud_chat_safe_dialog_pop.dart';
 import 'package:tencent_cloud_chat_common/components/tencent_cloud_chat_components_utils.dart';
@@ -25,11 +26,61 @@ class TencentCloudChatGroupNotification extends StatefulWidget {
 class TencentCloudChatGroupNotificationState
     extends TencentCloudChatState<TencentCloudChatGroupNotification> {
   String notification = "";
+  late V2TimGroupInfo _groupInfo = widget.groupInfo;
+  // Our own role as last announced by a grant / revoke (null: use
+  // _groupInfo.role). Kept apart so the shared group object is never mutated.
+  int? _selfRole;
+  StreamSubscription<TencentCloudChatGroupProfileData<dynamic>>?
+      _groupProfileSubscription;
 
   @override
   initState() {
     super.initState();
     notification = widget.groupInfo.notification ?? "";
+    // toxee: the page used to show its initState snapshot until reopened, so
+    // a topic changed by another member (or a role change that grants or
+    // revokes the edit) never reached an open page.
+    _groupProfileSubscription = TencentCloudChat.instance.eventBusInstance
+        .on<TencentCloudChatGroupProfileData<dynamic>>(
+            "TencentCloudChatGroupProfileData")
+        ?.listen(_onGroupProfileData);
+  }
+
+  @override
+  void dispose() {
+    _groupProfileSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _onGroupProfileData(TencentCloudChatGroupProfileData<dynamic> data) {
+    final groupID = widget.groupInfo.groupID;
+    switch (data.currentUpdatedFields) {
+      case TencentCloudChatGroupProfileDataKeys.updateGroupInfo:
+        if (data.updateGroupInfo.groupID != groupID) return;
+        safeSetState(() {
+          _groupInfo = data.updateGroupInfo;
+          _selfRole = null; // a fresh group object carries the current role
+          notification = data.updateGroupInfo.notification ?? "";
+        });
+      // A grant / revoke (or any member refresh) can change who may edit.
+      // The live rule (groupAnnouncementEditableResolver) is re-asked on
+      // rebuild; the role is only its fallback, kept current for our own row.
+      // For NGC groups our id in the event (64-hex public key) never equals
+      // currentUser (76-hex address): there the rebuild is what covers it.
+      case TencentCloudChatGroupProfileDataKeys.updateMemberRole:
+        if (data.updateGroupID != groupID) return;
+        final self =
+            TencentCloudChat.instance.dataInstance.basic.currentUser?.userID;
+        final mine = data.updateMemberList.any((m) => m.userID == self);
+        safeSetState(() {
+          if (mine) _selfRole = data.updateMemberRole;
+        });
+      case TencentCloudChatGroupProfileDataKeys.membersChange:
+        if (data.updateGroupID != groupID) return;
+        safeSetState(() {});
+      default:
+        return;
+    }
   }
 
   // toxee: Tim2Tox reports every NGC group as GroupType.Work, and the stock
@@ -38,7 +89,11 @@ class TencentCloudChatGroupNotificationState
   // shared rule asks the host for the live topic permission and otherwise
   // gates on the real self role (see group_announcement_permission.dart).
   // Desktop and mobile builders below both use it.
-  bool canEditNotification() => canEditGroupAnnouncement(widget.groupInfo);
+  bool canEditNotification() => canEditGroupAnnouncement(V2TimGroupInfo(
+        groupID: _groupInfo.groupID,
+        groupType: _groupInfo.groupType,
+        role: _selfRole ?? _groupInfo.role,
+      ));
 
   Future<void> _onSetGroupNotification(String value) async {
     final res = await TencentCloudChat.instance.chatSDKInstance.groupSDK

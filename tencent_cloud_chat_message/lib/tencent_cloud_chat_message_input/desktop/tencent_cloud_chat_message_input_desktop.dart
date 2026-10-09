@@ -841,6 +841,14 @@ class _TencentCloudChatMessageInputDesktopState
         suggestedFileName: fileName,
         bytes: imageBytes,
       );
+      // toxee: the write can outlive this composer (chat switched while a
+      // large paste was written); its context must not open the popup then.
+      if (!mounted) {
+        unawaited(resolveChatScratchFileProvider()
+            .deleteScratchFile(filePath)
+            .catchError((Object _) {}));
+        return;
+      }
 
       TencentCloudChatDesktopImageTools.sendImageOnDesktop(
         context: context,
