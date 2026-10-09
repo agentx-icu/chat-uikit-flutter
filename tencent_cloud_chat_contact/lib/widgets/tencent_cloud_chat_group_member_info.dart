@@ -32,6 +32,14 @@ class TencentCloudChatGroupMemberInfoState extends TencentCloudChatState<Tencent
     return name;
   }
 
+  // toxee: on a mobile OS the page is always PUSHED (showGroupMemberInfo and
+  // the member-list row only use a dialog on desktop platforms), but a wide
+  // iPad / tablet screen counts as a desktop screen and fell through to
+  // [desktopBuilder], which has no app bar: no way back. Tablets get the
+  // pushed-page layout.
+  @override
+  Widget? tabletAppBuilder(BuildContext context) => defaultBuilder(context);
+
   @override
   Widget? desktopBuilder(BuildContext context) {
     return TencentCloudChatThemeWidget(

@@ -24,6 +24,8 @@ class TencentCloudChatDesktopImageTools {
     required Function({String? imagePath, String? imageName, dynamic inputElement}) sendImageMessage,
   }) async {
     final Size size = imageSize ?? await getImageSize(imagePath);
+    // toxee: decoding is async; the caller's widget may be gone by now.
+    if (!context.mounted) return;
 
     TencentCloudChatDesktopPopup.showPopupWindow(
       operationKey: TencentCloudChatPopupOperationKey.sendResourcesOnDesktop,
